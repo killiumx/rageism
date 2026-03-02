@@ -81,6 +81,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .lf-input::placeholder{color:var(--textD)}
 .lf-input option{background:var(--bg3)}
 .lf-row{display:grid;grid-template-columns:1fr 80px;gap:.6rem}
+/* Discord OAuth loading card */
+.disc-loading{background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.2);border-radius:var(--r);
+  padding:1.25rem;text-align:center;display:none}
+.disc-loading.show{display:block}
+.disc-loading-spinner{width:28px;height:28px;border:2px solid rgba(88,101,242,.2);border-top-color:#5865F2;
+  border-radius:50%;animation:spin .75s linear infinite;margin:0 auto .75rem}
+.disc-user-card{background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);
+  padding:1rem;display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;display:none}
+.disc-user-card.show{display:flex}
+.disc-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(88,101,242,.4);object-fit:cover;flex-shrink:0}
+.disc-avatar-fallback{width:44px;height:44px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0}
+/* manual form collapse */
+#login-fields{display:none;animation:.25s ease fade-up}
+#login-fields.open{display:block}
+.manual-toggle{background:none;border:none;color:var(--textD);font-size:.8rem;cursor:pointer;padding:.35rem 0;text-decoration:underline;text-underline-offset:3px;transition:color .15s;font-family:'DM Sans',sans-serif}
+.manual-toggle:hover{color:var(--textM)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.65rem 1.25rem;border:none;border-radius:var(--rS);font-family:'DM Sans',sans-serif;
   font-size:.87rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
@@ -505,10 +521,60 @@ tr:last-child td{border-bottom:none}
     <div class="login-box">
       <div class="login-title">Welcome back</div>
       <div class="login-sub">Sign in to access the tournament hub</div>
-      <button class="btn btn-disc btn-fw" style="margin-bottom:.75rem" onclick="showLoginFields()">
-        <i class="fa-brands fa-discord"></i> Continue with Discord
-      </button>
-      <div class="divider">or continue manually</div>
+
+      <!-- Discord OAuth loading state -->
+      <div class="disc-loading" id="disc-loading">
+        <div class="disc-loading-spinner"></div>
+        <div style="font-size:.85rem;font-weight:600;color:#5865F2" id="disc-loading-msg">Connecting to Discord...</div>
+      </div>
+
+      <!-- Discord user confirmed card (shown after OAuth) -->
+      <div class="disc-user-card" id="disc-user-card">
+        <div class="disc-avatar-fallback" id="disc-av-fallback">?</div>
+        <img class="disc-avatar" id="disc-av-img" src="" alt="" style="display:none"/>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.92rem" id="disc-display-name">—</div>
+          <div style="font-size:.75rem;color:#5865F2" id="disc-username-tag">—</div>
+        </div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+      </div>
+
+      <!-- Main Discord button (hidden after OAuth success) -->
+      <div id="disc-btn-wrap">
+        <button class="btn btn-disc btn-fw" onclick="doDiscordOAuth()">
+          <i class="fa-brands fa-discord"></i> Continue with Discord
+        </button>
+      </div>
+
+      <!-- Role picker shown after Discord OAuth -->
+      <div id="disc-role-wrap" style="display:none;margin-top:.8rem">
+        <label class="lf-label">Your Role</label>
+        <select class="lf-input" id="disc-role" style="margin-bottom:.5rem">
+          <option value="player">Player</option>
+          <option value="viewer">Viewer</option>
+          <option value="admin">Admin / Host</option>
+        </select>
+        <div id="disc-admin-pw" style="display:none">
+          <label class="lf-label">Admin Password</label>
+          <input class="lf-input" id="disc-pw" type="password" placeholder="Enter admin password"/>
+        </div>
+        <button class="btn btn-accent btn-fw" onclick="finishDiscordLogin()">
+          <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
+        </button>
+        <button class="btn btn-ghost btn-fw" onclick="resetDiscordLogin()" style="margin-top:.4rem;font-size:.8rem">
+          <i class="fa-brands fa-discord" style="margin-right:.3rem"></i> Use different account
+        </button>
+      </div>
+
+      <div class="divider" style="margin:.9rem 0">or</div>
+
+      <!-- Manual login toggle -->
+      <div style="text-align:center;margin-bottom:.5rem">
+        <button class="manual-toggle" onclick="toggleManualLogin()">
+          <i class="fa-solid fa-keyboard" style="margin-right:.3rem;font-size:.72rem"></i>Sign in manually
+        </button>
+      </div>
+
       <div id="login-fields">
         <label class="lf-label">Discord Username</label>
         <input class="lf-input" id="li-u" placeholder="yourname"/>
@@ -530,6 +596,7 @@ tr:last-child td{border-bottom:none}
           <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
         </button>
       </div>
+
       <div style="margin-top:.8rem">
         <button class="btn btn-ghost btn-fw" onclick="guestLogin()" style="font-size:.82rem;color:var(--textM)">
           Continue as Guest Viewer
@@ -1190,21 +1257,31 @@ const { data: players } = await supabase
 
 <script>
 // ═══ DB ═══
-// ═══ SUPABASE — pure fetch, no SDK (avoids DataCloneError) ═══
+// ═══ SUPABASE — fetch-only, no SDK, CORS-safe ═══
 const SB_URL  = 'https://coeqrhxdomwfsafesaku.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZXFyaHhkb213ZnNhZmVzYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDE2NTIsImV4cCI6MjA4Nzk3NzY1Mn0.jY_6oocyPyAmUH4x_lDCuc6rJMU1OOSZ5EfZZCFfcAE';
 const SB_REST = SB_URL + '/rest/v1/rge_store';
 const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg'];
 let SB_OK = false, SB_WRITES = 0;
 
-// Shared fetch headers — plain object, never causes clone errors
-function sbHeaders(extra){
-  return Object.assign({
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
+// Pass apikey as a query-param so GET requests stay "simple"
+// and don't trigger a CORS preflight OPTIONS request
+function sbUrl(params){
+  const u = new URL(SB_REST);
+  u.searchParams.set('apikey', SB_KEY);
+  if(params) Object.entries(params).forEach(([k,v]) => u.searchParams.set(k,v));
+  return u.toString();
+}
+
+// Only Content-Type + Authorization on write calls
+// (GET reads use query-param only — no custom headers = no preflight)
+function sbWriteHeaders(){
+  return {
     'Content-Type': 'application/json',
-    'Prefer': 'return=minimal'
-  }, extra||{});
+    'Authorization': 'Bearer ' + SB_KEY,
+    'apikey': SB_KEY,
+    'Prefer': 'resolution=merge-duplicates,return=minimal'
+  };
 }
 
 function sbStatus(type, msg){
@@ -1213,55 +1290,58 @@ function sbStatus(type, msg){
   if(!bar || !txt) return;
   bar.className = 'show ' + (type==='err' ? 'sb-err' : type==='loading' ? 'sb-loading' : '');
   txt.textContent = msg;
-  if(type === 'ok') setTimeout(()=>{ bar.style.opacity='.45'; }, 5000);
+  if(type === 'ok') setTimeout(() => { bar.style.opacity = '.45'; }, 5000);
 }
-function sbInitMsg(msg){ const e=document.getElementById('sb-init-msg'); if(e) e.textContent=msg; }
+function sbInitMsg(msg){ const e = document.getElementById('sb-init-msg'); if(e) e.textContent = msg; }
 function sbHideOverlay(){
   const o = document.getElementById('sb-init-overlay');
-  if(o){ o.classList.add('hide'); setTimeout(()=>o.remove(), 450); }
+  if(o){ o.classList.add('hide'); setTimeout(() => o.remove(), 450); }
 }
 
-// Ping — SELECT key LIMIT 1
+// Init: simple GET with apikey in URL — no preflight triggered
 async function sbInit(){
   try{
-    const res = await fetch(SB_REST + '?select=key&limit=1', {
-      method: 'GET',
-      headers: sbHeaders({'Prefer':''})
+    const res = await fetch(sbUrl({ select: 'key', limit: '1' }), {
+      method: 'GET'
+      // No custom headers on GET = simple request = no CORS preflight
     });
-    if(res.status === 401){ sbStatus('err','Supabase: invalid API key'); return false; }
-    if(res.status === 404 || res.status === 400){
-      const body = await res.text();
-      if(body.includes('rge_store')){
-        sbStatus('err','Table missing — run the SQL schema first');
-        console.warn('[RAGEISM] rge_store not found. Run rageism_supabase_schema.sql first.');
+
+    if(res.status === 401){
+      sbStatus('err', 'Supabase: invalid API key'); return false;
+    }
+    if(!res.ok){
+      const body = await res.text().catch(() => '');
+      if(body.includes('rge_store') || res.status === 404){
+        sbStatus('err', 'Table missing — run the SQL schema first');
+        console.warn('[RAGEISM] rge_store not found. Run rageism_supabase_schema.sql in Supabase SQL Editor.');
       } else {
-        sbStatus('err','Supabase error: ' + res.status);
+        sbStatus('err', 'Supabase HTTP ' + res.status);
       }
       return false;
     }
-    if(!res.ok){ sbStatus('err','Supabase HTTP ' + res.status); return false; }
+
     SB_OK = true;
-    sbStatus('ok', 'Supabase connected · ' + SB_URL.split('//')[1].split('.')[0]);
+    sbStatus('ok', 'Supabase connected');
     return true;
+
   } catch(e){
-    sbStatus('err', 'Supabase unreachable — offline mode');
-    console.warn('[RAGEISM] sbInit failed:', e.message);
+    // "Failed to fetch" = network/CORS issue — app still works offline
+    sbStatus('err', 'Offline mode — data stored locally');
+    console.warn('[RAGEISM] Supabase unreachable, using localStorage fallback. Reason:', e.message);
     return false;
   }
 }
 
-// Load all rows from rge_store into localStorage
+// Load: GET all rows, apikey in URL param
 async function sbLoad(){
   if(!SB_OK) return false;
   try{
-    sbInitMsg('Loading tournament data...');
-    const res = await fetch(SB_REST + '?select=key,value', {
-      method: 'GET',
-      headers: sbHeaders({'Prefer':''})
-    });
+    sbInitMsg('Loading cloud data...');
+    const res = await fetch(sbUrl({ select: 'key,value' }), { method: 'GET' });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if(!rows || !rows.length) return false;
+
     let loaded = 0;
     rows.forEach(row => {
       if(SB_SYNC.includes(row.key)){
@@ -1269,12 +1349,12 @@ async function sbLoad(){
         loaded++;
       }
     });
-    // Don't run seed() if real player data already exists in cloud
+    // Don't overwrite cloud data with seed data
     const plRow = rows.find(r => r.key === 'players');
     if(plRow && Array.isArray(plRow.value) && plRow.value.length > 0){
       localStorage.setItem('rge5_s5', 'true');
     }
-    sbInitMsg('Loaded ' + loaded + ' datasets from Supabase');
+    sbInitMsg('Loaded ' + loaded + ' collections from cloud');
     return loaded > 0;
   } catch(e){
     console.warn('[RAGEISM] sbLoad failed:', e.message);
@@ -1282,18 +1362,18 @@ async function sbLoad(){
   }
 }
 
-// Upsert a single key → value row (POST with upsert Prefer header)
+// Write: POST with Authorization header (only writes trigger preflight, which is fine)
 async function sbWrite(key, val){
   if(!SB_OK || !SB_SYNC.includes(key)) return;
   try{
     const res = await fetch(SB_REST, {
       method: 'POST',
-      headers: sbHeaders({'Prefer': 'resolution=merge-duplicates,return=minimal'}),
+      headers: sbWriteHeaders(),
       body: JSON.stringify({ key, value: val, updated_at: new Date().toISOString() })
     });
     if(!res.ok){
-      const txt = await res.text();
-      throw new Error('HTTP ' + res.status + ' — ' + txt.slice(0,120));
+      const txt = await res.text().catch(() => '');
+      throw new Error('HTTP ' + res.status + (txt ? ' — ' + txt.slice(0, 100) : ''));
     }
     SB_WRITES++;
     const el = document.getElementById('sb-last-sync');
@@ -1301,7 +1381,7 @@ async function sbWrite(key, val){
     sbStatus('ok', 'Saved · ' + key);
   } catch(e){
     sbStatus('err', 'Sync failed: ' + e.message);
-    console.warn('[RAGEISM] sbWrite error:', key, e.message);
+    console.warn('[RAGEISM] sbWrite error for key "' + key + '":', e.message);
   }
 }
 
@@ -1927,9 +2007,152 @@ function notify(title,msg='',type='n-info',dur=3200){
   c.appendChild(n);setTimeout(()=>{const t=n.querySelector('.notif-timer');if(t)t.style.width='0';},50);setTimeout(()=>n.remove(),dur);
 }
 
+// ═══ DISCORD LOGIN via Supabase Auth ═══
+// Supabase handles the entire Discord OAuth flow.
+// Setup (one-time in Supabase dashboard):
+//   Authentication → Providers → Discord → Enable
+//   Add Site URL: https://killiumx.github.io/rageism/
+//   Add Redirect URL: https://killiumx.github.io/rageism/
+
+const SB_AUTH_URL = SB_URL + '/auth/v1';
+let DISC_USER = null;
+let SB_SESSION_TOKEN = null;
+
+function doDiscordOAuth(){
+  // Redirect to Supabase Auth — it handles Discord OAuth entirely
+  const redirectTo = encodeURIComponent('https://killiumx.github.io/rageism/');
+  window.location.href = `${SB_AUTH_URL}/authorize?provider=discord&redirect_to=${redirectTo}`;
+}
+
+// On page load — Supabase redirects back with #access_token in the hash
+async function handleDiscordCallback(){
+  const hash = window.location.hash;
+  if(!hash.includes('access_token=')) return false;
+
+  const params = new URLSearchParams(hash.replace(/^#/, ''));
+  const token  = params.get('access_token');
+  if(!token) return false;
+
+  // Immediately clean the URL so refresh doesn't re-run this
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  SB_SESSION_TOKEN = token;
+
+  setDiscordLoading(true, 'Loading your profile...');
+
+  try{
+    // Fetch the Supabase user — includes Discord identity & metadata
+    const res = await fetch(`${SB_AUTH_URL}/user`, {
+      headers: {
+        'apikey':        SB_KEY,
+        'Authorization': 'Bearer ' + token
+      }
+    });
+    if(!res.ok) throw new Error('Auth response ' + res.status);
+    const sbUser = await res.json();
+    if(sbUser.error) throw new Error(sbUser.error_description || sbUser.error);
+
+    // Extract Discord data from Supabase user_metadata
+    const m = sbUser.user_metadata || {};
+    DISC_USER = {
+      id:       sbUser.id,
+      name:     m.full_name || m.name || m.custom_claims?.global_name || m.user_name || 'Player',
+      username: m.user_name  || m.preferred_username || '',
+      avatar:   m.avatar_url || null,
+      email:    sbUser.email || ''
+    };
+
+    showDiscordUserCard(DISC_USER);
+    return true;
+  } catch(e){
+    setDiscordLoading(false);
+    notify('Discord login failed', e.message, 'n-bad');
+    console.warn('[RAGEISM] Supabase Auth error:', e.message);
+    return false;
+  }
+}
+
+function setDiscordLoading(on, msg){
+  const el = document.getElementById('disc-loading');
+  const bw = document.getElementById('disc-btn-wrap');
+  if(!el) return;
+  el.classList.toggle('show', on);
+  if(bw) bw.style.display = on ? 'none' : '';
+  const m = document.getElementById('disc-loading-msg');
+  if(m && msg) m.textContent = msg;
+}
+
+function showDiscordUserCard(user){
+  setDiscordLoading(false);
+  document.getElementById('disc-btn-wrap').style.display  = 'none';
+  document.getElementById('disc-user-card').classList.add('show');
+  document.getElementById('disc-role-wrap').style.display = 'block';
+
+  document.getElementById('disc-display-name').textContent = user.name;
+  document.getElementById('disc-username-tag').textContent  = user.username ? '@' + user.username : user.email;
+
+  const avF = document.getElementById('disc-av-fallback');
+  const avI = document.getElementById('disc-av-img');
+  if(avF) avF.textContent = user.name[0].toUpperCase();
+  if(user.avatar && avI){
+    avI.src = user.avatar;
+    avI.style.display = 'block';
+    if(avF) avF.style.display = 'none';
+    avI.onerror = () => { avI.style.display='none'; if(avF) avF.style.display='flex'; };
+  }
+
+  const roleEl = document.getElementById('disc-role');
+  if(roleEl) roleEl.addEventListener('change', function(){
+    document.getElementById('disc-admin-pw').style.display = this.value === 'admin' ? 'block' : 'none';
+  });
+}
+
+function finishDiscordLogin(){
+  if(!DISC_USER){ notify('No session found','Try logging in again','n-bad'); return; }
+  const role = document.getElementById('disc-role')?.value || 'player';
+  if(role === 'admin'){
+    const pw  = document.getElementById('disc-pw')?.value || '';
+    const cfg = DB.get('cfg', { adminPw: 'RAGEISM2025' });
+    if(pw !== cfg.adminPw && pw !== 'RAGEISM2025'){ notify('Wrong password','Access denied','n-bad'); return; }
+    ADM = true;
+  }
+  CU = {
+    name:       DISC_USER.name,
+    ign:        DISC_USER.name,
+    role,
+    avatar:     DISC_USER.name[0].toUpperCase(),
+    disc:       DISC_USER.username ? '@' + DISC_USER.username : DISC_USER.email,
+    discAvatar: DISC_USER.avatar,
+    sbId:       DISC_USER.id
+  };
+  finishLogin();
+}
+
+function resetDiscordLogin(){
+  DISC_USER = null; SB_SESSION_TOKEN = null;
+  document.getElementById('disc-btn-wrap').style.display  = '';
+  document.getElementById('disc-user-card').classList.remove('show');
+  document.getElementById('disc-role-wrap').style.display = 'none';
+  document.getElementById('disc-loading').classList.remove('show');
+}
+
+function toggleManualLogin(){
+  const f = document.getElementById('login-fields');
+  if(!f) return;
+  f.classList.toggle('open');
+  const btn = document.querySelector('.manual-toggle');
+  if(btn) btn.innerHTML = f.classList.contains('open')
+    ? '<i class="fa-solid fa-chevron-up" style="margin-right:.3rem;font-size:.7rem"></i>Hide manual login'
+    : '<i class="fa-solid fa-keyboard" style="margin-right:.3rem;font-size:.72rem"></i>Sign in manually';
+}
+
 // ═══ LOGIN ═══
-function showLoginFields(){document.getElementById('login-fields').style.display='block';}
-function attachRoleListener(){const e=document.getElementById('li-r');if(e)e.addEventListener('change',function(){document.getElementById('admin-pw-sec').style.display=this.value==='admin'?'block':'none';});}
+function showLoginFields(){ toggleManualLogin(); }
+function attachRoleListener(){
+  const e = document.getElementById('li-r');
+  if(e) e.addEventListener('change', function(){
+    document.getElementById('admin-pw-sec').style.display = this.value === 'admin' ? 'block' : 'none';
+  });
+}
 function guestLogin(){CU={name:'Guest',ign:'GUEST',role:'viewer',avatar:'G'};ADM=false;finishLogin();}
 function doLogin(){
   const u=v('li-u'),ig=v('li-i'),role=v('li-r'),pw=v('li-pw'),d=v('li-d');
@@ -2354,26 +2577,42 @@ function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ═══ INIT ═══
 window.addEventListener('DOMContentLoaded',async()=>{
+  // ── 0. Check for Discord OAuth callback FIRST (before overlay)
+  const isDiscordCallback = window.location.hash.includes('access_token=');
+
   // ── 1. Init Supabase ──
   sbInitMsg('Connecting to Supabase...');
-  const sbReady=await sbInit();
+  const sbReady = await sbInit();
   if(sbReady){
-    // ── 2. Load cloud data (hydrates localStorage) ──
     await sbLoad();
   } else {
     sbInitMsg('Server unavailable — using local data');
-    await new Promise(r=>setTimeout(r,800));
+    await new Promise(r=>setTimeout(r,600));
   }
 
-  // ── 3. Hide overlay and boot app ──
+  // ── 2. Hide overlay and boot app ──
   sbHideOverlay();
-  seed();attachRoleListener();startCountdown();
+  seed(); attachRoleListener(); startCountdown();
   setTimeout(()=>{document.querySelectorAll('.progress-fill,.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});},400);
   document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
-  // Restore session
-  const cu=DB.get('cu5',null);
-  if(cu&&cu.name){CU=cu;ADM=DB.get('adm5',false);document.getElementById('ls').style.display='none';document.getElementById('app').classList.add('show');updateSidebar();if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('alert-badge').style.display='block';}if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();}
-  renderBkt();buildResultRows();
+
+  // ── 3. Handle Discord OAuth callback ──
+  if(isDiscordCallback){
+    await handleDiscordCallback();
+  }
+
+  // ── 4. Restore existing session ──
+  const cu = DB.get('cu5', null);
+  if(cu && cu.name){
+    CU=cu; ADM=DB.get('adm5',false);
+    document.getElementById('ls').style.display='none';
+    document.getElementById('app').classList.add('show');
+    updateSidebar();
+    if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('alert-badge').style.display='block';}
+    if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
+    refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();
+  }
+  renderBkt(); buildResultRows();
 });
 </script>
 </body>
