@@ -326,18 +326,7 @@ tr:last-child td{border-bottom:none}
 .team-member:last-child{border-bottom:none}
 .member-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
-/* ── PROFILE ───────────────────────── */
-.profile-banner{height:90px;background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(6,182,212,.1));border-radius:var(--r) var(--r) 0 0;position:relative}
-.profile-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");border-radius:var(--r) var(--r) 0 0}
-.profile-av-wrap{margin-top:-30px;padding:0 1.25rem;display:flex;align-items:flex-end;gap:1rem;margin-bottom:.75rem}
-.profile-av{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,var(--accentD),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;border:3px solid var(--bg2);flex-shrink:0;font-family:'DM Mono',monospace;position:relative}
-.lvl-tag{position:absolute;bottom:-6px;right:-6px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;padding:.1rem .3rem;border-radius:4px;border:2px solid var(--bg2);font-family:'DM Mono',monospace}
-.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin:.8rem 0}
-.stat-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem;text-align:center}
-.stat-val{font-family:'DM Mono',monospace;font-size:1.35rem;font-weight:500;line-height:1}
-.stat-lbl{font-size:.65rem;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem}
-.xp-track{height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:.4rem}
-.xp-fill{height:100%;background:linear-gradient(90deg,var(--accentD),var(--accentL));border-radius:99px;transition:width 2s ease}
+
 
 /* ── POLLS ─────────────────────────── */
 .poll-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;margin-bottom:.9rem;transition:border-color .2s}
@@ -357,11 +346,64 @@ tr:last-child td{border-bottom:none}
   width:28px;height:28px;border-radius:7px;font-size:.72rem;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .vote-btn:hover{border-color:var(--accent);color:var(--accentL)}
 
-/* ── RESULT ENTRY ──────────────────── */
-.result-placement{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;margin-bottom:.6rem}
-.result-pos-label{font-family:'DM Mono',monospace;font-size:.9rem;font-weight:500;margin-bottom:.6rem}
-.rp-gold{color:var(--amber)}.rp-silver{color:#94a3b8}.rp-bronze{color:#cd7f32}.rp-default{color:var(--textD)}
-.pkr{display:grid;grid-template-columns:1fr 90px;gap:.5rem;margin-bottom:.4rem;align-items:center}
+/* ── PROFILE ───────────────────────── */
+.profile-banner{height:110px;background:linear-gradient(135deg,rgba(99,102,241,.35),rgba(6,182,212,.18),rgba(168,85,247,.2));border-radius:var(--r) var(--r) 0 0;position:relative;overflow:hidden}
+.profile-banner::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
+.profile-av-wrap{margin-top:-36px;padding:0 1.25rem;display:flex;align-items:flex-end;gap:1rem;margin-bottom:.6rem}
+.profile-av{width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,var(--accentD),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.9rem;font-weight:700;color:#fff;border:3px solid var(--bg2);flex-shrink:0;font-family:'DM Mono',monospace;position:relative}
+.lvl-tag{position:absolute;bottom:-6px;right:-6px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;padding:.1rem .35rem;border-radius:4px;border:2px solid var(--bg2);letter-spacing:.3px}
+/* Profile tabs */
+.prf-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.prf-tab{padding:.55rem 1rem;font-size:.8rem;font-weight:600;color:var(--textM);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;gap:.35rem;white-space:nowrap}
+.prf-tab:hover{color:var(--text)}
+.prf-tab.active{color:var(--accentL);border-bottom-color:var(--accent)}
+.prf-tab i{font-size:.72rem;opacity:.8}
+.prf-panel{display:none}.prf-panel.active{display:block;animation:.2s ease fade-up}
+/* stat grid */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:.6rem 0}
+.stat-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.65rem .5rem;text-align:center}
+.stat-val{font-family:'DM Mono',monospace;font-size:1.25rem;font-weight:500;line-height:1}
+.stat-lbl{font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem}
+/* social link row */
+.social-row{display:flex;align-items:center;gap:.6rem;padding:.5rem .65rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);margin-bottom:.4rem;text-decoration:none;color:var(--text);transition:border-color .15s,background .15s}
+.social-row:hover{border-color:var(--borderH);background:var(--bg4)}
+.social-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0}
+.social-val{font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.social-lbl{font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.4px}
+/* team card on profile */
+.prf-team-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;cursor:pointer;transition:border-color .15s}
+.prf-team-card:hover{border-color:var(--borderH)}
+/* xp track */
+.xp-track{height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:.4rem}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--accentD),var(--accentL));border-radius:99px;transition:width 2s ease}
+.res-team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s}
+.res-team-card:focus-within{border-color:var(--accent)40}
+.res-team-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;background:var(--bg3);border-bottom:1px solid var(--border)}
+.res-place-badge{font-family:'DM Mono',monospace;font-size:.75rem;font-weight:500;padding:.2rem .55rem;border-radius:5px;flex-shrink:0}
+.res-pb-1{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.res-pb-2{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
+.res-pb-3{background:rgba(205,127,50,.1);color:#cd7f32;border:1px solid rgba(205,127,50,.2)}
+.res-pb-n{background:var(--surface);color:var(--textD);border:1px solid var(--border)}
+.res-team-sel{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;outline:none;cursor:pointer;min-width:0}
+.res-team-sel option{background:var(--bg3)}
+.res-player-rows{padding:.5rem .9rem .7rem}
+.res-prow{display:grid;grid-template-columns:1fr 70px 60px;gap:.4rem;margin-bottom:.35rem;align-items:center}
+.res-prow-hdr{font-size:.63rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;padding:0 .1rem .25rem}
+.res-kills-in{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'DM Mono',monospace;font-size:.85rem;padding:.3rem .5rem;text-align:center;outline:none;transition:border-color .15s}
+.res-kills-in:focus{border-color:var(--accent)}
+.res-elim-btn{padding:.3rem .5rem;border-radius:5px;font-size:.68rem;font-weight:700;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--textD);transition:all .15s;white-space:nowrap}
+.res-elim-btn.elim{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:var(--red)}
+.res-ign-label{font-size:.84rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.res-ign-label:hover{color:var(--accentL)}
+/* log cards */
+.rlog-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);margin-bottom:.5rem;overflow:hidden}
+.rlog-card-hdr{display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;border-bottom:1px solid var(--border);cursor:pointer}
+.rlog-card-hdr:hover{background:var(--surface)}
+.rlog-body{padding:.5rem .7rem;display:none}
+.rlog-body.open{display:block}
+.rlog-team-block{margin-bottom:.5rem}
+.rlog-team-name{font-size:.72rem;font-weight:700;color:var(--textM);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.25rem}
+.rlog-pline{display:flex;align-items:center;gap:.4rem;padding:.1rem 0;font-size:.8rem}
 
 /* ── ADMIN TABS ────────────────────── */
 .admin-tabs{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:1.2rem;background:var(--bg2);padding:.4rem;border-radius:var(--r);border:1px solid var(--border);width:fit-content}
@@ -885,18 +927,52 @@ tr:last-child td{border-bottom:none}
 
       <!-- ░ ADMIN LOG RESULTS ░ -->
       <div class="page" id="page-admin-results">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">Enter match placements and individual kill counts</div></div></div>
-        <div class="g2">
-          <div class="card">
-            <div class="card-title"><i class="fa-solid fa-trophy"></i> Match Result Entry</div>
-            <div class="frow mb2">
-              <div class="fg"><label class="fl">Match ID</label><input class="fi" id="res-mid" placeholder="#M012" list="match-dl"/><datalist id="match-dl"></datalist></div>
-              <div class="fg"><label class="fl">Teams in Match</label><input class="fi" id="res-nt" type="number" value="4" min="1" max="20" oninput="buildResultRows()"/></div>
-            </div>
-            <div id="result-rows"></div>
-            <button class="btn btn-accent btn-fw" onclick="submitResults()" style="margin-top:.7rem"><i class="fa-solid fa-floppy-disk"></i> Save Match Results</button>
+        <div class="sh-row">
+          <div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">PUBG match results — team placements &amp; individual kills</div></div>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <select class="fi fsel" id="res-mid" style="min-width:180px" onchange="onMatchSelect()">
+              <option value="">— Select Match —</option>
+            </select>
           </div>
-          <div class="card"><div class="card-title"><i class="fa-solid fa-list-check"></i> Recent Logs</div><div id="result-logs" style="font-size:.85rem;color:var(--textM)">No logs yet.</div></div>
+        </div>
+
+        <!-- match meta bar -->
+        <div id="res-meta-bar" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.7rem 1.1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+          <div id="res-meta-name" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem"></div>
+          <div id="res-meta-map" class="chip chip-neutral" style="font-size:.72rem"></div>
+          <div id="res-meta-status" class="chip" style="font-size:.72rem"></div>
+          <div style="margin-left:auto;display:flex;gap:.5rem">
+            <button class="btn btn-ghost btn-sm" onclick="addResTeamSlot()"><i class="fa-solid fa-plus"></i> Add Team Slot</button>
+            <button class="btn btn-accent btn-sm" onclick="submitResults()"><i class="fa-solid fa-floppy-disk"></i> Save Results</button>
+          </div>
+        </div>
+        <!-- live score bar -->
+        <div id="res-pts-bar" style="margin-bottom:.8rem"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:1rem;align-items:start">
+          <!-- LEFT: placement slots -->
+          <div>
+            <div id="res-no-match" style="background:var(--bg2);border:1px dashed var(--border);border-radius:var(--r);padding:2.5rem;text-align:center;color:var(--textD)">
+              <i class="fa-solid fa-crosshairs" style="font-size:1.8rem;display:block;margin-bottom:.6rem;opacity:.3"></i>
+              <div style="font-size:.9rem;font-weight:600;margin-bottom:.25rem">Select a match above</div>
+              <div style="font-size:.8rem">Choose a scheduled match to begin logging results</div>
+            </div>
+            <div id="result-rows" style="display:flex;flex-direction:column;gap:.6rem"></div>
+            <div id="res-save-row" style="display:none;margin-top:.8rem">
+              <button class="btn btn-accent btn-fw" onclick="submitResults()"><i class="fa-solid fa-floppy-disk"></i> Save Match Results</button>
+            </div>
+          </div>
+
+          <!-- RIGHT: recent logs -->
+          <div style="position:sticky;top:4.5rem">
+            <div class="card" style="padding:.9rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+                <div style="font-weight:700;font-size:.82rem;display:flex;align-items:center;gap:.4rem"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accentL)"></i> Recent Logs</div>
+                <span id="rl-count" class="chip chip-neutral" style="font-size:.65rem">0</span>
+              </div>
+              <div id="result-logs" style="font-size:.82rem;color:var(--textM)">No logs yet.</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1011,10 +1087,38 @@ tr:last-child td{border-bottom:none}
       <!-- ░ LEADERBOARD ░ -->
       <div class="page" id="page-leaderboard">
         <div class="sh-row"><div class="sh"><div class="sh-title"><span style="color:var(--accentL)">Leaderboard</span></div></div>
-          <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem" id="lb-filter" onchange="renderLB()"><option value="kills">Sort by Kills</option><option value="kd">Sort by K/D</option><option value="wins">Sort by Wins</option><option value="games">Sort by Games</option></select>
+          <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem" id="lb-filter" onchange="renderLB()"><option value="points">Sort by Points</option><option value="kills">Sort by Kills</option><option value="kd">Sort by K/D</option><option value="wins">Sort by Wins</option><option value="games">Sort by Games</option></select>
         </div>
         <div id="podium" class="mb3" style="display:flex;gap:1rem;justify-content:center;align-items:flex-end;flex-wrap:wrap"></div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Games</th><th>Level</th><th></th></tr></thead><tbody id="lb-body"></tbody></table></div></div>
+        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Pts</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Games</th><th>Level</th><th></th></tr></thead><tbody id="lb-body"></tbody></table></div></div>
+
+        <!-- Team Standings -->
+        <div class="sh-row" style="margin-top:1.5rem"><div class="sh"><div class="sh-title" style="font-size:1.2rem">Team <span style="color:var(--accentL)">Standings</span></div></div></div>
+        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Team</th><th style="color:var(--accentL)">Total Pts</th><th>Matches</th><th>Wins (Chicken)</th><th>Team Kills</th><th>Avg Pts/Match</th></tr></thead><tbody id="ts-body"></tbody></table></div></div>
+
+        <!-- Points reference -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
+          <div class="card" style="padding:.9rem">
+            <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.7rem;text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-trophy" style="color:var(--amber);margin-right:.35rem"></i>Placement Points</div>
+            <table style="width:100%;font-size:.78rem">
+              <thead><tr><th style="text-align:left;color:var(--textD);font-size:.65rem;padding-bottom:.3rem">Place</th><th style="text-align:right;color:var(--textD);font-size:.65rem;padding-bottom:.3rem">Points</th></tr></thead>
+              <tbody>
+                ${[[1,'🥇 1st',10],[2,'🥈 2nd',6],[3,'🥉 3rd',5],[4,'4th',4],[5,'5th',3],[6,'6th',2],[7,'7th–8th',1],[9,'9th+',0]].map(([,label,pts])=>`<tr><td style="padding:.15rem 0;color:var(--textM)">${label}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:${pts>0?'var(--amber)':'var(--textD)'}">${pts}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="card" style="padding:.9rem">
+            <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.7rem;text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-skull-crossbones" style="color:var(--red);margin-right:.35rem"></i>Kill Points</div>
+            <div style="font-size:.87rem;color:var(--text);margin-bottom:.5rem"><span class="font-mono text-accent fw6">1 pt</span> per elimination</div>
+            <div style="font-size:.78rem;color:var(--textM);">No kill limit — every elimination counts.</div>
+            <div style="margin-top:.8rem;padding:.6rem .7rem;background:var(--bg3);border-radius:var(--rS);font-size:.75rem;color:var(--textD)">
+              Formula: <span style="color:var(--text)">Total = Placement Pts + (Kills × 1)</span>
+            </div>
+            <div style="margin-top:.5rem;padding:.5rem .7rem;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);border-radius:var(--rS);font-size:.72rem;color:var(--textM)">
+              Example: 1st place + 8 kills = <span style="color:var(--accentL);font-weight:700">18 pts</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ░ BRACKET ░ -->
@@ -1298,14 +1402,39 @@ const { data: players } = await supabase
 </div>
 
 <div class="modal-overlay" id="edit-player-modal">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:540px">
     <button class="modal-close" onclick="closeModal('edit-player-modal')"><i class="fa-solid fa-xmark"></i></button>
-    <div class="modal-title">Edit Player</div>
+    <div class="modal-title">Edit Profile</div>
     <input type="hidden" id="ep-id"/>
-    <div class="frow"><div class="fg"><label class="fl">IGN</label><input class="fi" id="ep-ign"/></div><div class="fg"><label class="fl">Discord</label><input class="fi" id="ep-dc"/></div></div>
-    <div class="frow"><div class="fg"><label class="fl">Team</label><input class="fi" id="ep-tm"/></div><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="ep-rk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div></div>
-    <div class="fg"><label class="fl">Bio</label><textarea class="fta" id="ep-bio"></textarea></div>
-    <button class="btn btn-accent btn-fw" onclick="saveEditPlayer()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+    <div class="frow">
+      <div class="fg"><label class="fl">In-Game Name (IGN)</label><input class="fi" id="ep-ign" placeholder="Your IGN"/></div>
+      <div class="fg"><label class="fl">Display Name</label><input class="fi" id="ep-name" placeholder="Full name"/></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="ep-rk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
+      <div class="fg"><label class="fl">Role</label><select class="fi fsel" id="ep-role"><option value="Fragger">Fragger</option><option value="IGL">IGL</option><option value="Support">Support</option><option value="Scout">Scout</option><option value="Flex">Flex</option></select></div>
+    </div>
+    <div class="fg" style="margin-bottom:.8rem"><label class="fl">Bio</label><textarea class="fta" id="ep-bio" rows="2" placeholder="Tell the community about yourself..."></textarea></div>
+    <div style="font-size:.72rem;font-weight:700;color:var(--textM);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Social Links</div>
+    <div class="frow">
+      <div class="fg"><label class="fl"><i class="fa-brands fa-discord" style="color:#7289da"></i> Discord</label><input class="fi" id="ep-dc" placeholder="username#0000"/></div>
+      <div class="fg"><label class="fl"><i class="fa-brands fa-youtube" style="color:#ff0000"></i> YouTube</label><input class="fi" id="ep-yt" placeholder="youtube.com/@channel"/></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl"><i class="fa-brands fa-tiktok" style="color:#e91e8c"></i> TikTok</label><input class="fi" id="ep-tt" placeholder="@yourtiktok"/></div>
+      <div class="fg"><label class="fl"><i class="fa-brands fa-twitch" style="color:#9147ff"></i> Twitch</label><input class="fi" id="ep-tw" placeholder="twitch.tv/channel"/></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl"><i class="fa-brands fa-x-twitter"></i> X / Twitter</label><input class="fi" id="ep-xt" placeholder="@yourhandle"/></div>
+      <div class="fg"><label class="fl"><i class="fa-brands fa-instagram" style="color:#e1306c"></i> Instagram</label><input class="fi" id="ep-ig" placeholder="@yourhandle"/></div>
+    </div>
+    <div style="font-size:.72rem;font-weight:700;color:var(--textM);text-transform:uppercase;letter-spacing:.5px;margin:.6rem 0 .5rem">Notifications</div>
+    <div class="fg" style="margin-bottom:.9rem">
+      <label class="fl"><i class="fa-brands fa-discord" style="color:#7289da"></i> Personal Webhook URL</label>
+      <input class="fi" id="ep-wh" placeholder="https://discord.com/api/webhooks/..."/>
+      <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Receive match result notifications in your Discord DMs</div>
+    </div>
+    <button class="btn btn-accent btn-fw" onclick="saveEditPlayer()"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
   </div>
 </div>
 
@@ -1451,6 +1580,11 @@ const v=id=>document.getElementById(id)?.value?.trim()||'';
 let CU=null,ADM=false;
 const RC={Bronze:'#cd7f32',Silver:'#94a3b8',Gold:'#f59e0b',Platinum:'#06b6d4',Diamond:'#3b82f6',Master:'#a855f7',Conqueror:'#ef4444'};
 const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
+// ── PUBG Esports Points System (PGC standard) ──
+// Placement points: 1st=10, 2nd=6, 3rd=5, 4th=4, 5th=3, 6th=2, 7th-8th=1, 9th+=0
+const PLACEMENT_PTS=[10,6,5,4,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
+// Kill points: 1 point per kill (no cap)
+const KILL_PT=1;
 const GL=['A','B','C','D','E','F','G','H'];
 
 function seed(){
@@ -2235,9 +2369,15 @@ function updateSidebar(){
 function refreshDLs(){
   const pl=DB.get('players');const igns=pl.map(p=>`<option value="${p.ign}">`).join('');
   ['ign-dl','ign-dl2'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=igns;});
-  const ms=DB.get('matches');const mids=ms.map(m=>`<option value="${m.id}">`).join('');
-  const md=document.getElementById('match-dl');if(md)md.innerHTML=mids;
-  buildResultRows();
+  // Populate match dropdown on result page
+  const ms=DB.get('matches');
+  const mSel=document.getElementById('res-mid');
+  if(mSel){
+    const cur=mSel.value;
+    const opts=ms.map(m=>`<option value="${m.id}">${m.name||m.id} · ${m.map||''}${m.status?' ('+m.status+')':''}</option>`).join('');
+    mSel.innerHTML='<option value="">— Select Match —</option>'+opts;
+    if(cur)mSel.value=cur;
+  }
 }
 
 // ═══ PAGES ═══
@@ -2413,76 +2553,322 @@ function renderGroups(){
 }
 
 // ═══ RESULT ENTRY ═══
-function buildResultRows(){
-  const el=document.getElementById('result-rows');if(!el)return;
-  const igns=DB.get('players').map(p=>p.ign);const num=parseInt(document.getElementById('res-nt')?.value)||4;
-  let html='';
-  for(let i=0;i<num;i++){const pos=i+1;const pc=pos===1?'rp-gold':pos===2?'rp-silver':pos===3?'rp-bronze':'rp-default';const pl=pos===1?'<i class="fa-solid fa-trophy" style="color:var(--amber)"></i> 1st Place':pos===2?'<i class="fa-solid fa-medal" style="color:#94a3b8"></i> 2nd Place':pos===3?'<i class="fa-solid fa-medal" style="color:#cd7f32"></i> 3rd Place':`${pos}th Place`;
-    const opts=igns.map(ig=>`<option value="${ig}">`).join('');
-    html+=`<div class="result-placement"><div class="result-pos-label ${pc}">${pl}</div>
-      <div id="rr-${i}">${[0,1,2,3].map(j=>`<div class="pkr" id="pkr-${i}-${j}"><div style="display:flex;gap:.4rem;align-items:center"><span class="font-mono text-dim" style="font-size:.7rem;width:16px">${j+1}.</span><input class="fi" style="font-size:.83rem;padding:.38rem .7rem" list="dl-${i}-${j}" placeholder="Player IGN" id="ri-${i}-${j}" autocomplete="off"/><datalist id="dl-${i}-${j}">${opts}</datalist></div><input class="fi" type="number" style="font-size:.83rem;padding:.38rem .7rem;text-align:center" placeholder="Kills" min="0" id="rk-${i}-${j}"/></div>`).join('')}</div>
-      <button class="btn btn-ghost btn-xs" style="margin-top:.4rem" onclick="addPlayerRow(${i})"><i class="fa-solid fa-plus"></i> Add Player</button>
-    </div>`;
-  }el.innerHTML=html;
-}
-function addPlayerRow(ti){
-  const c=document.getElementById('rr-'+ti);if(!c)return;const j=c.querySelectorAll('.pkr').length;
-  const igns=DB.get('players').map(p=>p.ign);const opts=igns.map(ig=>`<option value="${ig}">`).join('');
-  const d=document.createElement('div');d.className='pkr';d.id=`pkr-${ti}-${j}`;
-  d.innerHTML=`<div style="display:flex;gap:.4rem;align-items:center"><span class="font-mono text-dim" style="font-size:.7rem;width:16px">${j+1}.</span><input class="fi" style="font-size:.83rem;padding:.38rem .7rem" list="dl-${ti}-${j}" placeholder="Player IGN" id="ri-${ti}-${j}" autocomplete="off"/><datalist id="dl-${ti}-${j}">${opts}</datalist></div><input class="fi" type="number" style="font-size:.83rem;padding:.38rem .7rem;text-align:center" placeholder="Kills" min="0" id="rk-${ti}-${j}"/>`;
-  c.appendChild(d);
-}
-function submitResults(){
-  const mid=v('res-mid');const num=parseInt(document.getElementById('res-nt')?.value)||4;
-  const pl=DB.get('players');const logs=DB.get('rlogs5',[]);let done=0,entries=[];
-  let winnerIGN='',winnerTeam='';
-  const ms=DB.get('matches');const matchObj=ms.find(x=>x.id===mid);
-  for(let i=0;i<num;i++){let j=0;while(document.getElementById(`ri-${i}-${j}`)){const ign=document.getElementById(`ri-${i}-${j}`)?.value?.trim();const kills=parseInt(document.getElementById(`rk-${i}-${j}`)?.value)||0;
-    if(ign){const p=pl.find(x=>x.ign===ign);if(p){p.kills+=kills;p.deaths+=(i>0?1:0);if(i===0){p.wins++;if(!winnerIGN)winnerIGN=ign;if(p.team&&!winnerTeam)winnerTeam=p.team;}p.xp=(p.xp||0)+(kills*50)+(i===0?500:i===1?250:i===2?100:0);done++;entries.push({ign,kills,placement:i+1,team:p.team||'',ts:new Date().toLocaleTimeString()});}}j++;}
+let RES_SLOTS = []; // [{placement, teamId, players:[{ign,kills,elim}]}]
+
+function onMatchSelect(){
+  const mid = document.getElementById('res-mid')?.value;
+  const noMatch = document.getElementById('res-no-match');
+  const metaBar = document.getElementById('res-meta-bar');
+  const saveRow = document.getElementById('res-save-row');
+  const rr = document.getElementById('result-rows');
+  if(!mid){
+    if(noMatch){noMatch.style.display='block';}
+    if(metaBar){metaBar.style.display='none';}
+    if(saveRow){saveRow.style.display='none';}
+    if(rr){rr.innerHTML='';}
+    RES_SLOTS=[];return;
   }
-  if(!done)return notify('No valid data','Enter at least one player IGN','n-bad');
-  DB.set('players',pl);
-  const logEntry={id:'log'+Date.now(),matchId:mid,matchName:matchObj?matchObj.name:mid,map:matchObj?matchObj.map:'',winnerIGN,winnerTeam,entries,ts:new Date().toLocaleString()};
-  logs.unshift(logEntry);if(logs.length>50)logs.pop();DB.set('rlogs5',logs);
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===mid);
+  if(noMatch)noMatch.style.display='none';
+  if(metaBar)metaBar.style.display='flex';
+  if(saveRow)saveRow.style.display='block';
+  if(m){
+    const nn=document.getElementById('res-meta-name');if(nn)nn.textContent=m.name||m.id;
+    const nm=document.getElementById('res-meta-map');if(nm)nm.textContent=(MI[m.map]||'🗺')+' '+(m.map||'—');
+    const ns=document.getElementById('res-meta-status');if(ns){const sc=m.status==='live'?'chip-red':m.status==='done'?'chip-accent':'chip-neutral';ns.className='chip '+sc;ns.style.fontSize='.72rem';ns.textContent=m.status||'scheduled';}
+  }
+  // Auto-detect teams in match from bracket/groups or just create 4 empty slots
+  const teams=DB.get('teams').filter(t=>t.approved);
+  // Pre-populate with teams that were registered (up to 4 for a typical PUBG match)
+  RES_SLOTS = teams.slice(0,4).map((t,i)=>({placement:i+1,teamId:t.id,players:buildPlayersForTeam(t.id)}));
+  // Pad to at least 4 slots
+  while(RES_SLOTS.length<4) RES_SLOTS.push({placement:RES_SLOTS.length+1,teamId:'',players:[]});
+  renderResSlots();
+}
+
+function buildPlayersForTeam(teamId){
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return[];
+  return (t.members||[]).map(ign=>({ign,kills:0,elim:false}));
+}
+
+function addResTeamSlot(){
+  RES_SLOTS.push({placement:RES_SLOTS.length+1,teamId:'',players:[]});
+  renderResSlots();
+}
+
+function removeResSlot(i){
+  RES_SLOTS.splice(i,1);
+  RES_SLOTS.forEach((s,j)=>s.placement=j+1);
+  renderResSlots();
+}
+
+function onResTeamChange(i){
+  const sel=document.getElementById(`res-team-${i}`);
+  if(!sel)return;
+  const tid=sel.value;
+  RES_SLOTS[i].teamId=tid;
+  RES_SLOTS[i].players=buildPlayersForTeam(tid);
+  renderResSlots();
+  // focus kills of first player
+  setTimeout(()=>{const k=document.getElementById(`res-k-${i}-0`);if(k)k.focus();},50);
+}
+
+function onResKillChange(i,j){
+  const k=document.getElementById(`res-k-${i}-${j}`);
+  if(!k||!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
+  RES_SLOTS[i].players[j].kills=parseInt(k.value)||0;
+  // Update this player's pts display
+  const pPts=(RES_SLOTS[i].players[j].kills||0)*KILL_PT;
+  const pp=document.getElementById(`res-ppts-${i}-${j}`);
+  if(pp)pp.textContent=pPts||'—';
+  // Update team header
+  const teamKills=RES_SLOTS[i].players.reduce((a,p)=>a+(p.kills||0),0);
+  const placePts=PLACEMENT_PTS[RES_SLOTS[i].placement-1]||0;
+  const totalPts=placePts+teamKills*KILL_PT;
+  // Re-render just header chips without full re-render
+  updateResPointsBar();
+}
+
+function updateResPointsBar(){
+  // Update points bar in meta area if it exists
+  const bar=document.getElementById('res-pts-bar');if(!bar)return;
+  const filled=RES_SLOTS.filter(s=>s.teamId);
+  if(!filled.length){bar.innerHTML='';return;}
+  const teams=DB.get('teams');
+  bar.innerHTML=`<div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+    <span style="font-size:.68rem;color:var(--textD);font-weight:600;text-transform:uppercase;letter-spacing:.4px">Live Score:</span>
+    ${filled.map(slot=>{
+      const t=teams.find(x=>x.id===slot.teamId);
+      const tn=t?t.name:'?';
+      const tcolor=t?.color||'var(--accent)';
+      const kills=slot.players.reduce((a,p)=>a+(p.kills||0),0);
+      const placePts=PLACEMENT_PTS[slot.placement-1]||0;
+      const total=placePts+kills*KILL_PT;
+      const pl=slot.placement;const plLabel=pl===1?'🥇':pl===2?'🥈':pl===3?'🥉':`#${pl}`;
+      return `<span style="background:var(--bg3);border:1px solid ${tcolor}25;border-radius:5px;padding:.2rem .5rem;font-size:.7rem;display:inline-flex;align-items:center;gap:.3rem"><span style="color:${tcolor};font-weight:700">${plLabel} ${tn}</span><span style="color:var(--accentL);font-family:'DM Mono',monospace;font-weight:700">${total}pts</span></span>`;
+    }).join('')}
+  </div>`;
+}
+
+function toggleElim(i,j){
+  if(!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
+  RES_SLOTS[i].players[j].elim=!RES_SLOTS[i].players[j].elim;
+  const btn=document.getElementById(`res-e-${i}-${j}`);
+  if(btn){btn.classList.toggle('elim',RES_SLOTS[i].players[j].elim);btn.textContent=RES_SLOTS[i].players[j].elim?'☠ Dead':'Alive';}
+}
+
+function renderResSlots(){
+  const el=document.getElementById('result-rows');if(!el)return;
+  const teams=DB.get('teams').filter(t=>t.approved);
+  const teamOpts=teams.map(t=>`<option value="${t.id}">${t.name}${t.tag?' ['+t.tag+']':''}</option>`).join('');
+  const placeLabel=(n)=>n===1?'<i class="fa-solid fa-trophy"></i> 1st':n===2?'<i class="fa-solid fa-medal"></i> 2nd':n===3?'<i class="fa-solid fa-medal"></i> 3rd':`${n}th`;
+  const placeCls=(n)=>n===1?'res-pb-1':n===2?'res-pb-2':n===3?'res-pb-3':'res-pb-n';
+  el.innerHTML=RES_SLOTS.map((slot,i)=>{
+    const t=teams.find(x=>x.id===slot.teamId);
+    const players=slot.players;
+    const teamKills=players.reduce((a,p)=>a+(p.kills||0),0);
+    const placePts=PLACEMENT_PTS[slot.placement-1]||0;
+    const killPts=teamKills*KILL_PT;
+    const totalPts=placePts+killPts;
+    return `<div class="res-team-card">
+      <div class="res-team-header">
+        <span class="res-place-badge ${placeCls(slot.placement)}">${placeLabel(slot.placement)}</span>
+        <select class="res-team-sel" id="res-team-${i}" onchange="onResTeamChange(${i})">
+          <option value="">— Select Team —</option>${teamOpts}
+        </select>
+        ${slot.teamId?`
+        <div style="display:flex;gap:.3rem;align-items:center;flex-shrink:0">
+          <span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-skull-crossbones"></i> ${teamKills}K</span>
+          <span class="chip chip-accent" style="font-size:.63rem;font-weight:700" title="Placement ${placePts}pts + Kill ${killPts}pts">⚡ ${totalPts}pts</span>
+        </div>`:''}
+        ${RES_SLOTS.length>1?`<button onclick="removeResSlot(${i})" style="background:none;border:none;color:var(--textD);cursor:pointer;font-size:.75rem;padding:.15rem;flex-shrink:0" title="Remove"><i class="fa-solid fa-times"></i></button>`:''}
+      </div>
+      ${slot.teamId?`
+      <div class="res-player-rows">
+        <div style="display:flex;gap:.4rem;align-items:center;padding:.15rem .1rem .3rem;margin-bottom:.1rem">
+          <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;flex:1">Player</span>
+          <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:70px;text-align:center">Kills</span>
+          <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:60px;text-align:center">Status</span>
+          <span style="font-size:.6rem;font-weight:700;color:var(--accentL);text-transform:uppercase;letter-spacing:.5px;width:40px;text-align:center">Pts</span>
+        </div>
+        ${players.length?players.map((p,j)=>{
+          const pPts=(p.kills||0)*KILL_PT;
+          return `<div style="display:grid;grid-template-columns:1fr 70px 60px 40px;gap:.4rem;margin-bottom:.3rem;align-items:center">
+            <div class="res-ign-label" onclick="openProfileByIgn('${p.ign}')">${p.ign}</div>
+            <input class="res-kills-in" id="res-k-${i}-${j}" type="number" min="0" max="99" value="${p.kills||''}" placeholder="0" oninput="onResKillChange(${i},${j})" ${p.elim?'style="opacity:.4"':''}/>
+            <button class="res-elim-btn ${p.elim?'elim':''}" id="res-e-${i}-${j}" onclick="toggleElim(${i},${j})">${p.elim?'☠ Dead':'Alive'}</button>
+            <div id="res-ppts-${i}-${j}" style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accentL);text-align:center;font-weight:600">${pPts||'—'}</div>
+          </div>`;
+        }).join(''):`<div style="font-size:.78rem;color:var(--textD);padding:.4rem 0">No registered players — <button class="btn btn-ghost btn-xs" onclick="addResManualPlayer(${i})"><i class="fa-solid fa-plus"></i> Add</button></div>`}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem .1rem 0;border-top:1px solid var(--border);margin-top:.2rem">
+          <button class="btn btn-ghost btn-xs" onclick="addResManualPlayer(${i})"><i class="fa-solid fa-user-plus"></i> Add Player</button>
+          ${slot.teamId?`<div style="font-size:.72rem;color:var(--textD)">Placement <span style="color:var(--amber)">${placePts}pts</span> + Kills <span style="color:var(--red)">${killPts}pts</span> = <span style="color:var(--accentL);font-weight:700">${totalPts}pts</span></div>`:''}
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+  // Set dropdowns
+  RES_SLOTS.forEach((slot,i)=>{
+    const s=document.getElementById(`res-team-${i}`);
+    if(s&&slot.teamId)s.value=slot.teamId;
+  });
+  // Update total points preview bar
+  updateResPointsBar();
+}
+
+function addResManualPlayer(i){
+  if(!RES_SLOTS[i])return;
+  RES_SLOTS[i].players.push({ign:'',kills:0,elim:false,manual:true});
+  renderResSlots();
+  // Focus the new ign input — we'll use a modal for manual add
+  const j=RES_SLOTS[i].players.length-1;
+  const ign=prompt('Player IGN:');
+  if(ign&&ign.trim()){RES_SLOTS[i].players[j].ign=ign.trim();renderResSlots();}
+  else{RES_SLOTS[i].players.splice(j,1);renderResSlots();}
+}
+
+function openProfileByIgn(ign){
+  const p=DB.get('players').find(x=>x.ign===ign);
+  if(p)openProfile(p.id);
+}
+
+function submitResults(){
+  const mid=document.getElementById('res-mid')?.value;
+  if(!mid)return notify('No match selected','Pick a match first','n-bad');
+  const filled=RES_SLOTS.filter(s=>s.teamId&&s.players.length);
+  if(!filled.length)return notify('No data','Select at least one team with players','n-bad');
+
+  const pl=DB.get('players');const logs=DB.get('rlogs5',[]);
+  const ms=DB.get('matches');const matchObj=ms.find(x=>x.id===mid);
+  const teams=DB.get('teams');
+  let entries=[];let winnerIGN='',winnerTeam='';
+  let matchSummary=[];// for the score preview in the log
+
+  RES_SLOTS.forEach((slot,si)=>{
+    if(!slot.teamId)return;
+    const t=teams.find(x=>x.id===slot.teamId);
+    const tn=t?t.name:'';
+    const place=slot.placement;
+    const placePts=PLACEMENT_PTS[place-1]||0;
+    const teamKills=slot.players.reduce((a,sp)=>a+(sp.kills||0),0);
+    const killPts=teamKills*KILL_PT;
+    const totalTeamPts=placePts+killPts;
+
+    if(si===0&&tn)winnerTeam=tn;
+
+    // Update team-level points/wins/kills
+    if(t){
+      t.points=(t.points||0)+totalTeamPts;
+      t.kills=(t.kills||0)+teamKills;
+      if(place===1)t.wins=(t.wins||0)+1;
+      t.matchesPlayed=(t.matchesPlayed||0)+1;
+    }
+
+    matchSummary.push({teamId:slot.teamId,teamName:tn,placement:place,placePts,killPts,totalPts:totalTeamPts,kills:teamKills});
+
+    slot.players.forEach((sp)=>{
+      if(!sp.ign)return;
+      const p=pl.find(x=>x.ign===sp.ign);
+      const playerPts=(sp.kills||0)*KILL_PT+(place===1?Math.round(placePts/Math.max(slot.players.length,1)):0);
+      if(p){
+        p.kills=(p.kills||0)+(sp.kills||0);
+        p.points=(p.points||0)+playerPts;
+        if(!sp.elim&&place===1){p.wins=(p.wins||0)+1;}
+        if(sp.elim)p.deaths=(p.deaths||0)+1;
+        else if(place>1)p.deaths=(p.deaths||0)+1;
+        p.gamesPlayed=(p.gamesPlayed||0)+1;
+        p.xp=(p.xp||0)+((sp.kills||0)*50)+(place===1?500:place===2?250:place===3?100:0);
+        if(place===1&&!winnerIGN)winnerIGN=sp.ign;
+      }
+      entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*KILL_PT,pts:playerPts,team:tn,ts:new Date().toLocaleTimeString()});
+    });
+  });
+
+  DB.set('players',pl);DB.set('teams',teams);
+  const logEntry={id:'log'+Date.now(),matchId:mid,matchName:matchObj?matchObj.name:mid,map:matchObj?matchObj.map:'',winnerIGN,winnerTeam,entries,matchSummary,slots:RES_SLOTS.map(s=>({...s})),ts:new Date().toLocaleString()};
+  logs.unshift(logEntry);if(logs.length>100)logs.pop();DB.set('rlogs5',logs);
   if(matchObj){matchObj.status='done';DB.set('matches',ms);}
-  renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();buildTicker();renderAdminOverview();
-  // Fire webhook if set
+  renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();buildTicker();renderAdminOverview();renderTeams();
   if(matchObj){const cfg=DB.get('cfg',{});if(cfg.disc&&cfg.disc.startsWith('https://discord.com/api/webhooks/')){fireWebhook(cfg.disc,logEntry,matchObj);}}
-  notify('Results saved!',`${done} player stats updated · Winner: ${winnerTeam||winnerIGN||'—'}`,'n-ok');
+  const topTeam=matchSummary.sort((a,b)=>b.totalPts-a.totalPts)[0];
+  notify('Results saved!',`Winner: ${winnerTeam||winnerIGN||'—'} · ${topTeam?topTeam.totalPts+'pts':''}`,'n-ok');
+  // Reset
+  RES_SLOTS=[];renderResSlots();
+  document.getElementById('res-mid').value='';
+  const noMatch=document.getElementById('res-no-match');if(noMatch)noMatch.style.display='block';
+  const metaBar=document.getElementById('res-meta-bar');if(metaBar)metaBar.style.display='none';
+  const saveRow=document.getElementById('res-save-row');if(saveRow)saveRow.style.display='none';
 }
 
 function fireWebhook(url,log,match){
-  try{fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',embeds:[{title:`Match Results — ${log.matchId}`,color:6304479,fields:[{name:'Match',value:log.matchName||log.matchId,inline:true},{name:'Map',value:log.map||'—',inline:true},{name:'Winner',value:log.winnerTeam||log.winnerIGN||'—',inline:true},{name:'Top Fragger',value:log.entries.length?`${log.entries.sort((a,b)=>b.kills-a.kills)[0].ign} (${log.entries.sort((a,b)=>b.kills-a.kills)[0].kills}K)`:'—',inline:true}]}]})});}catch(e){console.warn('Webhook error:',e);}
+  try{fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',embeds:[{title:`Match Results — ${log.matchId}`,color:6304479,fields:[{name:'Match',value:log.matchName||log.matchId,inline:true},{name:'Map',value:log.map||'—',inline:true},{name:'Winner',value:log.winnerTeam||log.winnerIGN||'—',inline:true},{name:'Top Fragger',value:log.entries.length?`${[...log.entries].sort((a,b)=>b.kills-a.kills)[0].ign} (${[...log.entries].sort((a,b)=>b.kills-a.kills)[0].kills}K)`:'—',inline:true}]}]})});}catch(e){console.warn('Webhook error:',e);}
 }
 
 function renderResultLogs(){
-  const logs=DB.get('rlogs5',[]);const el=document.getElementById('result-logs');if(!el)return;
-  if(!logs.length){el.innerHTML='<div class="text-dim" style="font-size:.82rem">No logs yet.</div>';return;}
-  el.innerHTML=logs.slice(0,12).map(log=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.65rem .9rem;margin-bottom:.5rem">
-    <div style="display:flex;justify-content:space-between;margin-bottom:.3rem;align-items:center">
-      <div style="display:flex;gap:.4rem;align-items:center">
-        <span class="text-accent font-mono fw6" style="font-size:.78rem">${log.matchId||'—'}</span>
-        ${log.map?`<span style="font-size:.72rem;color:var(--textD)">${MI[log.map]||''} ${log.map}</span>`:''}
-        ${log.winnerTeam||log.winnerIGN?`<span class="chip chip-accent" style="font-size:.6rem"><i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>${log.winnerTeam||log.winnerIGN}</span>`:''}
+  const logs=DB.get('rlogs5',[]);
+  const el=document.getElementById('result-logs');if(!el)return;
+  const cnt=document.getElementById('rl-count');if(cnt)cnt.textContent=logs.length;
+  if(!logs.length){el.innerHTML='<div class="text-dim" style="font-size:.78rem;padding:.5rem 0">No logs yet.</div>';return;}
+  const teams=DB.get('teams');
+  el.innerHTML=logs.slice(0,15).map((log,li)=>{
+    // Use matchSummary if available, otherwise fall back to entries
+    const summary=log.matchSummary||[];
+    const byTeam={};
+    log.entries.forEach(e=>{if(!byTeam[e.team||'—'])byTeam[e.team||'—']=[];byTeam[e.team||'—'].push(e);});
+    const sorted=Object.entries(byTeam).sort((a,b)=>{const pa=a[1][0]?.placement||99,pb=b[1][0]?.placement||99;return pa-pb;});
+    const topPts=summary.length?Math.max(...summary.map(s=>s.totalPts||0)):0;
+    return `<div class="rlog-card">
+      <div class="rlog-card-hdr" onclick="toggleLogBody(${li})">
+        <span class="font-mono text-accent fw6" style="font-size:.72rem">${log.matchId||'—'}</span>
+        ${log.map?`<span style="font-size:.68rem;color:var(--textD)">${MI[log.map]||''} ${log.map}</span>`:''}
+        ${log.winnerTeam||log.winnerIGN?`<span class="chip chip-amber" style="font-size:.58rem"><i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>${log.winnerTeam||log.winnerIGN}</span>`:''}
+        ${topPts?`<span class="chip chip-accent" style="font-size:.58rem;font-weight:700">${topPts}pts</span>`:''}
+        <span class="text-dim font-mono" style="font-size:.62rem;margin-left:auto">${log.ts}</span>
+        ${ADM?`<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openEditLog('${log.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delLog('${log.id}')"><i class="fa-solid fa-trash"></i></button>`:''}
+        <i class="fa-solid fa-chevron-down text-dim" style="font-size:.6rem;transition:transform .2s" id="rlchev-${li}"></i>
       </div>
-      <div style="display:flex;gap:.3rem;align-items:center">
-        <span class="text-dim font-mono" style="font-size:.68rem">${log.ts}</span>
-        ${ADM?`<button class="btn btn-ghost btn-xs" onclick="openEditLog('${log.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-xs" onclick="delLog('${log.id}')"><i class="fa-solid fa-trash"></i></button>`:''}
+      <div class="rlog-body" id="rlog-body-${li}">
+        ${sorted.map(([tn,members])=>{
+          const pl=members[0]?.placement;const plLabel=pl===1?'🥇':pl===2?'🥈':pl===3?'🥉':`#${pl}`;
+          const t=teams.find(x=>x.name===tn);const tcolor=t?.color||'var(--accent)';
+          const tkills=members.reduce((a,e)=>a+e.kills,0);
+          const sum=summary.find(s=>s.teamName===tn);
+          const pts=sum?sum.totalPts:(PLACEMENT_PTS[(pl||1)-1]||0)+tkills*KILL_PT;
+          return `<div class="rlog-team-block">
+            <div class="rlog-team-name" style="display:flex;align-items:center;gap:.4rem;color:${tcolor}">
+              <span>${plLabel} ${tn}</span>
+              <span style="color:var(--textD);font-size:.65rem;font-weight:400">${tkills}K</span>
+              <span style="margin-left:auto;color:var(--accentL);font-family:'DM Mono',monospace;font-weight:700;font-size:.72rem">${pts}pts</span>
+              ${sum?`<span style="color:var(--textD);font-size:.63rem">(${sum.placePts}+${sum.killPts})</span>`:''}
+            </div>
+            ${members.map(e=>`<div class="rlog-pline">
+              <span style="font-weight:600;color:${e.elim?'var(--textD)':'var(--text)'}">${e.ign}</span>
+              <span class="chip chip-red" style="font-size:.6rem">${e.kills}K</span>
+              ${e.elim?'<span style="font-size:.65rem;color:var(--red)">☠</span>':'<span style="font-size:.65rem;color:var(--green)">✓</span>'}
+              <span style="font-size:.62rem;color:var(--accentL);font-family:'DM Mono',monospace">${(e.kills||0)*KILL_PT}pts</span>
+            </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>
-    </div>
-    ${log.entries.map(e=>`<div style="display:flex;gap:.6rem;align-items:center;padding:.1rem 0"><span style="font-weight:600;font-size:.83rem">${e.ign}</span>${e.team?`<span class="text-dim" style="font-size:.72rem">${e.team}</span>`:''}<span class="chip chip-red" style="font-size:.65rem">${e.kills}K</span><span class="chip ${e.placement===1?'chip-accent':e.placement===2?'chip-amber':'chip-green'}" style="font-size:.62rem">${e.placement===1?'WIN':e.placement+'th'}</span></div>`).join('')}
-  </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function delLog(id){if(!ADM)return;let logs=DB.get('rlogs5',[]);logs=logs.filter(l=>l.id!==id);DB.set('rlogs5',logs);renderResultLogs();notify('Log deleted','','n-ok');}
+function toggleLogBody(li){
+  const b=document.getElementById('rlog-body-'+li);const c=document.getElementById('rlchev-'+li);
+  if(!b)return;b.classList.toggle('open');
+  if(c)c.style.transform=b.classList.contains('open')?'rotate(180deg)':'';
+}
+
+function delLog(id){if(!ADM)return;if(!confirm('Delete this log?'))return;let logs=DB.get('rlogs5',[]);logs=logs.filter(l=>l.id!==id);DB.set('rlogs5',logs);renderResultLogs();notify('Log deleted','','n-ok');}
 
 function openEditLog(id){
   const logs=DB.get('rlogs5',[]);const log=logs.find(l=>l.id===id);if(!log)return;
   const content=`<div class="modal-title">Edit Match Log</div>
   <div class="frow"><div class="fg"><label class="fl">Match ID</label><input class="fi" id="el-mid" value="${log.matchId}"/></div><div class="fg"><label class="fl">Map</label><input class="fi" id="el-map" value="${log.map||''}"/></div></div>
-  <div class="frow"><div class="fg"><label class="fl">Winner Team/Player</label><input class="fi" id="el-winner" value="${log.winnerTeam||log.winnerIGN||''}"/></div></div>
-  <div class="fg"><label class="fl">Entries (IGN:kills:placement, one per line)</label><textarea class="fta" id="el-entries" rows="6">${log.entries.map(e=>`${e.ign}:${e.kills}:${e.placement}`).join('\n')}</textarea></div>
-  <button class="btn btn-accent btn-fw" onclick="saveEditLog('${id}')"><i class="fa-solid fa-floppy-disk"></i> Save</button>`;
+  <div class="fg" style="margin-bottom:.8rem"><label class="fl">Winner Team/Player</label><input class="fi" id="el-winner" value="${log.winnerTeam||log.winnerIGN||''}"/></div>
+  <div class="fg"><label class="fl" style="margin-bottom:.35rem">Entries <span class="text-dim" style="font-weight:400">(IGN:kills:placement, one per line)</span></label><textarea class="fta" id="el-entries" rows="8">${log.entries.map(e=>`${e.ign}:${e.kills}:${e.placement}`).join('\n')}</textarea></div>
+  <button class="btn btn-accent btn-fw" style="margin-top:.8rem" onclick="saveEditLog('${id}')"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>`;
   document.getElementById('edit-log-content').innerHTML=content;
   openModal('edit-log-modal');
 }
@@ -2493,125 +2879,290 @@ function saveEditLog(id){
   log.map=document.getElementById('el-map')?.value||log.map;
   const w=document.getElementById('el-winner')?.value||'';log.winnerTeam=w;log.winnerIGN=w;
   const rawEntries=document.getElementById('el-entries')?.value||'';
-  log.entries=rawEntries.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split(':');return{ign:p[0]?.trim(),kills:parseInt(p[1])||0,placement:parseInt(p[2])||1};});
+  log.entries=rawEntries.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split(':');return{ign:p[0]?.trim(),kills:parseInt(p[1])||0,placement:parseInt(p[2])||1,team:log.entries.find(e=>e.ign===p[0]?.trim())?.team||''};});
   DB.set('rlogs5',logs);closeModal('edit-log-modal');renderResultLogs();notify('Log updated','','n-ok');
 }
 
+
 // ═══ PROFILE ═══
-function buildProfileHTML(p,edit=false){
-  const kd=(p.kills/(p.deaths||1)).toFixed(2);const xp=p.xp||0;const lvl=Math.floor(xp/500)+1;const xpPct=Math.round((xp%500)/500*100);
-  return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+// ═══ PROFILE HELPERS ═══
+function profileAvHTML(p,size=72){
+  const lvl=Math.floor((p.xp||0)/500)+1;
+  const av=p.ign?p.ign[0].toUpperCase():'?';
+  return `<div class="profile-av" style="width:${size}px;height:${size}px;font-size:${size*0.45}px">${av}<div class="lvl-tag">LV${lvl}</div></div>`;
+}
+function socialURL(val,type){
+  if(!val)return '#';
+  if(val.startsWith('http'))return val;
+  if(type==='yt')return 'https://youtube.com/@'+val.replace('@','');
+  if(type==='tt')return 'https://tiktok.com/@'+val.replace('@','');
+  if(type==='tw')return 'https://twitch.tv/'+val.replace('twitch.tv/','');
+  if(type==='xt')return 'https://x.com/'+val.replace('@','');
+  if(type==='ig')return 'https://instagram.com/'+val.replace('@','');
+  return '#';
+}
+function socialRowHTML(icon,iconColor,label,val,type){
+  if(!val)return '';
+  const url=socialURL(val,type);
+  return `<a class="social-row" href="${url}" target="_blank" rel="noopener">
+    <div class="social-icon" style="background:${iconColor}18;color:${iconColor}"><i class="${icon}"></i></div>
+    <div style="min-width:0"><div class="social-lbl">${label}</div><div class="social-val">${val}</div></div>
+    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;color:var(--textD);margin-left:auto;flex-shrink:0"></i>
+  </a>`;
+}
+function profileStatsHTML(p){
+  const kd=((p.kills||0)/(p.deaths||1)).toFixed(2);
+  const games=(p.gamesPlayed||0)||(p.kills||0)+(p.deaths||0);
+  const wr=games>0?Math.round((p.wins||0)/games*100):0;
+  const pts=p.points||0;
+  return `<div class="stat-grid">
+    <div class="stat-cell"><div class="stat-val" style="color:var(--accentL)">${pts}</div><div class="stat-lbl">Points</div></div>
+    <div class="stat-cell"><div class="stat-val text-red">${p.kills||0}</div><div class="stat-lbl">Kills</div></div>
+    <div class="stat-cell"><div class="stat-val text-accent">${kd}</div><div class="stat-lbl">K/D</div></div>
+    <div class="stat-cell"><div class="stat-val text-green">${p.wins||0}</div><div class="stat-lbl">Wins</div></div>
+    <div class="stat-cell"><div class="stat-val text-amber">${p.deaths||0}</div><div class="stat-lbl">Deaths</div></div>
+    <div class="stat-cell"><div class="stat-val" style="color:var(--blue)">${games}</div><div class="stat-lbl">Games</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem">
+    <div class="stat-cell"><div class="stat-val" style="color:var(--amber)">${wr}%</div><div class="stat-lbl">Win Rate</div></div>
+    <div class="stat-cell">
+      <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--accentL);font-weight:600;margin-bottom:.2rem">LV${Math.floor((p.xp||0)/500)+1}</div>
+      <div class="xp-track" style="height:4px"><div class="xp-fill" style="width:${Math.round(((p.xp||0)%500)/500*100)}%"></div></div>
+      <div class="stat-lbl" style="margin-top:.3rem">${(p.xp||0)%500}/500 XP</div>
+    </div>
+  </div>`;
+}
+function profileTeamHTML(p){
+  if(!p.team)return `<div style="color:var(--textD);font-size:.83rem;padding:.5rem 0">Not on a team yet.</div>`;
+  const teams=DB.get('teams');const t=teams.find(x=>x.name===p.team);
+  if(!t)return `<div style="color:var(--textM);font-size:.83rem">${p.team}</div>`;
+  const tc=t.color||'var(--accent)';
+  return `<div class="prf-team-card" onclick="showPage('teams')">
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <div style="width:42px;height:42px;border-radius:10px;background:${tc}20;border:2px solid ${tc}40;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:${tc}">${(t.tag||t.name[0]).substring(0,3)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.95rem">${t.name}</div>
+        <div style="font-size:.73rem;color:var(--textD)">${t.captain?'Captain: '+t.captain:''} · ${t.members?.length||0} players</div>
+      </div>
+      <i class="fa-solid fa-chevron-right" style="color:var(--textD);font-size:.7rem"></i>
+    </div>
+    ${t.wins||t.kills?`<div style="display:flex;gap:.5rem;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border)">
+      <span class="chip chip-neutral" style="font-size:.65rem"><i class="fa-solid fa-trophy" style="color:var(--amber)"></i> ${t.wins||0} Wins</span>
+      <span class="chip chip-neutral" style="font-size:.65rem"><i class="fa-solid fa-skull-crossbones"></i> ${t.kills||0} Kills</span>
+      ${t.points?`<span class="chip chip-accent" style="font-size:.65rem">⚡ ${t.points} pts</span>`:''}
+    </div>`:''}
+  </div>`;
+}
+function profileMatchHistoryHTML(p){
+  const logs=DB.get('rlogs5',[]);
+  const myLogs=logs.filter(l=>l.entries.some(e=>e.ign===p.ign)).slice(0,8);
+  if(!myLogs.length)return `<div style="color:var(--textD);font-size:.83rem;padding:.5rem 0">No match history yet.</div>`;
+  return myLogs.map(log=>{
+    const myEntries=log.entries.filter(e=>e.ign===p.ign);
+    const totalKills=myEntries.reduce((a,e)=>a+e.kills,0);
+    const pl=myEntries[0]?.placement;const plLabel=pl===1?'🥇 1st':pl===2?'🥈 2nd':pl===3?'🥉 3rd':pl?`#${pl}`:'—';
+    const plColor=pl===1?'var(--amber)':pl===2?'#94a3b8':pl===3?'#cd7f32':'var(--textD)';
+    const pts=(myEntries[0]?.placePts||0)+(totalKills*KILL_PT);
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem .7rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);margin-bottom:.4rem">
+      <div style="font-size:.82rem;font-weight:700;color:${plColor};width:50px;flex-shrink:0">${plLabel}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${log.matchName||log.matchId}</div>
+        <div style="font-size:.68rem;color:var(--textD)">${log.ts}</div>
+      </div>
+      <div style="display:flex;gap:.35rem;flex-shrink:0">
+        <span class="chip chip-red" style="font-size:.62rem">${totalKills}K</span>
+        ${pts?`<span class="chip chip-accent" style="font-size:.62rem">${pts}pts</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildProfileCardHTML(p,isOwn=false){
+  const rankColor=RC[p.rank]||'var(--textM)';
+  const hasSocials=p.discord||p.youtube||p.tiktok||p.twitch||p.twitter||p.instagram;
+  return `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
     <div class="profile-banner"></div>
-    <div style="padding:0 1.25rem 1.25rem">
+    <div style="padding:0 1.1rem 1rem">
       <div class="profile-av-wrap">
-        <div class="profile-av">${p.ign[0]}<div class="lvl-tag">LV${lvl}</div></div>
-        <div style="flex:1;padding-bottom:.2rem"><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.3px">${p.ign}</div><div class="text-muted" style="font-size:.83rem">${p.name}</div></div>
-        ${edit?`<button class="btn btn-ghost btn-sm" onclick="openModal('edit-player-modal');setupEditMe()"><i class="fa-solid fa-pen"></i> Edit</button>`:''}
-      </div>
-      <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0">
-        <span class="chip chip-accent"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>
-        ${p.tag?`<span class="chip chip-neutral">${p.tag}</span>`:''}
-        ${p.team?`<span class="chip chip-neutral"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
-        <span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>
-        <span class="chip chip-neutral">${p.role}</span>
-        ${p.discord?`<span class="chip chip-disc"><i class="fa-brands fa-discord"></i> ${p.discord}</span>`:''}
-      </div>
-      ${p.bio?`<div style="font-size:.87rem;color:var(--textM);line-height:1.6;margin:.6rem 0">${p.bio}</div>`:''}
-      <div class="stat-grid">
-        <div class="stat-cell"><div class="stat-val text-red">${p.kills}</div><div class="stat-lbl">Kills</div></div>
-        <div class="stat-cell"><div class="stat-val text-accent">${kd}</div><div class="stat-lbl">K/D</div></div>
-        <div class="stat-cell"><div class="stat-val text-green">${p.wins}</div><div class="stat-lbl">Wins</div></div>
-        <div class="stat-cell"><div class="stat-val text-amber">${p.deaths||0}</div><div class="stat-lbl">Deaths</div></div>
-        <div class="stat-cell"><div class="stat-val" style="color:var(--blue)">${(p.kills+p.deaths)||0}</div><div class="stat-lbl">Games</div></div>
-      </div>
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;margin:.7rem 0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-          <span class="text-accent font-mono fw6" style="font-size:.75rem">Level ${lvl}</span>
-          <span class="text-muted font-mono" style="font-size:.7rem">${xp} XP total</span>
+        ${profileAvHTML(p,72)}
+        <div style="flex:1;padding-bottom:.3rem;min-width:0">
+          <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ign}</div>
+          <div style="font-size:.8rem;color:var(--textM)">${p.name||''}</div>
         </div>
-        <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%"></div></div>
-        <div class="text-dim" style="font-size:.68rem;margin-top:.3rem">${xp%500} / 500 XP to next level</div>
+        <div style="display:flex;gap:.35rem;flex-shrink:0;padding-bottom:.3rem">
+          ${isOwn?`<button class="btn btn-ghost btn-sm" onclick="openModal('edit-player-modal');setupEditMe()"><i class="fa-solid fa-pen"></i> Edit</button><button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>`:''}
+        </div>
       </div>
-      ${edit?`
-      <div style="background:var(--bg3);border:1px solid rgba(88,101,242,.25);border-radius:var(--rS);padding:.8rem 1rem;margin:.7rem 0">
-        <div style="font-size:.75rem;font-weight:700;color:#7289da;margin-bottom:.6rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
-        <div style="display:flex;gap:.5rem">
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
+        ${p.uid?`<span class="chip chip-accent" style="font-size:.63rem"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>`:''}
+        ${p.team?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
+        ${p.rank?`<span class="chip" style="font-size:.63rem;color:${rankColor};background:${rankColor}15;border:1px solid ${rankColor}25">${p.rank}</span>`:''}
+        ${p.role?`<span class="chip chip-neutral" style="font-size:.63rem">${p.role}</span>`:''}
+        ${p.platform?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
+        ${p.region?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
+      </div>
+      ${p.bio?`<div style="font-size:.84rem;color:var(--textM);line-height:1.6;margin-bottom:.7rem;padding:.6rem .7rem;background:var(--bg3);border-radius:var(--rS);border-left:3px solid var(--accent)">${p.bio}</div>`:''}
+    </div>
+  </div>
+
+  <div style="margin-top:.7rem">
+    <div class="prf-tabs">
+      <button class="prf-tab active" onclick="prfTab(this,'prf-stats')"><i class="fa-solid fa-chart-bar"></i> Stats</button>
+      <button class="prf-tab" onclick="prfTab(this,'prf-team')"><i class="fa-solid fa-shield-halved"></i> Team</button>
+      <button class="prf-tab" onclick="prfTab(this,'prf-history')"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+      ${hasSocials?`<button class="prf-tab" onclick="prfTab(this,'prf-social')"><i class="fa-solid fa-link"></i> Links</button>`:''}
+      ${isOwn?`<button class="prf-tab" onclick="prfTab(this,'prf-settings')"><i class="fa-solid fa-gear"></i> Settings</button>`:''}
+    </div>
+
+    <div class="prf-panel active" id="prf-stats">
+      ${profileStatsHTML(p)}
+    </div>
+
+    <div class="prf-panel" id="prf-team">
+      ${profileTeamHTML(p)}
+      ${isOwn&&!p.team?`<div style="margin-top:.8rem;padding:.7rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS)">
+        <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.5rem"><i class="fa-solid fa-paper-plane"></i> Request to Join a Team</div>
+        <div style="display:flex;gap:.4rem">
+          <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.8rem"><option value="">— Select Team —</option></select>
+          <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Send</button>
+        </div>
+      </div>`:''}
+    </div>
+
+    <div class="prf-panel" id="prf-history">
+      ${profileMatchHistoryHTML(p)}
+    </div>
+
+    ${hasSocials?`<div class="prf-panel" id="prf-social">
+      ${socialRowHTML('fa-brands fa-discord','#7289da','Discord',p.discord,'dc')}
+      ${socialRowHTML('fa-brands fa-youtube','#ff0000','YouTube',p.youtube,'yt')}
+      ${socialRowHTML('fa-brands fa-tiktok','#e91e8c','TikTok',p.tiktok,'tt')}
+      ${socialRowHTML('fa-brands fa-twitch','#9147ff','Twitch',p.twitch,'tw')}
+      ${socialRowHTML('fa-brands fa-x-twitter','#e2e8f0','X / Twitter',p.twitter,'xt')}
+      ${socialRowHTML('fa-brands fa-instagram','#e1306c','Instagram',p.instagram,'ig')}
+    </div>`:''}
+
+    ${isOwn?`<div class="prf-panel" id="prf-settings">
+      <div style="padding:.7rem;background:var(--bg3);border:1px solid rgba(88,101,242,.2);border-radius:var(--rS);margin-bottom:.6rem">
+        <div style="font-size:.73rem;font-weight:700;color:#7289da;margin-bottom:.5rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
+        <div style="display:flex;gap:.4rem">
           <input class="fi" id="profile-webhook" style="flex:1;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="${p.webhook||''}"/>
           <button class="btn btn-ghost btn-sm" onclick="saveProfileWebhook()"><i class="fa-solid fa-floppy-disk"></i></button>
         </div>
-        <div style="font-size:.7rem;color:var(--textD);margin-top:.35rem">Paste a Discord webhook to receive match result notifications for your player.</div>
+        <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Receive personal match notifications via Discord</div>
       </div>
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;margin:.5rem 0">
-        <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.6rem"><i class="fa-solid fa-people-group"></i> Request to Join a Team</div>
-        <div style="display:flex;gap:.5rem">
-          <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.82rem"></select>
-          <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Request</button>
-        </div>
-        <div style="font-size:.7rem;color:var(--textD);margin-top:.3rem">Team managers and admins must approve your request.</div>
-      </div>
-      `:''}
-    </div>
+      <button class="btn btn-danger btn-fw" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+    </div>`:''}
   </div>`;
 }
+
+function prfTab(btn,panelId){
+  const wrap=btn.closest('.prf-tabs');if(!wrap)return;
+  wrap.querySelectorAll('.prf-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  // Find all sibling panels
+  let el=wrap.nextElementSibling;
+  while(el&&el.classList.contains('prf-panel')){el.classList.remove('active');el=el.nextElementSibling;}
+  const panel=document.getElementById(panelId);if(panel)panel.classList.add('active');
+}
+
 function openProfile(id){
   const p=DB.get('players').find(x=>x.id===id);if(!p)return;
-  const kd=(p.kills/(p.deaths||1)).toFixed(2);
-  const xp=p.xp||0;const lvl=Math.floor(xp/500)+1;const xpPct=Math.round((xp%500)/500*100);
-  const games=(p.kills||0)+(p.deaths||0);
-  const winRate=games>0?Math.round((p.wins||0)/Math.max(games,1)*100):0;
-  document.getElementById('profile-modal-content').innerHTML=`
-  <div style="background:var(--bg2);border-radius:var(--r);overflow:hidden">
-    <div class="profile-banner"></div>
-    <div style="padding:0 1.25rem 1.25rem">
-      <div class="profile-av-wrap">
-        <div class="profile-av">${p.ign[0]}<div class="lvl-tag">LV${lvl}</div></div>
-        <div style="flex:1;padding-bottom:.2rem">
-          <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">${p.ign}</div>
-          <div class="text-muted" style="font-size:.82rem">${p.name||''}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0">
-        ${p.uid?`<span class="chip chip-accent"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>`:''}
-        ${p.tag?`<span class="chip chip-neutral">${p.tag}</span>`:''}
-        ${p.team?`<span class="chip chip-neutral"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
-        ${p.rank?`<span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>`:''}
-        ${p.role?`<span class="chip chip-neutral">${p.role}</span>`:''}
-        ${p.platform?`<span class="chip chip-neutral"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
-        ${p.region?`<span class="chip chip-neutral"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
-        ${p.discord?`<span class="chip chip-disc"><i class="fa-brands fa-discord"></i> ${p.discord}</span>`:''}
-      </div>
-      ${p.bio?`<div style="font-size:.87rem;color:var(--textM);line-height:1.6;margin:.6rem 0;padding:.6rem .8rem;background:var(--bg3);border-radius:var(--rS)">${p.bio}</div>`:''}
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin:.8rem 0">
-        <div class="stat-cell"><div class="stat-val text-red">${p.kills||0}</div><div class="stat-lbl">Kills</div></div>
-        <div class="stat-cell"><div class="stat-val text-accent">${kd}</div><div class="stat-lbl">K/D</div></div>
-        <div class="stat-cell"><div class="stat-val text-green">${p.wins||0}</div><div class="stat-lbl">Wins</div></div>
-        <div class="stat-cell"><div class="stat-val text-amber">${p.deaths||0}</div><div class="stat-lbl">Deaths</div></div>
-        <div class="stat-cell"><div class="stat-val" style="color:var(--blue)">${games}</div><div class="stat-lbl">Games</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem">
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem;text-align:center">
-          <div class="font-mono" style="font-size:1rem;color:var(--amber)">${winRate}%</div>
-          <div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">Win Rate</div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem;text-align:center">
-          <div class="font-mono" style="font-size:1rem;color:var(--accentL)">${lvl}</div>
-          <div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">Level</div>
-        </div>
-      </div>
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem 1rem">
-        <div style="display:flex;justify-content:space-between;margin-bottom:.35rem">
-          <span class="text-accent font-mono fw6" style="font-size:.72rem">Level ${lvl}</span>
-          <span class="text-muted font-mono" style="font-size:.68rem">${xp} XP</span>
-        </div>
-        <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%"></div></div>
-        <div class="text-dim" style="font-size:.65rem;margin-top:.25rem">${xp%500} / 500 XP to next level</div>
-      </div>
-    </div>
-  </div>`;
+  document.getElementById('profile-modal-content').innerHTML=buildProfileCardHTML(p,false);
   openModal('profile-modal');
+  // Populate XP bar after render
+  setTimeout(()=>document.querySelectorAll('.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,50);}),50);
 }
-function setupEditMe(){if(!CU)return;const p=DB.get('players').find(x=>x.ign===CU.ign);if(!p)return;document.getElementById('ep-id').value=p.id;document.getElementById('ep-ign').value=p.ign;document.getElementById('ep-dc').value=p.discord||'';document.getElementById('ep-tm').value=p.team||'';document.getElementById('ep-rk').value=p.rank;document.getElementById('ep-bio').value=p.bio||'';}
-function saveEditPlayer(){const id=document.getElementById('ep-id').value;const pl=DB.get('players');const p=pl.find(x=>x.id===id);if(!p)return;p.ign=document.getElementById('ep-ign').value||p.ign;p.discord=document.getElementById('ep-dc').value;p.team=document.getElementById('ep-tm').value;p.rank=document.getElementById('ep-rk').value;p.bio=document.getElementById('ep-bio').value;DB.set('players',pl);closeModal('edit-player-modal');buildMyProfile();renderReg();renderAPlayers();notify('Saved!','','n-ok');}
+
+function setupEditMe(){
+  if(!CU)return;
+  const players=DB.get('players');
+  const p=players.find(x=>x.ign===CU.ign)||players.find(x=>x.ign===CU.name)||players.find(x=>x.name&&x.name.toLowerCase()===(CU.name||'').toLowerCase());
+  if(!p)return;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
+  set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
+  set('ep-xt',p.twitter||'');set('ep-ig',p.instagram||'');set('ep-wh',p.webhook||'');
+}
+
+function saveEditPlayer(){
+  const id=document.getElementById('ep-id')?.value;
+  const pl=DB.get('players');const p=pl.find(x=>x.id===id);if(!p)return;
+  const g=(eid)=>document.getElementById(eid)?.value?.trim()||'';
+  p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=g('ep-dc');
+  p.rank=g('ep-rk')||p.rank;p.role=g('ep-role')||p.role;p.bio=g('ep-bio');
+  p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
+  p.twitter=g('ep-xt');p.instagram=g('ep-ig');p.webhook=g('ep-wh');
+  DB.set('players',pl);
+  closeModal('edit-player-modal');
+  buildMyProfile();renderReg();renderAPlayers();
+  notify('Profile saved!','Your info has been updated','n-ok');
+}
+
+function buildProfileHTML(p,edit=false){
+  // Legacy wrapper used by older code paths
+  return buildProfileCardHTML(p,edit);
+}
+
+function buildMyProfile(){
+  if(!CU){
+    const el=document.getElementById('my-profile-content');
+    if(el)el.innerHTML=`<div style="text-align:center;padding:4rem;color:var(--textD)"><i class="fa-solid fa-lock" style="font-size:2rem;display:block;margin-bottom:.8rem;opacity:.4"></i><div style="font-weight:600;margin-bottom:.4rem">Not logged in</div><div style="font-size:.87rem">Login to view your profile</div></div>`;
+    return;
+  }
+  const el=document.getElementById('my-profile-content');if(!el)return;
+  const players=DB.get('players');
+  const p=players.find(x=>x.ign===CU.ign)
+    ||players.find(x=>x.ign===CU.name)
+    ||players.find(x=>x.discord&&x.discord.toLowerCase()===((CU.disc||CU.name||'').toLowerCase()))
+    ||players.find(x=>x.name&&x.name.toLowerCase()===(CU.name||'').toLowerCase());
+
+  if(!p){
+    el.innerHTML=`<div style="max-width:480px;margin:0 auto">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:2rem;text-align:center;margin-bottom:1rem">
+        <div style="width:68px;height:68px;background:linear-gradient(135deg,var(--accentD),var(--accent));border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.8rem;font-weight:700;color:#fff">${(CU.name||'?')[0].toUpperCase()}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:.25rem">${CU.name||'Guest'}</div>
+        <div style="font-size:.82rem;color:var(--textM);margin-bottom:1.2rem">${CU.disc||CU.role||'Not registered'}</div>
+        <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:var(--rS);padding:.75rem 1rem;margin-bottom:1rem;font-size:.84rem;color:var(--textM);text-align:left">
+          <i class="fa-solid fa-circle-info" style="color:var(--accentL);margin-right:.4rem"></i>
+          You're logged in but not yet registered as a tournament player.
+        </div>
+        <button class="btn btn-accent btn-fw" onclick="showPage('signup')"><i class="fa-solid fa-user-plus"></i> Register Now</button>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:.84rem;color:var(--textM)">Logged in as <strong style="color:var(--text)">${CU.name}</strong></div>
+        <button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=`<div style="max-width:680px;margin:0 auto">${buildProfileCardHTML(p,true)}</div>`;
+
+  // Populate team dropdown
+  setTimeout(()=>{
+    const sel=document.getElementById('profile-team-req');
+    if(sel){
+      const teams=DB.get('teams').filter(t=>t.approved&&!t.members?.includes(p.ign));
+      sel.innerHTML='<option value="">— Select Team —</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    }
+    // Animate XP bars
+    document.querySelectorAll('.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});
+  },0);
+}
+
+// Also update openEditAdmin to populate new fields
+function openEditAdmin(id){
+  const p=DB.get('players').find(x=>x.id===id);if(!p)return;
+  const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val||'';};
+  set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
+  set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
+  set('ep-xt',p.twitter||'');set('ep-ig',p.instagram||'');set('ep-wh',p.webhook||'');
+  openModal('edit-player-modal');
+}
 function updatePendingBadges(){
   const pending=DB.get('teams').filter(t=>!t.approved).length;
   const joinPending=DB.get('joinRequests',[]).filter(r=>r.status==='pending').length;
@@ -2755,25 +3306,60 @@ function buildMyProfile(){
 
 // ═══ LEADERBOARD ═══
 function renderLB(){
-  const pl=DB.get('players');const f=document.getElementById('lb-filter')?.value||'kills';
-  const s=[...pl].sort((a,b)=>{if(f==='kills')return b.kills-a.kills;if(f==='kd')return(b.kills/(b.deaths||1))-(a.kills/(a.deaths||1));if(f==='wins')return b.wins-a.wins;return(b.kills+b.deaths)-(a.kills+a.deaths);});
-  const pod=document.getElementById('podium');if(pod){const t3=s.slice(0,3);const co=['#94a3b8','#f59e0b','#cd7f32'];const podH=['120px','155px','100px'];const order=[t3[1],t3[0],t3[2]];
+  const pl=DB.get('players');const f=document.getElementById('lb-filter')?.value||'points';
+  const s=[...pl].sort((a,b)=>{
+    if(f==='points')return (b.points||0)-(a.points||0);
+    if(f==='kills')return (b.kills||0)-(a.kills||0);
+    if(f==='kd')return(b.kills/(b.deaths||1))-(a.kills/(a.deaths||1));
+    if(f==='wins')return (b.wins||0)-(a.wins||0);
+    return((b.gamesPlayed||b.kills+b.deaths)||0)-((a.gamesPlayed||a.kills+a.deaths)||0);
+  });
+  const pod=document.getElementById('podium');
+  if(pod){const t3=s.slice(0,3);const co=['#94a3b8','#f59e0b','#cd7f32'];const podH=['120px','155px','100px'];const order=[t3[1],t3[0],t3[2]];
     pod.innerHTML=order.filter(Boolean).map((p,vi)=>{const rk=vi===1?1:vi===0?2:3;const cl=co[rk-1];const em=rk===1?'<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>':rk===2?'<i class="fa-solid fa-medal" style="color:#94a3b8"></i>':'<i class="fa-solid fa-medal" style="color:#cd7f32"></i>';
-      return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${p.ign[0]}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${p.ign}</div><div class="cell-sub">${p.team||p.rank}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${p.kills}</div><div style="font-size:.58rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Kills</div></div></div>`;
+      const metric=f==='points'?`${p.points||0}pts`:f==='kd'?(p.kills/(p.deaths||1)).toFixed(1)+'K/D':f==='wins'?p.wins+'W':`${p.kills}K`;
+      return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${p.ign[0]}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${p.ign}</div><div class="cell-sub">${p.team||p.rank||''}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${metric}</div></div></div>`;
     }).join('');}
   const body=document.getElementById('lb-body');if(!body)return;
-  if(!s.length){body.innerHTML='<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--textD)">No players registered.</td></tr>';return;}
+  if(!s.length){body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:2.5rem;color:var(--textD)">No players registered.</td></tr>';return;}
   const ic=['<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>','<i class="fa-solid fa-medal" style="color:#94a3b8"></i>','<i class="fa-solid fa-medal" style="color:#cd7f32"></i>'];
-  body.innerHTML=s.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(2);const lvl=Math.floor((p.xp||0)/500)+1;const games=(p.kills+p.deaths)||0;
+  body.innerHTML=s.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(2);const lvl=Math.floor((p.xp||0)/500)+1;const games=(p.gamesPlayed||p.kills+p.deaths)||0;
     return `<tr class="rank-${i+1}"><td><span style="font-size:.9rem">${ic[i]||i+1}</span></td>
     <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.ign}</div><div class="cell-sub">${p.discord||''}</div></div></div></td>
     <td class="text-muted" style="font-size:.83rem">${p.team||'—'}</td>
-    <td><span class="chip chip-red">${p.kills}</span></td><td class="text-dim">${p.deaths}</td>
+    <td><span class="chip chip-accent" style="font-weight:700">${p.points||0}</span></td>
+    <td><span class="chip chip-red">${p.kills||0}</span></td><td class="text-dim">${p.deaths||0}</td>
     <td><span class="chip ${parseFloat(kd)>=3?'chip-accent':parseFloat(kd)>=1.5?'chip-green':'chip-neutral'}">${kd}</span></td>
-    <td><span class="font-mono text-green fw6">${p.wins}</span></td>
+    <td><span class="font-mono text-green fw6">${p.wins||0}</span></td>
     <td class="text-dim font-mono" style="font-size:.75rem">${games}</td>
     <td><span class="chip chip-neutral" style="font-size:.65rem">Lv${lvl}</span></td>
     <td><button class="btn btn-ghost btn-xs" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button></td></tr>`;
+  }).join('');
+  renderTeamStandings();
+}
+
+function renderTeamStandings(){
+  const body=document.getElementById('ts-body');if(!body)return;
+  const teams=DB.get('teams').filter(t=>t.approved);
+  if(!teams.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--textD)">No teams registered.</td></tr>';return;}
+  const sorted=[...teams].sort((a,b)=>(b.points||0)-(a.points||0));
+  const ic=['🥇','🥈','🥉'];
+  body.innerHTML=sorted.map((t,i)=>{
+    const matches=t.matchesPlayed||0;
+    const avg=matches>0?((t.points||0)/matches).toFixed(1):'—';
+    const tcolor=t.color||'var(--accent)';
+    return `<tr>
+      <td><span style="font-size:.88rem">${ic[i]||i+1}</span></td>
+      <td><div style="display:flex;align-items:center;gap:.5rem">
+        <div style="width:10px;height:10px;border-radius:50%;background:${tcolor};flex-shrink:0"></div>
+        <div><div style="font-weight:700;font-size:.88rem">${t.name}</div><div style="font-size:.68rem;color:var(--textD)">${t.tag||''}</div></div>
+      </div></td>
+      <td><span class="chip chip-accent" style="font-weight:700;font-size:.82rem">${t.points||0}</span></td>
+      <td class="text-muted font-mono" style="font-size:.82rem">${matches}</td>
+      <td><span class="font-mono text-green fw6">${t.wins||0}</span> <span style="font-size:.65rem;color:var(--textD)">🍗</span></td>
+      <td><span class="chip chip-red" style="font-size:.75rem">${t.kills||0}K</span></td>
+      <td class="font-mono text-amber" style="font-size:.82rem">${avg}</td>
+    </tr>`;
   }).join('');
 }
 
@@ -2905,7 +3491,7 @@ function submitSug(){const ign=v('sug-ign'),cat=v('sug-cat'),text=v('sug-text');
 // ═══ ADMIN RENDERS ═══
 function renderAPlayers(){const pl=DB.get('players');const body=document.getElementById('ap-body');if(!body)return;if(!pl.length){body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players.</td></tr>';return;}
   body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span></td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="openEditAdmin('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-xs" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
-function openEditAdmin(id){const p=DB.get('players').find(x=>x.id===id);if(!p)return;document.getElementById('ep-id').value=p.id;document.getElementById('ep-ign').value=p.ign;document.getElementById('ep-dc').value=p.discord||'';document.getElementById('ep-tm').value=p.team||'';document.getElementById('ep-rk').value=p.rank;document.getElementById('ep-bio').value=p.bio||'';openModal('edit-player-modal');}
+
 function renderATeams(){
   const teams=DB.get('teams');const pending=teams.filter(t=>!t.approved);const approved=teams.filter(t=>t.approved);
   const body=document.getElementById('at-body');if(!body)return;
@@ -3063,7 +3649,7 @@ function renderAMatches(){const ms=DB.get('matches');const body=document.getElem
 function delMatch(id){if(!ADM)return;let ms=DB.get('matches');ms=ms.filter(x=>x.id!==id);DB.set('matches',ms);renderAMatches();renderMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify('Match removed','','n-ok');}
 function renderAPolls(){const polls=DB.get('polls');const el=document.getElementById('apo-list');if(!el)return;el.innerHTML=polls.map(p=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><div><div style="font-weight:600;font-size:.87rem">${p.q}</div><div class="text-dim" style="font-size:.72rem">${p.votes.reduce((a,b)=>a+b,0)} votes · ${p.active?'Open':'Closed'}</div></div><div style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="closePoll('${p.id}')"><i class="fa-solid fa-lock"></i></button><button class="btn btn-danger btn-xs" onclick="delPoll('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')||'<div class="text-dim" style="font-size:.82rem">No polls.</div>';}
 function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),adminPw:v('cfg-pw'),disc:v('cfg-wh')||v('cfg-dc'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};DB.set('cfg',cfg);notify('Settings saved!','','n-ok');if(ADM)renderAdminOverview();}
-function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;});DB.set('players',pl);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();notify(`${what} cleared!`,'','n-ok');}
+function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();notify(`${what} cleared!`,'','n-ok');}
 function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
@@ -3108,7 +3694,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();
     if(ADM){updatePendingBadges();}
   }
-  renderBkt(); buildResultRows();
+  renderBkt();
 });
 </script>
 </body>
