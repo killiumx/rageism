@@ -332,7 +332,7 @@ tr:last-child td{border-bottom:none}
 .profile-av-wrap{margin-top:-30px;padding:0 1.25rem;display:flex;align-items:flex-end;gap:1rem;margin-bottom:.75rem}
 .profile-av{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,var(--accentD),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;border:3px solid var(--bg2);flex-shrink:0;font-family:'DM Mono',monospace;position:relative}
 .lvl-tag{position:absolute;bottom:-6px;right:-6px;background:var(--accent);color:#fff;font-size:.55rem;font-weight:700;padding:.1rem .3rem;border-radius:4px;border:2px solid var(--bg2);font-family:'DM Mono',monospace}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.8rem 0}
+.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin:.8rem 0}
 .stat-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem;text-align:center}
 .stat-val{font-family:'DM Mono',monospace;font-size:1.35rem;font-weight:500;line-height:1}
 .stat-lbl{font-size:.65rem;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem}
@@ -653,8 +653,10 @@ tr:last-child td{border-bottom:none}
         <div class="sb-avatar" id="sb-av">?</div>
         <div><div class="sb-uname" id="sb-uname">Guest</div><div class="sb-urole" id="sb-urole">Viewer</div></div>
         <div class="sb-admin-badge" id="admin-badge" style="display:none">HOST</div>
-        <button onclick="event.stopPropagation();doLogout()" style="background:none;border:none;color:var(--textD);cursor:pointer;padding:.2rem;margin-left:4px;font-size:.8rem" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
+      <button onclick="doLogout()" style="width:100%;margin-top:.4rem;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:var(--red);border-radius:var(--rS);padding:.45rem;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.12)'" onmouseout="this.style.background='rgba(239,68,68,.06)'">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </button>
     </div>
   </div>
 
@@ -2212,7 +2214,22 @@ function finishLogin(){
   if(ADM)updatePendingBadges();
 }
 function doLogout(){CU=null;ADM=false;DB.set('cu5',null);DB.set('adm5',false);location.reload();}
-function updateSidebar(){if(!CU)return;document.getElementById('sb-uname').textContent=CU.disc?`${CU.name}${CU.disc}`:CU.name;document.getElementById('sb-urole').textContent=ADM?'Host / Admin':(CU.role||'Player');document.getElementById('sb-av').textContent=CU.avatar||'?';}
+function updateSidebar(){
+  if(!CU)return;
+  const uname=document.getElementById('sb-uname');
+  const urole=document.getElementById('sb-urole');
+  const av=document.getElementById('sb-av');
+  if(uname)uname.textContent=CU.name||'Player';
+  if(urole)urole.textContent=ADM?'Host / Admin':(CU.role||'Player');
+  if(av){
+    if(CU.discAvatar){
+      av.innerHTML=`<img src="${CU.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:7px" onerror="this.parentElement.textContent='${(CU.name||'?')[0].toUpperCase()}'"/>`;
+      av.style.background='transparent';av.style.padding='0';av.style.overflow='hidden';
+    } else {
+      av.textContent=(CU.name||'?')[0].toUpperCase();
+    }
+  }
+}
 
 // ═══ DATALISTS ═══
 function refreshDLs(){
@@ -2536,7 +2553,63 @@ function buildProfileHTML(p,edit=false){
     </div>
   </div>`;
 }
-function openProfile(id){const p=DB.get('players').find(x=>x.id===id);if(!p)return;document.getElementById('profile-modal-content').innerHTML=buildProfileHTML(p);openModal('profile-modal');}
+function openProfile(id){
+  const p=DB.get('players').find(x=>x.id===id);if(!p)return;
+  const kd=(p.kills/(p.deaths||1)).toFixed(2);
+  const xp=p.xp||0;const lvl=Math.floor(xp/500)+1;const xpPct=Math.round((xp%500)/500*100);
+  const games=(p.kills||0)+(p.deaths||0);
+  const winRate=games>0?Math.round((p.wins||0)/Math.max(games,1)*100):0;
+  document.getElementById('profile-modal-content').innerHTML=`
+  <div style="background:var(--bg2);border-radius:var(--r);overflow:hidden">
+    <div class="profile-banner"></div>
+    <div style="padding:0 1.25rem 1.25rem">
+      <div class="profile-av-wrap">
+        <div class="profile-av">${p.ign[0]}<div class="lvl-tag">LV${lvl}</div></div>
+        <div style="flex:1;padding-bottom:.2rem">
+          <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">${p.ign}</div>
+          <div class="text-muted" style="font-size:.82rem">${p.name||''}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0">
+        ${p.uid?`<span class="chip chip-accent"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>`:''}
+        ${p.tag?`<span class="chip chip-neutral">${p.tag}</span>`:''}
+        ${p.team?`<span class="chip chip-neutral"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
+        ${p.rank?`<span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>`:''}
+        ${p.role?`<span class="chip chip-neutral">${p.role}</span>`:''}
+        ${p.platform?`<span class="chip chip-neutral"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
+        ${p.region?`<span class="chip chip-neutral"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
+        ${p.discord?`<span class="chip chip-disc"><i class="fa-brands fa-discord"></i> ${p.discord}</span>`:''}
+      </div>
+      ${p.bio?`<div style="font-size:.87rem;color:var(--textM);line-height:1.6;margin:.6rem 0;padding:.6rem .8rem;background:var(--bg3);border-radius:var(--rS)">${p.bio}</div>`:''}
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin:.8rem 0">
+        <div class="stat-cell"><div class="stat-val text-red">${p.kills||0}</div><div class="stat-lbl">Kills</div></div>
+        <div class="stat-cell"><div class="stat-val text-accent">${kd}</div><div class="stat-lbl">K/D</div></div>
+        <div class="stat-cell"><div class="stat-val text-green">${p.wins||0}</div><div class="stat-lbl">Wins</div></div>
+        <div class="stat-cell"><div class="stat-val text-amber">${p.deaths||0}</div><div class="stat-lbl">Deaths</div></div>
+        <div class="stat-cell"><div class="stat-val" style="color:var(--blue)">${games}</div><div class="stat-lbl">Games</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem;text-align:center">
+          <div class="font-mono" style="font-size:1rem;color:var(--amber)">${winRate}%</div>
+          <div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">Win Rate</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem;text-align:center">
+          <div class="font-mono" style="font-size:1rem;color:var(--accentL)">${lvl}</div>
+          <div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">Level</div>
+        </div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem 1rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.35rem">
+          <span class="text-accent font-mono fw6" style="font-size:.72rem">Level ${lvl}</span>
+          <span class="text-muted font-mono" style="font-size:.68rem">${xp} XP</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%"></div></div>
+        <div class="text-dim" style="font-size:.65rem;margin-top:.25rem">${xp%500} / 500 XP to next level</div>
+      </div>
+    </div>
+  </div>`;
+  openModal('profile-modal');
+}
 function setupEditMe(){if(!CU)return;const p=DB.get('players').find(x=>x.ign===CU.ign);if(!p)return;document.getElementById('ep-id').value=p.id;document.getElementById('ep-ign').value=p.ign;document.getElementById('ep-dc').value=p.discord||'';document.getElementById('ep-tm').value=p.team||'';document.getElementById('ep-rk').value=p.rank;document.getElementById('ep-bio').value=p.bio||'';}
 function saveEditPlayer(){const id=document.getElementById('ep-id').value;const pl=DB.get('players');const p=pl.find(x=>x.id===id);if(!p)return;p.ign=document.getElementById('ep-ign').value||p.ign;p.discord=document.getElementById('ep-dc').value;p.team=document.getElementById('ep-tm').value;p.rank=document.getElementById('ep-rk').value;p.bio=document.getElementById('ep-bio').value;DB.set('players',pl);closeModal('edit-player-modal');buildMyProfile();renderReg();renderAPlayers();notify('Saved!','','n-ok');}
 function updatePendingBadges(){
@@ -2547,12 +2620,137 @@ function updatePendingBadges(){
   const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending;
 }
 
-function buildMyProfile(){if(!CU)return;const p=DB.get('players').find(x=>x.ign===CU.ign);const el=document.getElementById('my-profile-content');if(!el)return;
-  if(!p){el.innerHTML=`<div style="text-align:center;padding:3rem"><div style="width:60px;height:60px;background:rgba(99,102,241,.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;font-size:1.3rem;color:var(--accentL)"><i class="fa-solid fa-crosshairs"></i></div><div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:.4rem">Not Registered</div><div class="text-muted" style="margin-bottom:1.2rem">IGN <strong class="text-accent">${CU.ign}</strong> is not in the tournament yet.</div><button class="btn btn-accent" onclick="showPage('signup')"><i class="fa-solid fa-user-plus"></i> Register Now</button></div>`;return;}
-  el.innerHTML=buildProfileHTML(p,true);
-  // Populate team join dropdown
-  const sel=document.getElementById('profile-team-req');
-  if(sel){const teams=DB.get('teams').filter(t=>t.approved&&!t.members.includes(p.ign));sel.innerHTML='<option value="">— Select Team —</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');}
+function buildMyProfile(){
+  if(!CU){
+    const el=document.getElementById('my-profile-content');
+    if(el)el.innerHTML=`<div style="text-align:center;padding:4rem;color:var(--textD)"><i class="fa-solid fa-lock" style="font-size:2rem;display:block;margin-bottom:.8rem;opacity:.4"></i><div style="font-weight:600;margin-bottom:.4rem">Not logged in</div><div style="font-size:.87rem">Login to see your profile</div></div>`;
+    return;
+  }
+  const el=document.getElementById('my-profile-content');if(!el)return;
+  // Try multiple ways to find the player
+  const players=DB.get('players');
+  let p=players.find(x=>x.ign===CU.ign)
+    ||players.find(x=>x.ign===CU.name)
+    ||players.find(x=>x.discord&&x.discord.toLowerCase()===((CU.disc||CU.name||'').toLowerCase()))
+    ||players.find(x=>x.name&&x.name.toLowerCase()===(CU.name||'').toLowerCase());
+
+  if(!p){
+    el.innerHTML=`
+    <div style="max-width:500px;margin:0 auto">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:2rem;text-align:center;margin-bottom:1rem">
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--accentD),var(--accent));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;font-size:1.6rem;font-weight:700;color:#fff;font-family:'DM Mono',monospace">${(CU.name||'?')[0].toUpperCase()}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:.25rem">${CU.name||'Guest'}</div>
+        <div style="font-size:.82rem;color:var(--textM);margin-bottom:1.2rem">${CU.disc||CU.role||'Player'}</div>
+        <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:var(--rS);padding:.75rem 1rem;margin-bottom:1rem;font-size:.84rem;color:var(--textM)">
+          <i class="fa-solid fa-circle-info" style="color:var(--accentL);margin-right:.4rem"></i>
+          You're logged in but not yet registered as a tournament player. Register below to get a full player profile with stats.
+        </div>
+        <button class="btn btn-accent btn-fw" onclick="showPage('signup')"><i class="fa-solid fa-user-plus"></i> Register as a Player</button>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:.84rem;color:var(--textM)">Logged in as <strong style="color:var(--text)">${CU.name}</strong></div>
+        <button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const kd=(p.kills/(p.deaths||1)).toFixed(2);
+  const xp=p.xp||0;
+  const lvl=Math.floor(xp/500)+1;
+  const xpPct=Math.round((xp%500)/500*100);
+  const games=(p.kills||0)+(p.deaths||0);
+  const winRate=games>0?Math.round((p.wins||0)/Math.max(games,1)*100):0;
+
+  el.innerHTML=`
+  <div style="max-width:700px;margin:0 auto">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem">
+      <div class="profile-banner"></div>
+      <div style="padding:0 1.25rem 1.25rem">
+        <div class="profile-av-wrap">
+          <div class="profile-av" style="${p.discAvatar?'padding:0;overflow:hidden':''}">${p.discAvatar?`<img src="${p.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:11px" onerror="this.parentElement.textContent='${p.ign[0]}'"/>`:p.ign[0]}<div class="lvl-tag">LV${lvl}</div></div>
+          <div style="flex:1;padding-bottom:.2rem">
+            <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.3px">${p.ign}</div>
+            <div class="text-muted" style="font-size:.83rem">${p.name||''}</div>
+          </div>
+          <div style="display:flex;gap:.4rem">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('edit-player-modal');setupEditMe()"><i class="fa-solid fa-pen"></i> Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0">
+          ${p.uid?`<span class="chip chip-accent"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>`:''}
+          ${p.tag?`<span class="chip chip-neutral">${p.tag}</span>`:''}
+          ${p.team?`<span class="chip chip-neutral"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
+          ${p.rank?`<span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>`:''}
+          ${p.role?`<span class="chip chip-neutral">${p.role}</span>`:''}
+          ${p.platform?`<span class="chip chip-neutral"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
+          ${p.region?`<span class="chip chip-neutral"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
+          ${p.discord?`<span class="chip chip-disc"><i class="fa-brands fa-discord"></i> ${p.discord}</span>`:''}
+        </div>
+
+        ${p.bio?`<div style="font-size:.87rem;color:var(--textM);line-height:1.6;margin:.6rem 0;padding:.6rem .8rem;background:var(--bg3);border-radius:var(--rS)">${p.bio}</div>`:''}
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin:.8rem 0">
+          <div class="stat-cell"><div class="stat-val text-red">${p.kills||0}</div><div class="stat-lbl">Kills</div></div>
+          <div class="stat-cell"><div class="stat-val text-accent">${kd}</div><div class="stat-lbl">K/D</div></div>
+          <div class="stat-cell"><div class="stat-val text-green">${p.wins||0}</div><div class="stat-lbl">Wins</div></div>
+          <div class="stat-cell"><div class="stat-val text-amber">${p.deaths||0}</div><div class="stat-lbl">Deaths</div></div>
+          <div class="stat-cell"><div class="stat-val" style="color:var(--blue)">${games}</div><div class="stat-lbl">Games</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.8rem">
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.65rem .9rem;text-align:center">
+            <div class="font-mono" style="font-size:1.1rem;color:var(--amber)">${winRate}%</div>
+            <div style="font-size:.65rem;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.15rem">Win Rate</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.65rem .9rem;text-align:center">
+            <div class="font-mono" style="font-size:1.1rem;color:var(--accentL)">${lvl}</div>
+            <div style="font-size:.65rem;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.15rem">Level</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;margin-bottom:.8rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+            <span class="text-accent font-mono fw6" style="font-size:.75rem">Level ${lvl}</span>
+            <span class="text-muted font-mono" style="font-size:.7rem">${xp} XP total</span>
+          </div>
+          <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%"></div></div>
+          <div class="text-dim" style="font-size:.68rem;margin-top:.3rem">${xp%500} / 500 XP to next level</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);padding:1rem;margin-bottom:1rem">
+      <div style="font-size:.75rem;font-weight:700;color:#7289da;margin-bottom:.6rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
+      <div style="display:flex;gap:.5rem">
+        <input class="fi" id="profile-webhook" style="flex:1;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="${p.webhook||''}"/>
+        <button class="btn btn-ghost btn-sm" onclick="saveProfileWebhook()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+      </div>
+      <div style="font-size:.7rem;color:var(--textD);margin-top:.35rem">Paste a Discord webhook to receive personal match notifications.</div>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.6rem"><i class="fa-solid fa-people-group"></i> Request to Join a Team</div>
+      <div style="display:flex;gap:.5rem">
+        <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.82rem">
+          <option value="">— Select Team —</option>
+        </select>
+        <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Request</button>
+      </div>
+      <div style="font-size:.7rem;color:var(--textD);margin-top:.3rem">Team managers and admins must approve your request.</div>
+    </div>
+  </div>`;
+
+  // Populate team join dropdown after render
+  setTimeout(()=>{
+    const sel=document.getElementById('profile-team-req');
+    if(sel){
+      const teams=DB.get('teams').filter(t=>t.approved&&!t.members.includes(p.ign));
+      sel.innerHTML='<option value="">— Select Team —</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    }
+  },0);
 }
 
 // ═══ LEADERBOARD ═══
