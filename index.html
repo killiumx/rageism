@@ -6,6 +6,7 @@
 <title>RAGEISM · PUBG Esports</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root {
   --bg:        #0d1117;
@@ -436,6 +437,17 @@ tr:last-child td{border-bottom:none}
 .mab-card.green{background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border-color:rgba(16,185,129,.2)}
 .mab-card.red{background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.02));border-color:rgba(239,68,68,.2)}
 @media(max-width:700px){.kill-bar-name{width:90px}.map-hero-name{font-size:1.2rem}}
+/* ── SUPABASE STATUS ─────────────────── */
+#sb-status-bar{position:fixed;bottom:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(62,207,142,.15),rgba(62,207,142,.08));border-top:1px solid rgba(62,207,142,.25);padding:.45rem 1rem;display:none;align-items:center;gap:.7rem;font-size:.75rem;color:#3ecf8e;font-weight:600}
+#sb-status-bar.show{display:flex}
+#sb-status-bar.sb-err{background:linear-gradient(90deg,rgba(239,68,68,.12),rgba(239,68,68,.06));border-color:rgba(239,68,68,.25);color:var(--red)}
+#sb-status-bar.sb-loading{background:linear-gradient(90deg,rgba(99,102,241,.12),rgba(99,102,241,.06));border-color:rgba(99,102,241,.25);color:var(--accentL)}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.5s ease infinite}
+#sb-init-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem}
+#sb-init-overlay.hide{animation:.4s ease forwards fade-out}
+@keyframes fade-out{to{opacity:0;pointer-events:none}}
+.sb-spinner{width:36px;height:36px;border:3px solid rgba(99,102,241,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 /* ── UTILS ─────────────────────────── */
 .text-green{color:var(--green)}.text-red{color:var(--red)}.text-amber{color:var(--amber)}.text-accent{color:var(--accentL)}.text-muted{color:var(--textM)}.text-dim{color:var(--textD)}
 .font-mono{font-family:'DM Mono',monospace}
@@ -461,6 +473,20 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 <div id="notifs"></div>
+
+<!-- Supabase init overlay -->
+<div id="sb-init-overlay">
+  <div class="sb-spinner"></div>
+  <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text)">RAGEISM</div>
+  <div style="font-size:.8rem;color:var(--textM)" id="sb-init-msg">Connecting to server...</div>
+</div>
+
+<!-- Supabase live status bar -->
+<div id="sb-status-bar">
+  <div class="sb-dot"></div>
+  <span id="sb-status-txt">Supabase connected</span>
+  <span style="margin-left:auto;opacity:.5;font-weight:400" id="sb-last-sync"></span>
+</div>
 
 <!-- ═══════ LOGIN ═══════ -->
 <div id="ls">
@@ -1165,7 +1191,103 @@ const { data: players } = await supabase
 
 <script>
 // ═══ DB ═══
-const DB={get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem('rge5_'+k))??d}catch{return d}},set:(k,v)=>localStorage.setItem('rge5_'+k,JSON.stringify(v))};
+// ═══ SUPABASE ═══
+const SB_URL='https://coeqrhxdomwfsafesaku.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZXFyaHhkb213ZnNhZmVzYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDE2NTIsImV4cCI6MjA4Nzk3NzY1Mn0.jY_6oocyPyAmUH4x_lDCuc6rJMU1OOSZ5EfZZCFfcAE';
+const SB_TABLE='rge_store';
+const SB_SYNC=['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg'];
+let SB=null,SB_OK=false,SB_WRITES=0;
+
+function sbStatus(type,msg){
+  const bar=document.getElementById('sb-status-bar');
+  const txt=document.getElementById('sb-status-txt');
+  if(!bar||!txt)return;
+  bar.className='sb-status-bar show '+(type==='err'?'sb-err':type==='loading'?'sb-loading':'');
+  bar.classList.add('show');
+  txt.textContent=msg;
+  if(type==='ok')setTimeout(()=>{bar.style.opacity='.5';},4000);
+}
+function sbInitMsg(msg){const e=document.getElementById('sb-init-msg');if(e)e.textContent=msg;}
+function sbHideOverlay(){
+  const o=document.getElementById('sb-init-overlay');
+  if(o){o.classList.add('hide');setTimeout(()=>o.remove(),450);}
+}
+
+async function sbInit(){
+  try{
+    if(!window.supabase){sbStatus('err','Supabase library not loaded');return false;}
+    SB=window.supabase.createClient(SB_URL,SB_KEY);
+    // Quick ping test
+    const{error}=await SB.from(SB_TABLE).select('key').limit(1);
+    if(error){
+      if(error.code==='42P01'){
+        // Table doesn't exist yet — show helpful message
+        sbStatus('err','Run SQL setup first — see Discord Setup page');
+        console.warn('[RAGEISM] rge_store table missing. Run the SQL schema first.');
+      } else {
+        sbStatus('err','Supabase: '+error.message);
+      }
+      return false;
+    }
+    SB_OK=true;
+    sbStatus('ok','Supabase connected · '+SB_URL.replace('https://','').split('.')[0]);
+    return true;
+  }catch(e){
+    sbStatus('err','Supabase unreachable');
+    console.warn('[RAGEISM] Supabase init error:',e);
+    return false;
+  }
+}
+
+async function sbLoad(){
+  if(!SB_OK)return false;
+  try{
+    sbInitMsg('Loading tournament data...');
+    const{data,error}=await SB.from(SB_TABLE).select('key,value');
+    if(error)throw error;
+    if(!data||!data.length)return false;
+    let loaded=0;
+    data.forEach(row=>{
+      if(SB_SYNC.includes(row.key)){
+        localStorage.setItem('rge5_'+row.key,JSON.stringify(row.value));
+        loaded++;
+      }
+    });
+    // If players exist in Supabase, mark as seeded so seed() won't overwrite
+    const plRow=data.find(r=>r.key==='players');
+    if(plRow&&plRow.value&&Array.isArray(plRow.value)&&plRow.value.length>0){
+      localStorage.setItem('rge5_s5','true');
+    }
+    sbInitMsg(`Loaded ${loaded} datasets from Supabase`);
+    return loaded>0;
+  }catch(e){
+    console.warn('[RAGEISM] Supabase load failed:',e);
+    return false;
+  }
+}
+
+async function sbWrite(key,val){
+  if(!SB_OK||!SB_SYNC.includes(key))return;
+  try{
+    await SB.from(SB_TABLE).upsert({key,value:val,updated_at:new Date().toISOString()},{onConflict:'key'});
+    SB_WRITES++;
+    const el=document.getElementById('sb-last-sync');
+    if(el)el.textContent='Last sync: '+new Date().toLocaleTimeString();
+    sbStatus('ok','Saved to Supabase · '+key);
+  }catch(e){
+    sbStatus('err','Sync failed for '+key+': '+e.message);
+    console.warn('[RAGEISM] Supabase write error:',key,e);
+  }
+}
+
+// ═══ DB (localStorage + Supabase mirror) ═══
+const DB={
+  get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem('rge5_'+k))??d}catch{return d}},
+  set:(k,v)=>{
+    localStorage.setItem('rge5_'+k,JSON.stringify(v));
+    sbWrite(k,v); // fire-and-forget async mirror
+  }
+};
 const v=id=>document.getElementById(id)?.value?.trim()||'';
 let CU=null,ADM=false;
 const RC={Bronze:'#cd7f32',Silver:'#94a3b8',Gold:'#f59e0b',Platinum:'#06b6d4',Diamond:'#3b82f6',Master:'#a855f7',Conqueror:'#ef4444'};
@@ -2206,7 +2328,20 @@ function openModal(id){document.getElementById(id)?.classList.add('open');}
 function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ═══ INIT ═══
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded',async()=>{
+  // ── 1. Init Supabase ──
+  sbInitMsg('Connecting to Supabase...');
+  const sbReady=await sbInit();
+  if(sbReady){
+    // ── 2. Load cloud data (hydrates localStorage) ──
+    await sbLoad();
+  } else {
+    sbInitMsg('Server unavailable — using local data');
+    await new Promise(r=>setTimeout(r,800));
+  }
+
+  // ── 3. Hide overlay and boot app ──
+  sbHideOverlay();
   seed();attachRoleListener();startCountdown();
   setTimeout(()=>{document.querySelectorAll('.progress-fill,.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});},400);
   document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
