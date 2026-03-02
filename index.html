@@ -6,7 +6,6 @@
 <title>RAGEISM · PUBG Esports</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root {
   --bg:        #0d1117;
@@ -1191,92 +1190,118 @@ const { data: players } = await supabase
 
 <script>
 // ═══ DB ═══
-// ═══ SUPABASE ═══
-const SB_URL='https://coeqrhxdomwfsafesaku.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZXFyaHhkb213ZnNhZmVzYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDE2NTIsImV4cCI6MjA4Nzk3NzY1Mn0.jY_6oocyPyAmUH4x_lDCuc6rJMU1OOSZ5EfZZCFfcAE';
-const SB_TABLE='rge_store';
-const SB_SYNC=['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg'];
-let SB=null,SB_OK=false,SB_WRITES=0;
+// ═══ SUPABASE — pure fetch, no SDK (avoids DataCloneError) ═══
+const SB_URL  = 'https://coeqrhxdomwfsafesaku.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZXFyaHhkb213ZnNhZmVzYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDE2NTIsImV4cCI6MjA4Nzk3NzY1Mn0.jY_6oocyPyAmUH4x_lDCuc6rJMU1OOSZ5EfZZCFfcAE';
+const SB_REST = SB_URL + '/rest/v1/rge_store';
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg'];
+let SB_OK = false, SB_WRITES = 0;
 
-function sbStatus(type,msg){
-  const bar=document.getElementById('sb-status-bar');
-  const txt=document.getElementById('sb-status-txt');
-  if(!bar||!txt)return;
-  bar.className='sb-status-bar show '+(type==='err'?'sb-err':type==='loading'?'sb-loading':'');
-  bar.classList.add('show');
-  txt.textContent=msg;
-  if(type==='ok')setTimeout(()=>{bar.style.opacity='.5';},4000);
+// Shared fetch headers — plain object, never causes clone errors
+function sbHeaders(extra){
+  return Object.assign({
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal'
+  }, extra||{});
 }
-function sbInitMsg(msg){const e=document.getElementById('sb-init-msg');if(e)e.textContent=msg;}
+
+function sbStatus(type, msg){
+  const bar = document.getElementById('sb-status-bar');
+  const txt = document.getElementById('sb-status-txt');
+  if(!bar || !txt) return;
+  bar.className = 'show ' + (type==='err' ? 'sb-err' : type==='loading' ? 'sb-loading' : '');
+  txt.textContent = msg;
+  if(type === 'ok') setTimeout(()=>{ bar.style.opacity='.45'; }, 5000);
+}
+function sbInitMsg(msg){ const e=document.getElementById('sb-init-msg'); if(e) e.textContent=msg; }
 function sbHideOverlay(){
-  const o=document.getElementById('sb-init-overlay');
-  if(o){o.classList.add('hide');setTimeout(()=>o.remove(),450);}
+  const o = document.getElementById('sb-init-overlay');
+  if(o){ o.classList.add('hide'); setTimeout(()=>o.remove(), 450); }
 }
 
+// Ping — SELECT key LIMIT 1
 async function sbInit(){
   try{
-    if(!window.supabase){sbStatus('err','Supabase library not loaded');return false;}
-    SB=window.supabase.createClient(SB_URL,SB_KEY);
-    // Quick ping test
-    const{error}=await SB.from(SB_TABLE).select('key').limit(1);
-    if(error){
-      if(error.code==='42P01'){
-        // Table doesn't exist yet — show helpful message
-        sbStatus('err','Run SQL setup first — see Discord Setup page');
-        console.warn('[RAGEISM] rge_store table missing. Run the SQL schema first.');
+    const res = await fetch(SB_REST + '?select=key&limit=1', {
+      method: 'GET',
+      headers: sbHeaders({'Prefer':''})
+    });
+    if(res.status === 401){ sbStatus('err','Supabase: invalid API key'); return false; }
+    if(res.status === 404 || res.status === 400){
+      const body = await res.text();
+      if(body.includes('rge_store')){
+        sbStatus('err','Table missing — run the SQL schema first');
+        console.warn('[RAGEISM] rge_store not found. Run rageism_supabase_schema.sql first.');
       } else {
-        sbStatus('err','Supabase: '+error.message);
+        sbStatus('err','Supabase error: ' + res.status);
       }
       return false;
     }
-    SB_OK=true;
-    sbStatus('ok','Supabase connected · '+SB_URL.replace('https://','').split('.')[0]);
+    if(!res.ok){ sbStatus('err','Supabase HTTP ' + res.status); return false; }
+    SB_OK = true;
+    sbStatus('ok', 'Supabase connected · ' + SB_URL.split('//')[1].split('.')[0]);
     return true;
-  }catch(e){
-    sbStatus('err','Supabase unreachable');
-    console.warn('[RAGEISM] Supabase init error:',e);
+  } catch(e){
+    sbStatus('err', 'Supabase unreachable — offline mode');
+    console.warn('[RAGEISM] sbInit failed:', e.message);
     return false;
   }
 }
 
+// Load all rows from rge_store into localStorage
 async function sbLoad(){
-  if(!SB_OK)return false;
+  if(!SB_OK) return false;
   try{
     sbInitMsg('Loading tournament data...');
-    const{data,error}=await SB.from(SB_TABLE).select('key,value');
-    if(error)throw error;
-    if(!data||!data.length)return false;
-    let loaded=0;
-    data.forEach(row=>{
+    const res = await fetch(SB_REST + '?select=key,value', {
+      method: 'GET',
+      headers: sbHeaders({'Prefer':''})
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json();
+    if(!rows || !rows.length) return false;
+    let loaded = 0;
+    rows.forEach(row => {
       if(SB_SYNC.includes(row.key)){
-        localStorage.setItem('rge5_'+row.key,JSON.stringify(row.value));
+        localStorage.setItem('rge5_' + row.key, JSON.stringify(row.value));
         loaded++;
       }
     });
-    // If players exist in Supabase, mark as seeded so seed() won't overwrite
-    const plRow=data.find(r=>r.key==='players');
-    if(plRow&&plRow.value&&Array.isArray(plRow.value)&&plRow.value.length>0){
-      localStorage.setItem('rge5_s5','true');
+    // Don't run seed() if real player data already exists in cloud
+    const plRow = rows.find(r => r.key === 'players');
+    if(plRow && Array.isArray(plRow.value) && plRow.value.length > 0){
+      localStorage.setItem('rge5_s5', 'true');
     }
-    sbInitMsg(`Loaded ${loaded} datasets from Supabase`);
-    return loaded>0;
-  }catch(e){
-    console.warn('[RAGEISM] Supabase load failed:',e);
+    sbInitMsg('Loaded ' + loaded + ' datasets from Supabase');
+    return loaded > 0;
+  } catch(e){
+    console.warn('[RAGEISM] sbLoad failed:', e.message);
     return false;
   }
 }
 
-async function sbWrite(key,val){
-  if(!SB_OK||!SB_SYNC.includes(key))return;
+// Upsert a single key → value row (POST with upsert Prefer header)
+async function sbWrite(key, val){
+  if(!SB_OK || !SB_SYNC.includes(key)) return;
   try{
-    await SB.from(SB_TABLE).upsert({key,value:val,updated_at:new Date().toISOString()},{onConflict:'key'});
+    const res = await fetch(SB_REST, {
+      method: 'POST',
+      headers: sbHeaders({'Prefer': 'resolution=merge-duplicates,return=minimal'}),
+      body: JSON.stringify({ key, value: val, updated_at: new Date().toISOString() })
+    });
+    if(!res.ok){
+      const txt = await res.text();
+      throw new Error('HTTP ' + res.status + ' — ' + txt.slice(0,120));
+    }
     SB_WRITES++;
-    const el=document.getElementById('sb-last-sync');
-    if(el)el.textContent='Last sync: '+new Date().toLocaleTimeString();
-    sbStatus('ok','Saved to Supabase · '+key);
-  }catch(e){
-    sbStatus('err','Sync failed for '+key+': '+e.message);
-    console.warn('[RAGEISM] Supabase write error:',key,e);
+    const el = document.getElementById('sb-last-sync');
+    if(el) el.textContent = 'Synced ' + new Date().toLocaleTimeString();
+    sbStatus('ok', 'Saved · ' + key);
+  } catch(e){
+    sbStatus('err', 'Sync failed: ' + e.message);
+    console.warn('[RAGEISM] sbWrite error:', key, e.message);
   }
 }
 
