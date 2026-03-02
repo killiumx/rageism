@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAGEISM — PUBG Esports</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --bg:#080c14;--bg2:#0d1420;--bg3:#131b28;--border:#1e2d44;
+  --accent:#f59e0b;--accent2:#ef4444;--blue:#3b82f6;--green:#22c55e;
+  --text:#e2e8f0;--muted:#64748b;--card:#0f1825;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--accent);}
+#app{display:flex;min-height:100vh;}
+#sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;}
+#main{margin-left:240px;flex:1;min-height:100vh;}
+#topbar{height:60px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:99;}
+#content{padding:24px;}
+.sidebar-brand{padding:20px 20px 8px;border-bottom:1px solid var(--border);}
+.brand-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);letter-spacing:2px;}
+.brand-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;}
+.sidebar-section{padding:12px 12px 4px;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:2px 8px;border-radius:8px;cursor:pointer;transition:.2s;font-size:13px;color:var(--muted);}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(245,158,11,.15);color:var(--accent);}
+.nav-item i{width:16px;text-align:center;}
+.nbadge{background:var(--accent2);color:#fff;font-size:10px;padding:1px 6px;border-radius:99px;margin-left:auto;font-family:'DM Mono',monospace;}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;flex:1;}
+.topbar-user{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);}
+.topbar-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;}
+.role-tag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600;text-transform:uppercase;}
+.role-admin{background:rgba(239,68,68,.2);color:var(--accent2);}
+.role-moderator{background:rgba(59,130,246,.2);color:var(--blue);}
+.role-manager{background:rgba(168,85,247,.2);color:#a855f7;}
+.role-player{background:rgba(34,197,94,.2);color:var(--green);}
+.role-viewer{background:rgba(100,116,139,.2);color:var(--muted);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.grid{display:grid;gap:16px;}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;border-radius:0 12px 0 70px;opacity:.12;}
+.stat-card.amber::before{background:var(--accent);}.stat-card.red::before{background:var(--accent2);}
+.stat-card.blue::before{background:var(--blue);}.stat-card.green::before{background:var(--green);}
+.stat-num{font-family:'DM Mono',monospace;font-size:30px;font-weight:500;margin:6px 0 2px;}
+.stat-label{font-size:12px;color:var(--muted);}
+.stat-icon{font-size:20px;margin-bottom:4px;}
+.stat-icon.amber{color:var(--accent);}.stat-icon.red{color:var(--accent2);}.stat-icon.blue{color:var(--blue);}.stat-icon.green{color:var(--green);}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.2s;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#000;}.btn-primary:hover{background:#d97706;}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--accent2);border:1px solid rgba(239,68,68,.3);}.btn-danger:hover{background:rgba(239,68,68,.25);}
+.btn-success{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);}.btn-success:hover{background:rgba(34,197,94,.25);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg3);color:var(--text);}
+.btn-sm{padding:5px 10px;font-size:12px;}.btn-xs{padding:3px 8px;font-size:11px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:10px 12px;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(30,45,68,.5);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.form-group{margin-bottom:14px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:80px;}
+select option{background:var(--bg2);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;min-width:460px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+#toasts{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:10px;animation:slideIn .3s ease;min-width:260px;}
+.toast.success{border-color:rgba(34,197,94,.4);color:var(--green);}
+.toast.error{border-color:rgba(239,68,68,.4);color:var(--accent2);}
+.toast.info{border-color:rgba(59,130,246,.4);color:var(--blue);}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.page-head{margin-bottom:24px;}
+.page-head h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+.page-head p{color:var(--muted);font-size:13px;margin-top:4px;}
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+.status-live{background:rgba(239,68,68,.15);color:var(--accent2);}
+.status-upcoming{background:rgba(245,158,11,.15);color:var(--accent);}
+.status-done{background:rgba(100,116,139,.15);color:var(--muted);}
+.status-pending{background:rgba(245,158,11,.15);color:var(--accent);}
+.status-approved{background:rgba(34,197,94,.15);color:var(--green);}
+.status-rejected{background:rgba(239,68,68,.15);color:var(--accent2);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:40px;width:420px;text-align:center;}
+.login-logo{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--accent);letter-spacing:4px;margin-bottom:6px;}
+.login-sub{color:var(--muted);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin-bottom:32px;}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state i{font-size:36px;margin-bottom:12px;display:block;}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#d97706);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0;}
+.flex{display:flex;}.items-center{align-items:center;}.gap-8{gap:8px;}.gap-12{gap:12px;}
+.ml-auto{margin-left:auto;}.text-muted{color:var(--muted);}.text-sm{font-size:12px;}.font-mono{font-family:'DM Mono',monospace;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.srch{position:relative;} .srch i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+.srch input{padding-left:32px;}
+.tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{padding:7px 16px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted);transition:.2s;}
+.tab.active{background:var(--bg2);color:var(--text);font-weight:600;}
+.info-box{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--accent);display:flex;align-items:flex-start;gap:8px;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">RAGEISM</div>
+    <div class="login-sub">PUBG Esports Platform</div>
+    <div id="lf-player">
+      <button id="discord-btn" class="btn" style="width:100%;justify-content:center;padding:13px;background:#5865F2;color:#fff;font-size:14px;border-radius:10px;margin-bottom:4px" onclick="discordLogin()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Continue with Discord
+      </button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px">Uses your Discord account — no separate password needed</div>
+      <div class="divider">or sign in manually</div>
+      <div class="form-group" style="text-align:left"><label>IGN / Display Name *</label><input type="text" id="l-ign" placeholder="Your in-game name"></div>
+      <div class="form-group" style="text-align:left"><label>Discord Username</label><input type="text" id="l-discord" placeholder="username#0000"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="doLogin()"><i class="fa fa-gamepad"></i> Enter Platform</button>
+      <div class="divider">or</div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="showForm('admin')"><i class="fa fa-shield"></i> Admin Login</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="guestLogin()"><i class="fa fa-eye"></i> View as Guest</button>
+    </div>
+    <div id="lf-admin" style="display:none">
+      <div class="form-group" style="text-align:left"><label>Admin Password</label><input type="password" id="l-pass" placeholder="Enter admin password"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="doAdminLogin()"><i class="fa fa-lock"></i> Login as Admin</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="showForm('player')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <aside id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">RAGEISM</div>
+      <div class="brand-sub">PUBG Esports</div>
+    </div>
+    <div style="padding:8px;flex:1;overflow-y:auto">
+      <div class="sidebar-section">Main</div>
+      <div class="nav-item" id="ni-dashboard" onclick="nav('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
+      <div class="nav-item" id="ni-players" onclick="nav('players')"><i class="fa fa-users"></i> Players</div>
+      <div class="nav-item" id="ni-teams" onclick="nav('teams')"><i class="fa fa-shield-halved"></i> Teams</div>
+      <div class="nav-item" id="ni-matches" onclick="nav('matches')"><i class="fa fa-crosshairs"></i> Matches</div>
+      <div class="nav-item" id="ni-leaderboard" onclick="nav('leaderboard')"><i class="fa fa-trophy"></i> Leaderboard</div>
+      <div class="nav-item" id="ni-bracket" onclick="nav('bracket')"><i class="fa fa-sitemap"></i> Bracket</div>
+      <div class="nav-item" id="ni-polls" onclick="nav('polls')"><i class="fa fa-poll"></i> Polls</div>
+
+      <div class="sidebar-section" id="adm-sec" style="display:none">Admin</div>
+      <div class="nav-item" id="ni-approvals" style="display:none" onclick="nav('approvals')"><i class="fa fa-clock"></i> Approvals <span class="nbadge" id="apl-badge">0</span></div>
+      <div class="nav-item" id="ni-roles" style="display:none" onclick="nav('roles')"><i class="fa fa-user-shield"></i> Roles</div>
+      <div class="nav-item" id="ni-results" style="display:none" onclick="nav('results')"><i class="fa fa-flag-checkered"></i> Log Results</div>
+      <div class="nav-item" id="ni-settings" style="display:none" onclick="nav('settings')"><i class="fa fa-gear"></i> Settings</div>
+    </div>
+    <div style="padding:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Database</div>
+      <div id="sync-status" style="font-size:11px;color:var(--green);margin-bottom:10px"><i class="fa fa-circle" style="font-size:7px"></i> Supabase Connected</div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="doLogout()"><i class="fa fa-sign-out"></i> Logout</button>
+    </div>
+  </aside>
+  <div id="main">
+    <div id="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div style="flex:1"></div>
+      <div class="topbar-user">
+        <div class="topbar-avatar" id="u-avatar">?</div>
+        <div><div style="font-size:13px;font-weight:600" id="u-ign">-</div><div id="u-roletag"></div></div>
+      </div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><div id="modal-content"></div></div>
+</div>
+<div id="toasts"></div>
+
+<script>
+const SUPABASE_URL='https://coeqrhxdomwfsafesaku.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZXFyaHhkb213ZnNhZmVzYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMDE3ODMsImV4cCI6MjA1OTc3Nzc4M30.pxLaMSrv2-3CU4DjBXTlFQTbmPRG8P71xBEAfQH9oNs';
+
+// DB Layer
+const DB={
+  cache:{},
+  async fetchAll(){
+    try{
+      const r=await fetch(`${SUPABASE_URL}/rest/v1/rge_store?select=key,value`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+      const d=await r.json();
+      if(Array.isArray(d))d.forEach(row=>{
+        try{this.cache[row.key]=typeof row.value==='string'?JSON.parse(row.value):row.value;}catch(e){this.cache[row.key]=row.value;}
+      });
+    }catch(e){document.getElementById('sync-status').innerHTML='<i class="fa fa-circle" style="font-size:7px;color:var(--accent2)"></i> Offline';}
+  },
+  async set(key,val){
+    this.cache[key]=val;
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/rge_store`,{method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify({key,value:JSON.stringify(val),updated_at:new Date().toISOString()})});
+    }catch(e){}
+  },
+  get(key,def=null){return this.cache[key]??def;}
+};
+
+// State
+let SES=null; // session
+let DATA={
+  players:[],teams:[],matches:[],polls:[],results:[],bracket:{},
+  teamreqs:[],joinreqs:[],roles:{},
+  cfg:{name:'RAGEISM Tournament',season:'Season 1',prize:5000,adminPass:'RAGEISM2025',announcement:'',webhook:''}
+};
+
+function save(key){DB.set(key,key==='cfg'?DATA.cfg:DATA[key]);}
+
+// Helpers
+function uid(){return Math.random().toString(36).slice(2,10);}
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={success:'fa-check-circle',error:'fa-exclamation-circle',info:'fa-info-circle'};
+  el.innerHTML=`<i class="fa ${icons[type]}"></i> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+function openModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal-overlay').classList.add('open');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function isAdmin(){return['admin','moderator'].includes(SES?.role);}
+function isManager(teamId){const t=DATA.teams.find(t=>t.id===teamId);return t&&t.manager===SES?.ign;}
+function canManageTeam(teamId){return isAdmin()||isManager(teamId);}
+function kd(p){return p.deaths?(p.kills/p.deaths).toFixed(2):(p.kills||0).toFixed(2);}
+function lvl(xp){return Math.floor((xp||0)/500)+1;}
+function fmt(n){return(n||0).toLocaleString();}
+function roleClass(r){return{'admin':'role-admin','moderator':'role-moderator','manager':'role-manager','player':'role-player','viewer':'role-viewer'}[r]||'role-player';}
+function pendingCount(){return DATA.teamreqs.filter(r=>r.status==='pending').length+DATA.joinreqs.filter(r=>r.status==='pending').length;}
+
+// Login
+function showForm(f){
+  document.getElementById('lf-player').style.display=f==='player'?'block':'none';
+  document.getElementById('lf-admin').style.display=f==='admin'?'block':'none';
+}
+
+// Discord OAuth via Supabase
+async function discordLogin(){
+  const btn=document.getElementById('discord-btn');
+  btn.disabled=true;btn.textContent='Redirecting to Discord...';
+  try{
+    const r=await fetch(`${SUPABASE_URL}/auth/v1/authorize?provider=discord&redirect_to=${encodeURIComponent(window.location.href.split('?')[0].split('#')[0])}`,{
+      method:'GET',headers:{'apikey':SUPABASE_KEY}
+    });
+    // Supabase returns a redirect — we just navigate directly
+    window.location.href=`${SUPABASE_URL}/auth/v1/authorize?provider=discord&redirect_to=${encodeURIComponent(window.location.href.split('?')[0].split('#')[0])}`;
+  }catch(e){
+    btn.disabled=false;
+    btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg> Continue with Discord';
+    toast('Discord login failed. Try manual login.','error');
+  }
+}
+
+// Handle OAuth callback (Supabase puts access_token in URL hash)
+async function handleOAuthCallback(){
+  const hash=window.location.hash;
+  if(!hash.includes('access_token'))return false;
+  const params=new URLSearchParams(hash.slice(1));
+  const accessToken=params.get('access_token');
+  if(!accessToken)return false;
+  // Clean URL
+  history.replaceState(null,'',window.location.pathname);
+  try{
+    // Get user info from Supabase
+    const r=await fetch(`${SUPABASE_URL}/auth/v1/user`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+accessToken}
+    });
+    const user=await r.json();
+    if(!user||!user.id)return false;
+    // Discord identity info
+    const identity=user.identities?.find(i=>i.provider==='discord');
+    const discordName=identity?.identity_data?.full_name||identity?.identity_data?.name||user.email||'Discord User';
+    const discordUser=identity?.identity_data?.custom_claims?.global_name||discordName;
+    const discordId=identity?.identity_data?.provider_id||user.id;
+    // Find or create player by discord id
+    let p=DATA.players.find(pl=>pl.discordId===discordId);
+    if(!p){
+      // Check by discord username too
+      p=DATA.players.find(pl=>pl.discord&&pl.discord.toLowerCase()===discordName.toLowerCase());
+    }
+    if(!p){
+      // New user — create with discord name as IGN, let them update later
+      const ign=discordUser.replace(/[^a-zA-Z0-9_]/g,'').slice(0,20)||'Player'+uid().slice(0,4);
+      p={id:uid(),ign,discord:discordName,discordId,avatarUrl:identity?.identity_data?.avatar_url||'',
+        team:'',kills:0,deaths:0,wins:0,games:0,xp:0,created:Date.now()};
+      DATA.players.push(p);save('players');
+    } else if(!p.discordId){
+      p.discordId=discordId;save('players');
+    }
+    SES={...p,role:DATA.roles[p.ign]||'player',accessToken};
+    return true;
+  }catch(e){console.error('OAuth callback error',e);return false;}
+}
+
+function doLogin(){
+  const ign=document.getElementById('l-ign').value.trim();
+  const discord=document.getElementById('l-discord').value.trim();
+  if(!ign)return toast('Enter your IGN','error');
+  let p=DATA.players.find(pl=>pl.ign.toLowerCase()===ign.toLowerCase());
+  if(!p){
+    p={id:uid(),ign,discord:discord||'',team:'',kills:0,deaths:0,wins:0,games:0,xp:0,created:Date.now()};
+    DATA.players.push(p);save('players');
+  }
+  SES={...p,role:DATA.roles[p.ign]||'player'};
+  startApp();
+}
+function doAdminLogin(){
+  if(document.getElementById('l-pass').value!==DATA.cfg.adminPass)return toast('Wrong password','error');
+  SES={id:'admin',ign:'Admin',discord:'',role:'admin'};
+  startApp();
+}
+function guestLogin(){SES={id:'guest',ign:'Guest',discord:'',role:'viewer'};startApp();}
+function doLogout(){
+  SES=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  showForm('player');
+}
+
+// Init
+async function init(){
+  await DB.fetchAll();
+  DATA.players=DB.get('players',[]);
+  DATA.teams=DB.get('teams',[]);
+  DATA.matches=DB.get('matches',[]);
+  DATA.polls=DB.get('polls',[]);
+  DATA.results=DB.get('results',[]);
+  DATA.bracket=DB.get('bracket',{});
+  DATA.teamreqs=DB.get('teamreqs',[]);
+  DATA.joinreqs=DB.get('joinreqs',[]);
+  DATA.roles=DB.get('roles',{});
+  const sc=DB.get('cfg',null);
+  if(sc)DATA.cfg={...DATA.cfg,...sc};
+  // Check for Discord OAuth redirect callback
+  if(window.location.hash.includes("access_token")){
+    const ok=await handleOAuthCallback();
+    if(ok){startApp();return;}
+  }
+}
+
+function startApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  // topbar
+  document.getElementById('u-ign').textContent=SES.ign;
+  document.getElementById('u-avatar').textContent=SES.ign.charAt(0).toUpperCase();
+  document.getElementById('u-roletag').innerHTML=`<span class="role-tag ${roleClass(SES.role)}">${SES.role}</span>`;
+  // admin nav
+  const adm=isAdmin();
+  document.getElementById('adm-sec').style.display=adm?'block':'none';
+  ['ni-approvals','ni-roles','ni-results','ni-settings'].forEach(id=>{
+    document.getElementById(id).style.display=adm?'flex':'none';
+  });
+  updateBadge();
+  nav('dashboard');
+}
+
+function updateBadge(){
+  const n=pendingCount();
+  const b=document.getElementById('apl-badge');
+  if(b)b.textContent=n;
+}
+
+// Navigation
+function nav(page){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('ni-'+page);
+  if(el)el.classList.add('active');
+  const titles={dashboard:'Dashboard',players:'Players',teams:'Teams',matches:'Matches',leaderboard:'Leaderboard',
+    approvals:'Approvals',roles:'Role Management',results:'Log Results',settings:'Settings',bracket:'Bracket',polls:'Polls'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+  const pages={dashboard:pgDashboard,players:pgPlayers,teams:pgTeams,matches:pgMatches,
+    leaderboard:pgLeaderboard,approvals:pgApprovals,roles:pgRoles,results:pgResults,
+    settings:pgSettings,bracket:pgBracket,polls:pgPolls};
+  if(pages[page])pages[page]();
+}
+
+// ---- DASHBOARD ----
+function pgDashboard(){
+  const aprv=DATA.teams.filter(t=>t.status==='approved').length;
+  const live=DATA.matches.filter(m=>m.status==='live').length;
+  const pend=pendingCount();
+  document.getElementById('content').innerHTML=`
+    ${DATA.cfg.announcement?`<div class="info-box" style="margin-bottom:16px"><i class="fa fa-bullhorn"></i> ${DATA.cfg.announcement}</div>`:''}
+    <div class="page-head"><h1>Dashboard</h1><p>${DATA.cfg.name} — ${DATA.cfg.season}</p></div>
+    <div class="grid g4" style="margin-bottom:20px">
+      <div class="stat-card amber"><div class="stat-icon amber"><i class="fa fa-users"></i></div><div class="stat-num">${DATA.players.length}</div><div class="stat-label">Players</div></div>
+      <div class="stat-card blue"><div class="stat-icon blue"><i class="fa fa-shield-halved"></i></div><div class="stat-num">${aprv}</div><div class="stat-label">Approved Teams</div></div>
+      <div class="stat-card red"><div class="stat-icon red"><i class="fa fa-crosshairs"></i></div><div class="stat-num">${live}</div><div class="stat-label">Live Matches</div></div>
+      <div class="stat-card green"><div class="stat-icon green"><i class="fa fa-clock"></i></div><div class="stat-num">${pend}</div><div class="stat-label">Pending Approvals</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Matches</div><button class="btn btn-ghost btn-sm" onclick="nav('matches')">All</button></div>
+        ${DATA.matches.length===0?'<div class="empty-state"><i class="fa fa-crosshairs"></i><p>No matches</p></div>':
+          [...DATA.matches].reverse().slice(0,5).map(m=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1"><div style="font-size:13px;font-weight:600">${m.name}</div><div style="font-size:11px;color:var(--muted)">${m.map||''} • ${m.date||'TBD'}</div></div>
+            <span class="status status-${m.status}">${m.status}</span>
+          </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Top Players</div><button class="btn btn-ghost btn-sm" onclick="nav('leaderboard')">Leaderboard</button></div>
+        ${DATA.players.length===0?'<div class="empty-state"><i class="fa fa-trophy"></i><p>No players</p></div>':
+          [...DATA.players].sort((a,b)=>b.kills-a.kills).slice(0,5).map((p,i)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="font-size:16px;font-weight:800;color:var(--muted);width:20px;text-align:center">${i+1}</div>
+            <div class="avatar">${p.ign.charAt(0)}</div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600">${p.ign}</div><div style="font-size:11px;color:var(--muted)">${p.team||'No Team'}</div></div>
+            <div class="font-mono" style="font-size:13px">${fmt(p.kills)}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    ${isAdmin()?`<div class="card" style="margin-top:16px">
+      <div class="card-header"><div class="card-title"><i class="fa fa-bolt" style="color:var(--accent)"></i> Quick Actions</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="nav('approvals')"><i class="fa fa-clock"></i> Approvals (${pend})</button>
+        <button class="btn btn-ghost" onclick="nav('matches')"><i class="fa fa-plus"></i> Matches</button>
+        <button class="btn btn-ghost" onclick="nav('results')"><i class="fa fa-flag-checkered"></i> Log Results</button>
+        <button class="btn btn-ghost" onclick="nav('roles')"><i class="fa fa-user-shield"></i> Manage Roles</button>
+      </div>
+    </div>`:''}
+  `;
+}
+
+// ---- PLAYERS ----
+function pgPlayers(){
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Players</h1></div>
+    <div class="card">
+      <div class="section-head">
+        <div class="srch"><i class="fa fa-search"></i><input type="text" id="ps-q" placeholder="Search..." onkeyup="renderPlayerTable()" style="width:240px"></div>
+        ${SES.role!=='viewer'?`<button class="btn btn-primary" onclick="openRegPlayer()"><i class="fa fa-user-plus"></i> Register</button>`:''}
+      </div>
+      <div id="pt"></div>
+    </div>
+  `;
+  renderPlayerTable();
+}
+function renderPlayerTable(){
+  const q=(document.getElementById('ps-q')?.value||'').toLowerCase();
+  const list=DATA.players.filter(p=>p.ign.toLowerCase().includes(q)||(p.discord||'').toLowerCase().includes(q)||(p.team||'').toLowerCase().includes(q));
+  const c=document.getElementById('pt');
+  if(!list.length){c.innerHTML='<div class="empty-state"><i class="fa fa-users"></i><p>No players found</p></div>';return;}
+  c.innerHTML=`<div class="table-wrap"><table>
+    <tr><th>Player</th><th>Discord</th><th>Team</th><th>Role</th><th>Kills</th><th>K/D</th><th>Wins</th><th>Level</th>${isAdmin()?'<th></th>':''}</tr>
+    ${list.map(p=>{
+      const role=DATA.roles[p.ign]||'player';
+      return`<tr>
+        <td><div class="flex items-center gap-8"><div class="avatar">${p.ign.charAt(0)}</div><span style="font-weight:600">${p.ign}</span></div></td>
+        <td class="text-muted">${p.discord||'—'}</td>
+        <td>${p.team||'<span class="text-muted">—</span>'}</td>
+        <td><span class="role-tag ${roleClass(role)}">${role}</span></td>
+        <td class="font-mono">${fmt(p.kills)}</td>
+        <td class="font-mono">${kd(p)}</td>
+        <td class="font-mono">${fmt(p.wins)}</td>
+        <td class="font-mono">Lv.${lvl(p.xp)}</td>
+        ${isAdmin()?`<td><button class="btn btn-danger btn-xs" onclick="delPlayer('${p.id}')"><i class="fa fa-trash"></i></button></td>`:''}
+      </tr>`;
+    }).join('')}
+  </table></div>`;
+}
+function openRegPlayer(){
+  openModal(`<div class="modal-title">Register Player</div>
+    <div class="form-group"><label>IGN *</label><input type="text" id="rp-ign"></div>
+    <div class="form-group"><label>Discord</label><input type="text" id="rp-disc"></div>
+    <div class="form-group"><label>PUBG UID</label><input type="text" id="rp-uid"></div>
+    <div class="form-group"><label>Region</label><select id="rp-reg"><option>Asia</option><option>NA</option><option>EU</option><option>SEA</option><option>SA</option></select></div>
+    <div class="form-group"><label>Rank</label><select id="rp-rank"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveRegPlayer()">Register</button></div>`);
+}
+function saveRegPlayer(){
+  const ign=document.getElementById('rp-ign').value.trim();
+  if(!ign)return toast('IGN required','error');
+  if(DATA.players.find(p=>p.ign.toLowerCase()===ign.toLowerCase()))return toast('IGN taken','error');
+  DATA.players.push({id:uid(),ign,discord:document.getElementById('rp-disc').value.trim(),
+    uid:document.getElementById('rp-uid').value.trim(),region:document.getElementById('rp-reg').value,
+    rank:document.getElementById('rp-rank').value,team:'',kills:0,deaths:0,wins:0,games:0,xp:0,created:Date.now()});
+  save('players');closeModal();toast('Registered','success');renderPlayerTable();
+}
+function delPlayer(id){
+  if(!confirm('Delete player?'))return;
+  DATA.players=DATA.players.filter(p=>p.id!==id);save('players');toast('Deleted','info');renderPlayerTable();
+}
+
+// ---- TEAMS ----
+function pgTeams(){
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Teams</h1></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="tabs" style="margin-bottom:0">
+        <div class="tab active" onclick="setTeamTab(this,'all')">All</div>
+        <div class="tab" onclick="setTeamTab(this,'approved')">Approved</div>
+        <div class="tab" onclick="setTeamTab(this,'pending')">Pending</div>
+        <div class="tab" onclick="setTeamTab(this,'rejected')">Rejected</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${SES.role!=='viewer'?`<button class="btn btn-primary" onclick="openCreateTeam()"><i class="fa fa-plus"></i> Register Team</button>`:''}
+        ${SES.role!=='viewer'&&SES.role!=='admin'?`<button class="btn btn-ghost" onclick="openJoinTeam()"><i class="fa fa-door-open"></i> Join Team</button>`:''}
+      </div>
+    </div>
+    <div id="teams-grid" class="grid g3"></div>
+  `;
+  renderTeamCards('all');
+}
+function setTeamTab(el,f){
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');renderTeamCards(f);
+}
+function renderTeamCards(f){
+  let list=DATA.teams;
+  if(f!=='all')list=list.filter(t=>t.status===f);
+  const c=document.getElementById('teams-grid');
+  if(!list.length){c.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fa fa-shield-halved"></i><p>No teams</p></div>';return;}
+  c.innerHTML=list.map(t=>{
+    const canMng=isAdmin()||canManageTeam(t.id)||SES.ign===t.captain;
+    const mbrs=t.members||[];
+    return`<div class="card">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+        <div style="width:44px;height:44px;border-radius:10px;background:${t.color||'#f59e0b'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#000;flex-shrink:0">${t.tag?t.tag.charAt(0):t.name.charAt(0)}</div>
+        <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">${t.name}</div>
+          <div style="font-size:11px;color:var(--muted)">[${t.tag||'—'}] • ${t.captain}</div></div>
+        <span class="status status-${t.status}">${t.status}</span>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:5px;letter-spacing:1px">MEMBERS (${mbrs.length})</div>
+        ${mbrs.slice(0,5).map(m=>`<div style="font-size:12px;padding:2px 0;color:${m===t.captain?'var(--accent)':m===t.manager?'#a855f7':'var(--text)'}">${m}${m===t.captain?' ★':m===t.manager?' M':''}</div>`).join('')}
+        ${mbrs.length>5?`<div style="font-size:11px;color:var(--muted)">+${mbrs.length-5} more</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Manager: <span style="color:#a855f7">${t.manager||'None'}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${canMng?`<button class="btn btn-ghost btn-sm" onclick="openManageTeam('${t.id}')"><i class="fa fa-edit"></i> Manage</button>`:''}
+        ${isAdmin()&&t.status==='pending'?`
+          <button class="btn btn-success btn-sm" onclick="approveTeam('${t.id}')"><i class="fa fa-check"></i> Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectTeam('${t.id}')"><i class="fa fa-times"></i> Reject</button>`:''}
+        ${isAdmin()?`<button class="btn btn-danger btn-sm" onclick="delTeam('${t.id}')"><i class="fa fa-trash"></i></button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openCreateTeam(){
+  openModal(`<div class="modal-title">Register Team</div>
+    <div class="info-box"><i class="fa fa-info-circle"></i> Team registration requires admin approval before becoming active.</div>
+    <div class="form-group"><label>Team Name *</label><input type="text" id="ct-name"></div>
+    <div class="form-group"><label>Tag (max 5 chars) *</label><input type="text" id="ct-tag" maxlength="5" placeholder="e.g. RGE"></div>
+    <div class="form-group"><label>Captain IGN *</label><input type="text" id="ct-cap" value="${SES.ign}"></div>
+    <div class="form-group"><label>Team Manager IGN <span style="color:var(--muted)">(can add/remove members)</span></label><input type="text" id="ct-mgr" value="${SES.ign}"></div>
+    <div class="form-group"><label>Members (comma separated IGNs)</label><textarea id="ct-mbrs" placeholder="IGN1, IGN2, IGN3"></textarea></div>
+    <div class="form-group"><label>Preferred Map</label><select id="ct-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveCreateTeam()"><i class="fa fa-paper-plane"></i> Submit for Approval</button></div>`);
+}
+function saveCreateTeam(){
+  const name=document.getElementById('ct-name').value.trim();
+  const tag=document.getElementById('ct-tag').value.trim().toUpperCase();
+  const cap=document.getElementById('ct-cap').value.trim();
+  const mgr=document.getElementById('ct-mgr').value.trim()||cap;
+  if(!name||!tag||!cap)return toast('Fill required fields','error');
+  const mbrs=document.getElementById('ct-mbrs').value.split(',').map(m=>m.trim()).filter(Boolean);
+  if(!mbrs.includes(cap))mbrs.unshift(cap);
+  const colors=['#f59e0b','#ef4444','#3b82f6','#22c55e','#a855f7','#06b6d4','#f97316'];
+  const team={id:uid(),name,tag,captain:cap,manager:mgr,members:mbrs,
+    map:document.getElementById('ct-map').value,color:colors[Math.floor(Math.random()*colors.length)],
+    status:'pending',wins:0,created:Date.now()};
+  DATA.teams.push(team);save('teams');
+  DATA.teamreqs.push({id:uid(),teamId:team.id,name,captain:cap,status:'pending',created:Date.now()});save('teamreqs');
+  closeModal();toast('Team submitted for approval!','success');updateBadge();pgTeams();
+}
+function approveTeam(id){
+  const t=DATA.teams.find(t=>t.id===id);if(!t)return;
+  t.status='approved';save('teams');
+  if(t.manager){DATA.roles[t.manager]='manager';save('roles');}
+  const r=DATA.teamreqs.find(r=>r.teamId===id);if(r){r.status='approved';save('teamreqs');}
+  toast(`"${t.name}" approved!`,'success');updateBadge();renderTeamCards(document.querySelector('.tabs .tab.active')?.textContent.toLowerCase()||'all');
+}
+function rejectTeam(id){
+  const t=DATA.teams.find(t=>t.id===id);if(!t)return;
+  t.status='rejected';save('teams');
+  const r=DATA.teamreqs.find(r=>r.teamId===id);if(r){r.status='rejected';save('teamreqs');}
+  toast('Team rejected','info');updateBadge();renderTeamCards(document.querySelector('.tabs .tab.active')?.textContent.toLowerCase()||'all');
+}
+function delTeam(id){
+  if(!confirm('Delete team?'))return;
+  DATA.teams=DATA.teams.filter(t=>t.id!==id);save('teams');toast('Deleted','info');pgTeams();
+}
+function openManageTeam(id){
+  const t=DATA.teams.find(t=>t.id===id);if(!t)return;
+  if(!canManageTeam(id)&&SES.ign!==t.captain&&!isAdmin())return toast('No permission','error');
+  openModal(`<div class="modal-title"><i class="fa fa-users" style="color:var(--accent)"></i> ${t.name} — Manage</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">MEMBERS</div>
+      ${(t.members||[]).map(m=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px">
+          <div class="avatar">${m.charAt(0)}</div>
+          <div style="flex:1;font-size:13px">${m}
+            ${m===t.captain?'<span style="color:var(--accent);font-size:11px;margin-left:6px">Captain</span>':''}
+            ${m===t.manager&&m!==t.captain?'<span style="color:#a855f7;font-size:11px;margin-left:6px">Manager</span>':''}
+          </div>
+          ${m!==t.captain?`<button class="btn btn-danger btn-xs" onclick="removeMbr('${id}','${m}')"><i class="fa fa-times"></i> Remove</button>`:''}
+        </div>`).join('')||'<div class="text-muted text-sm">No members</div>'}
+    </div>
+    <div class="form-group">
+      <label>Add Member</label>
+      <div style="display:flex;gap:8px"><input type="text" id="add-mbr-ign" placeholder="Player IGN" style="flex:1"><button class="btn btn-success" onclick="addMbr('${id}')"><i class="fa fa-plus"></i> Add</button></div>
+    </div>
+    ${isAdmin()?`<div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <label>Set Team Manager</label>
+      <select id="edit-mgr">${(t.members||[]).map(m=>`<option value="${m}" ${m===t.manager?'selected':''}>${m}</option>`).join('')}</select>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="saveTeamMgr('${id}')"><i class="fa fa-save"></i> Save Manager</button>
+    </div>`:''}
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`);
+}
+function addMbr(teamId){
+  const ign=document.getElementById('add-mbr-ign').value.trim();
+  if(!ign)return toast('Enter IGN','error');
+  const t=DATA.teams.find(t=>t.id===teamId);if(!t)return;
+  if(t.members.includes(ign))return toast('Already a member','error');
+  t.members.push(ign);
+  const p=DATA.players.find(p=>p.ign===ign);if(p){p.team=t.name;save('players');}
+  save('teams');toast(`${ign} added`,'success');openManageTeam(teamId);
+}
+function removeMbr(teamId,ign){
+  const t=DATA.teams.find(t=>t.id===teamId);if(!t)return;
+  t.members=t.members.filter(m=>m!==ign);
+  if(t.manager===ign)t.manager=t.captain;
+  const p=DATA.players.find(p=>p.ign===ign);if(p&&p.team===t.name){p.team='';save('players');}
+  save('teams');toast(`${ign} removed`,'success');openManageTeam(teamId);
+}
+function saveTeamMgr(teamId){
+  const t=DATA.teams.find(t=>t.id===teamId);if(!t)return;
+  const nm=document.getElementById('edit-mgr').value;
+  if(t.manager&&DATA.roles[t.manager]==='manager'&&t.manager!==nm)delete DATA.roles[t.manager];
+  t.manager=nm;DATA.roles[nm]='manager';
+  save('teams');save('roles');toast(`Manager → ${nm}`,'success');
+}
+function openJoinTeam(){
+  const aTeams=DATA.teams.filter(t=>t.status==='approved');
+  if(!aTeams.length)return toast('No approved teams to join','error');
+  openModal(`<div class="modal-title">Request to Join Team</div>
+    <div class="form-group"><label>Select Team</label><select id="jt-team">${aTeams.map(t=>`<option value="${t.id}">${t.name} [${t.tag}]</option>`).join('')}</select></div>
+    <div class="form-group"><label>Your IGN</label><input type="text" id="jt-ign" value="${SES.ign}"></div>
+    <div class="form-group"><label>Message (optional)</label><textarea id="jt-msg" placeholder="Why do you want to join?"></textarea></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitJoinReq()"><i class="fa fa-paper-plane"></i> Send Request</button></div>`);
+}
+function submitJoinReq(){
+  const teamId=document.getElementById('jt-team').value;
+  const ign=document.getElementById('jt-ign').value.trim();
+  const msg=document.getElementById('jt-msg').value.trim();
+  if(!ign)return toast('Enter IGN','error');
+  if(DATA.joinreqs.find(r=>r.teamId===teamId&&r.ign===ign&&r.status==='pending'))return toast('Already requested','error');
+  DATA.joinreqs.push({id:uid(),teamId,ign,msg,status:'pending',created:Date.now()});
+  save('joinreqs');closeModal();toast('Request sent!','success');updateBadge();
+}
+
+// ---- MATCHES ----
+function pgMatches(){
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Matches</h1></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="tabs" style="margin-bottom:0">
+        <div class="tab active" onclick="setMatchTab(this,'all')">All</div>
+        <div class="tab" onclick="setMatchTab(this,'live')">Live</div>
+        <div class="tab" onclick="setMatchTab(this,'upcoming')">Upcoming</div>
+        <div class="tab" onclick="setMatchTab(this,'done')">Ended</div>
+      </div>
+      ${isAdmin()?`<button class="btn btn-primary" onclick="openCreateMatch()"><i class="fa fa-plus"></i> Create Match</button>`:''}
+    </div>
+    <div id="match-list"></div>
+  `;
+  renderMatchList('all');
+}
+function setMatchTab(el,f){document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderMatchList(f);}
+function renderMatchList(f){
+  let list=DATA.matches;if(f!=='all')list=list.filter(m=>m.status===f);
+  const c=document.getElementById('match-list');
+  if(!list.length){c.innerHTML='<div class="empty-state"><i class="fa fa-crosshairs"></i><p>No matches</p></div>';return;}
+  c.innerHTML=`<div class="grid g2">${list.map(m=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">${m.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${m.map||''} • ${m.mode||'Squad'} • ${m.date||'TBD'} ${m.time||''}</div></div>
+        <span class="status status-${m.status}">${m.status}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Max Teams: ${m.maxTeams||16}</div>
+      ${isAdmin()?`<div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="cycleMatch('${m.id}')"><i class="fa fa-rotate"></i> Cycle</button>
+        <button class="btn btn-danger btn-sm" onclick="delMatch('${m.id}')"><i class="fa fa-trash"></i></button>
+      </div>`:''}
+    </div>`).join('')}</div>`;
+}
+function openCreateMatch(){
+  openModal(`<div class="modal-title">Create Match</div>
+    <div class="form-group"><label>Name *</label><input type="text" id="cm-name" placeholder="e.g. Grand Finals"></div>
+    <div class="form-group"><label>Map</label><select id="cm-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
+    <div class="form-group"><label>Mode</label><select id="cm-mode"><option>Squad</option><option>Duo</option><option>Solo</option></select></div>
+    <div class="grid g2"><div class="form-group"><label>Date</label><input type="date" id="cm-date"></div><div class="form-group"><label>Time</label><input type="time" id="cm-time"></div></div>
+    <div class="form-group"><label>Max Teams</label><input type="number" id="cm-max" value="16" min="2"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveMatch()">Create</button></div>`);
+}
+function saveMatch(){
+  const name=document.getElementById('cm-name').value.trim();
+  if(!name)return toast('Name required','error');
+  DATA.matches.push({id:uid(),name,map:document.getElementById('cm-map').value,mode:document.getElementById('cm-mode').value,
+    date:document.getElementById('cm-date').value,time:document.getElementById('cm-time').value,
+    maxTeams:document.getElementById('cm-max').value||16,status:'upcoming',created:Date.now()});
+  save('matches');closeModal();toast('Match created','success');pgMatches();
+}
+function cycleMatch(id){
+  const m=DATA.matches.find(m=>m.id===id);if(!m)return;
+  m.status={upcoming:'live',live:'done',done:'upcoming'}[m.status];
+  save('matches');toast(`Status: ${m.status}`,'info');
+  renderMatchList(document.querySelector('.tabs .tab.active')?.textContent.toLowerCase()||'all');
+}
+function delMatch(id){if(!confirm('Delete?'))return;DATA.matches=DATA.matches.filter(m=>m.id!==id);save('matches');pgMatches();}
+
+// ---- LEADERBOARD ----
+function pgLeaderboard(){
+  const sorted=[...DATA.players].sort((a,b)=>b.kills-a.kills);
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Leaderboard</h1></div>
+    ${sorted.length>=3?`<div class="grid" style="grid-template-columns:1fr 1.15fr 1fr;gap:16px;margin-bottom:20px">
+      ${[sorted[1],sorted[0],sorted[2]].map((p,i)=>{
+        if(!p)return'<div></div>';
+        const medals=['🥈','🥇','🥉'],bg=['rgba(148,163,184,.08)','rgba(245,158,11,.08)','rgba(205,127,50,.08)'];
+        return`<div class="card" style="text-align:center;background:${bg[i]}">
+          <div style="font-size:30px">${medals[i]}</div>
+          <div class="avatar" style="margin:8px auto;width:40px;height:40px;font-size:16px">${p.ign.charAt(0)}</div>
+          <div style="font-weight:700">${p.ign}</div><div class="text-muted text-sm">${p.team||'No Team'}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:22px;margin-top:8px">${fmt(p.kills)}</div>
+          <div class="text-muted text-sm">kills</div></div>`;
+      }).join('')}</div>`:''}
+    <div class="card">
+      <div class="table-wrap"><table>
+        <tr><th>#</th><th>Player</th><th>Team</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Games</th></tr>
+        ${sorted.map((p,i)=>`<tr>
+          <td class="font-mono text-muted">${i+1}</td>
+          <td><div class="flex items-center gap-8"><div class="avatar">${p.ign.charAt(0)}</div><span style="font-weight:600">${p.ign}</span></div></td>
+          <td class="text-muted">${p.team||'—'}</td>
+          <td class="font-mono">${fmt(p.kills)}</td><td class="font-mono">${fmt(p.deaths)}</td>
+          <td class="font-mono">${kd(p)}</td><td class="font-mono">${fmt(p.wins)}</td><td class="font-mono">${fmt(p.games)}</td>
+        </tr>`).join('')}
+      </table></div>
+    </div>
+  `;
+}
+
+// ---- APPROVALS ----
+function pgApprovals(){
+  if(!isAdmin()){document.getElementById('content').innerHTML='<div class="empty-state"><i class="fa fa-lock"></i><p>Admin only</p></div>';return;}
+  const tPend=DATA.teamreqs.filter(r=>r.status==='pending');
+  const jPend=DATA.joinreqs.filter(r=>r.status==='pending');
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Approvals</h1><p>Review pending requests</p></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title"><i class="fa fa-shield-halved" style="color:var(--accent)"></i> Team Registrations</div><span class="nbadge" style="font-size:13px">${tPend.length}</span></div>
+      ${tPend.length===0?'<div class="empty-state" style="padding:24px"><i class="fa fa-check-circle" style="color:var(--green)"></i><p>All clear!</p></div>':
+        tPend.map(req=>{
+          const t=DATA.teams.find(t=>t.id===req.teamId);
+          return`<div style="padding:14px;background:var(--bg3);border-radius:10px;margin-bottom:10px">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:14px">${req.name}</div>
+                <div style="font-size:12px;color:var(--muted)">Captain: ${req.captain} • ${new Date(req.created).toLocaleDateString()}</div>
+                ${t?`<div style="font-size:12px;color:var(--muted);margin-top:3px">Members: ${(t.members||[]).join(', ')||'—'} • Manager: ${t.manager||'—'}</div>`:''}
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-success btn-sm" onclick="approveTeam('${req.teamId}');updateBadge();pgApprovals()"><i class="fa fa-check"></i> Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectTeam('${req.teamId}');updateBadge();pgApprovals()"><i class="fa fa-times"></i> Reject</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fa fa-door-open" style="color:var(--blue)"></i> Join Requests</div><span class="nbadge" style="font-size:13px">${jPend.length}</span></div>
+      ${jPend.length===0?'<div class="empty-state" style="padding:24px"><i class="fa fa-check-circle" style="color:var(--green)"></i><p>All clear!</p></div>':
+        jPend.map(req=>{
+          const t=DATA.teams.find(t=>t.id===req.teamId);
+          return`<div style="padding:14px;background:var(--bg3);border-radius:10px;margin-bottom:10px">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <div class="avatar">${req.ign.charAt(0)}</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:14px">${req.ign}</div>
+                <div style="font-size:12px;color:var(--muted)">→ <strong style="color:var(--text)">${t?.name||'Unknown'}</strong> • ${new Date(req.created).toLocaleDateString()}</div>
+                ${req.msg?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">"${req.msg}"</div>`:''}
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-success btn-sm" onclick="approveJoin('${req.id}')"><i class="fa fa-check"></i> Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectJoin('${req.id}')"><i class="fa fa-times"></i> Reject</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+function approveJoin(id){
+  const req=DATA.joinreqs.find(r=>r.id===id);if(!req)return;
+  req.status='approved';
+  const t=DATA.teams.find(t=>t.id===req.teamId);
+  if(t&&!t.members.includes(req.ign))t.members.push(req.ign);
+  if(t)save('teams');
+  const p=DATA.players.find(p=>p.ign===req.ign);if(p&&t){p.team=t.name;save('players');}
+  save('joinreqs');toast(`${req.ign} approved`,'success');updateBadge();pgApprovals();
+}
+function rejectJoin(id){
+  const req=DATA.joinreqs.find(r=>r.id===id);if(!req)return;
+  req.status='rejected';save('joinreqs');toast('Rejected','info');updateBadge();pgApprovals();
+}
+
+// ---- ROLES ----
+function pgRoles(){
+  if(!isAdmin())return;
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Role Management</h1><p>Assign roles to players from this dashboard</p></div>
+    <div class="grid g2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Assign Role</div></div>
+        <div class="form-group"><label>Player</label><select id="rp-sel"><option value="">Select...</option>${DATA.players.map(p=>`<option value="${p.ign}">${p.ign}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Role</label><select id="rr-sel">
+          <option value="player">Player</option>
+          <option value="manager">Team Manager</option>
+          <option value="moderator">Moderator</option>
+          <option value="admin">Admin</option>
+          <option value="viewer">Viewer</option>
+        </select></div>
+        <div class="form-group"><label>Confirm Admin Password</label><input type="password" id="rpass" placeholder="Admin password"></div>
+        <button class="btn btn-primary" onclick="doAssignRole()"><i class="fa fa-save"></i> Assign Role</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Current Assignments</div></div>
+        ${Object.keys(DATA.roles).length===0?'<div class="empty-state" style="padding:24px"><i class="fa fa-user-shield"></i><p>No custom roles</p></div>':
+          Object.entries(DATA.roles).map(([ign,role])=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div class="avatar">${ign.charAt(0)}</div>
+            <div style="flex:1;font-weight:600">${ign}</div>
+            <span class="role-tag ${roleClass(role)}">${role}</span>
+            <button class="btn btn-danger btn-xs" onclick="revokeRole('${ign}')"><i class="fa fa-times"></i></button>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Team Managers — Quick Set</div></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Set a manager directly from each approved team. Manager role is auto-assigned on team approval.</p>
+      <div class="grid g3">
+        ${DATA.teams.filter(t=>t.status==='approved').map(t=>`
+          <div style="background:var(--bg3);padding:14px;border-radius:10px">
+            <div style="font-weight:700;margin-bottom:3px">${t.name}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Current: <span style="color:#a855f7">${t.manager||'None'}</span></div>
+            <select onchange="quickMgr('${t.id}',this.value)" style="width:100%;font-size:12px;padding:6px">
+              <option value="">Set manager...</option>
+              ${(t.members||[]).map(m=>`<option value="${m}" ${m===t.manager?'selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>`).join('')||'<div class="text-muted text-sm">No approved teams</div>'}
+      </div>
+    </div>
+  `;
+}
+function doAssignRole(){
+  const ign=document.getElementById('rp-sel').value;
+  const role=document.getElementById('rr-sel').value;
+  const pass=document.getElementById('rpass').value;
+  if(!ign)return toast('Select player','error');
+  if(pass!==DATA.cfg.adminPass)return toast('Wrong password','error');
+  DATA.roles[ign]=role;save('roles');toast(`${ign} → ${role}`,'success');pgRoles();
+}
+function revokeRole(ign){delete DATA.roles[ign];save('roles');toast('Revoked','info');pgRoles();}
+function quickMgr(teamId,ign){
+  if(!ign)return;
+  const t=DATA.teams.find(t=>t.id===teamId);if(!t)return;
+  if(t.manager&&DATA.roles[t.manager]==='manager'&&t.manager!==ign)delete DATA.roles[t.manager];
+  t.manager=ign;DATA.roles[ign]='manager';save('teams');save('roles');toast(`Manager: ${ign}`,'success');
+}
+
+// ---- RESULTS ----
+function pgResults(){
+  if(!isAdmin())return;
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Log Results</h1></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Match</div></div>
+        <select id="res-match" onchange="loadResForm()" style="width:100%;margin-bottom:12px">
+          <option value="">Select match...</option>
+          ${DATA.matches.filter(m=>m.status==='live'||m.status==='done').map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}
+        </select>
+        <div id="res-form"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Result History</div></div>
+        ${DATA.results.length===0?'<div class="empty-state"><i class="fa fa-flag-checkered"></i><p>No results</p></div>':
+          [...DATA.results].reverse().slice(0,10).map(r=>`
+          <div style="padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="font-weight:600;font-size:13px">${r.matchName}</div>
+            <div style="font-size:11px;color:var(--muted)">${new Date(r.created).toLocaleDateString()} • Winner: ${r.winner||'N/A'}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+function loadResForm(){
+  const matchId=document.getElementById('res-match').value;
+  if(!matchId)return;
+  const m=DATA.matches.find(m=>m.id===matchId);
+  let html=`<div style="font-size:13px;font-weight:600;margin-bottom:12px">${m.name}</div>`;
+  for(let i=1;i<=10;i++){
+    html+=`<div style="margin-bottom:8px;padding:10px;background:var(--bg3);border-radius:8px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1px">#${i} PLACE</div>
+      <div class="grid g2"><input type="text" id="ri-${i}" placeholder="Player IGN"><input type="number" id="rk-${i}" placeholder="Kills" min="0" value="0"></div>
+    </div>`;
+  }
+  html+=`<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="submitRes('${matchId}')"><i class="fa fa-flag-checkered"></i> Submit Results</button>`;
+  document.getElementById('res-form').innerHTML=html;
+}
+function submitRes(matchId){
+  const m=DATA.matches.find(m=>m.id===matchId);if(!m)return;
+  const xpBonus=[500,250,100,50,50,30,30,20,20,20];
+  const entries=[];
+  for(let i=1;i<=10;i++){
+    const ign=(document.getElementById(`ri-${i}`)?.value||'').trim();
+    const kills=parseInt(document.getElementById(`rk-${i}`)?.value||0);
+    if(!ign)continue;
+    entries.push({place:i,ign,kills});
+    const p=DATA.players.find(p=>p.ign.toLowerCase()===ign.toLowerCase());
+    if(p){p.kills=(p.kills||0)+kills;p.games=(p.games||0)+1;if(i===1)p.wins=(p.wins||0)+1;
+      p.xp=(p.xp||0)+kills*50+(xpBonus[i-1]||0);p.deaths=(p.deaths||0)+(i>1?1:0);}
+  }
+  save('players');
+  DATA.results.push({id:uid(),matchId,matchName:m.name,entries,winner:entries[0]?.ign||'',created:Date.now()});
+  save('results');m.status='done';save('matches');toast('Results logged!','success');pgResults();
+}
+
+// ---- SETTINGS ----
+function pgSettings(){
+  if(!isAdmin())return;
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Settings</h1></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Tournament</div></div>
+        <div class="form-group"><label>Name</label><input type="text" id="s-name" value="${DATA.cfg.name}"></div>
+        <div class="form-group"><label>Season</label><input type="text" id="s-season" value="${DATA.cfg.season}"></div>
+        <div class="form-group"><label>Prize Pool ($)</label><input type="number" id="s-prize" value="${DATA.cfg.prize}"></div>
+        <div class="form-group"><label>Announcement</label><textarea id="s-ann">${DATA.cfg.announcement}</textarea></div>
+        <div class="form-group"><label>Discord Webhook</label><input type="text" id="s-wh" value="${DATA.cfg.webhook||''}"></div>
+        <button class="btn btn-primary" onclick="saveSettings()"><i class="fa fa-save"></i> Save</button>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Change Password</div></div>
+          <div class="form-group"><label>Current</label><input type="password" id="s-cp"></div>
+          <div class="form-group"><label>New</label><input type="password" id="s-np"></div>
+          <button class="btn btn-primary" onclick="changePass()"><i class="fa fa-lock"></i> Update</button>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,.3)">
+          <div class="card-header"><div class="card-title" style="color:var(--accent2)"><i class="fa fa-triangle-exclamation"></i> Danger Zone</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-danger" onclick="if(confirm('Clear players?')){DATA.players=[];save('players');toast('Done','info');}">Clear Players</button>
+            <button class="btn btn-danger" onclick="if(confirm('Clear teams?')){DATA.teams=[];DATA.teamreqs=[];save('teams');save('teamreqs');toast('Done','info');}">Clear Teams</button>
+            <button class="btn btn-danger" onclick="if(confirm('Clear matches?')){DATA.matches=[];save('matches');toast('Done','info');}">Clear Matches</button>
+            <button class="btn btn-danger" onclick="fullReset()">⚠️ Full Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function saveSettings(){
+  DATA.cfg.name=document.getElementById('s-name').value;
+  DATA.cfg.season=document.getElementById('s-season').value;
+  DATA.cfg.prize=parseFloat(document.getElementById('s-prize').value)||0;
+  DATA.cfg.announcement=document.getElementById('s-ann').value;
+  DATA.cfg.webhook=document.getElementById('s-wh').value;
+  save('cfg');toast('Saved','success');
+}
+function changePass(){
+  const cp=document.getElementById('s-cp').value,np=document.getElementById('s-np').value;
+  if(cp!==DATA.cfg.adminPass)return toast('Wrong current password','error');
+  if(!np)return toast('Enter new password','error');
+  DATA.cfg.adminPass=np;save('cfg');toast('Password updated','success');
+}
+function fullReset(){
+  if(!confirm('FULL RESET — delete ALL data?'))return;
+  DATA.players=[];DATA.teams=[];DATA.matches=[];DATA.polls=[];DATA.results=[];
+  DATA.bracket={};DATA.teamreqs=[];DATA.joinreqs=[];DATA.roles={};
+  ['players','teams','matches','polls','results','bracket','teamreqs','joinreqs','roles'].forEach(k=>save(k));
+  toast('Reset complete','info');pgDashboard();
+}
+
+// ---- BRACKET ----
+function pgBracket(){
+  const rounds=['Quarter Finals','Semi Finals','Final'];
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Tournament Bracket</h1></div>
+    <div style="display:flex;gap:20px;overflow-x:auto;padding-bottom:16px;align-items:flex-start">
+      ${rounds.map((r,ri)=>`
+        <div style="min-width:220px;flex-shrink:0">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--accent);margin-bottom:10px">${r}</div>
+          <div id="br-${ri}"></div>
+          ${isAdmin()?`<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addBMatch(${ri})"><i class="fa fa-plus"></i> Add</button>`:''}
+        </div>`).join('')}
+    </div>
+  `;
+  rounds.forEach((_,ri)=>{
+    const ms=DATA.bracket[ri]||[];
+    document.getElementById(`br-${ri}`).innerHTML=ms.map((m,mi)=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+        ${['A','B'].map(s=>{
+          const key=s.toLowerCase();
+          return`<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:${m.winner===key?'rgba(245,158,11,.12)':'var(--bg2)'};border-radius:6px;margin-bottom:4px">
+            <span style="flex:1;font-size:13px">${m['team'+s]||'TBD'}</span>
+            <span class="font-mono" style="font-size:12px">${m['score'+s]||0}</span>
+          </div>`;
+        }).join('')}
+        ${isAdmin()?`<div style="display:flex;gap:5px;margin-top:8px">
+          <button class="btn btn-ghost btn-xs" onclick="editBMatch(${ri},${mi})"><i class="fa fa-edit"></i></button>
+          <button class="btn btn-danger btn-xs" onclick="delBMatch(${ri},${mi})"><i class="fa fa-trash"></i></button>
+        </div>`:''}
+      </div>`).join('')||'<div class="text-muted text-sm" style="padding:8px">No matches</div>';
+  });
+}
+function addBMatch(ri){
+  openModal(`<div class="modal-title">Add Match</div>
+    <div class="form-group"><label>Team A</label><input type="text" id="b-ta"></div>
+    <div class="form-group"><label>Team B</label><input type="text" id="b-tb"></div>
+    <div class="form-group"><label>Score A</label><input type="number" id="b-sa" value="0"></div>
+    <div class="form-group"><label>Score B</label><input type="number" id="b-sb" value="0"></div>
+    <div class="form-group"><label>Winner</label><select id="b-w"><option value="">TBD</option><option value="a">Team A</option><option value="b">Team B</option></select></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveBMatch(${ri})">Save</button></div>`);
+}
+function saveBMatch(ri){
+  if(!DATA.bracket[ri])DATA.bracket[ri]=[];
+  DATA.bracket[ri].push({teamA:document.getElementById('b-ta').value,teamB:document.getElementById('b-tb').value,
+    scoreA:document.getElementById('b-sa').value,scoreB:document.getElementById('b-sb').value,winner:document.getElementById('b-w').value});
+  save('bracket');closeModal();pgBracket();
+}
+function delBMatch(ri,mi){DATA.bracket[ri].splice(mi,1);save('bracket');pgBracket();}
+function editBMatch(ri,mi){
+  const m=DATA.bracket[ri][mi];
+  openModal(`<div class="modal-title">Edit Match</div>
+    <div class="form-group"><label>Team A</label><input type="text" id="b-ta" value="${m.teamA||''}"></div>
+    <div class="form-group"><label>Team B</label><input type="text" id="b-tb" value="${m.teamB||''}"></div>
+    <div class="form-group"><label>Score A</label><input type="number" id="b-sa" value="${m.scoreA||0}"></div>
+    <div class="form-group"><label>Score B</label><input type="number" id="b-sb" value="${m.scoreB||0}"></div>
+    <div class="form-group"><label>Winner</label><select id="b-w"><option value="">TBD</option><option value="a" ${m.winner==='a'?'selected':''}>Team A</option><option value="b" ${m.winner==='b'?'selected':''}>Team B</option></select></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="updBMatch(${ri},${mi})">Save</button></div>`);
+}
+function updBMatch(ri,mi){
+  DATA.bracket[ri][mi]={teamA:document.getElementById('b-ta').value,teamB:document.getElementById('b-tb').value,
+    scoreA:document.getElementById('b-sa').value,scoreB:document.getElementById('b-sb').value,winner:document.getElementById('b-w').value};
+  save('bracket');closeModal();pgBracket();
+}
+
+// ---- POLLS ----
+function pgPolls(){
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h1>Polls</h1></div>
+    ${isAdmin()?`<div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Create Poll</div></div>
+      <div class="form-group"><label>Question</label><input type="text" id="pq" placeholder="Your question"></div>
+      <div class="form-group"><label>Options (one per line)</label><textarea id="po" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea></div>
+      <button class="btn btn-primary" onclick="createPoll()"><i class="fa fa-plus"></i> Create</button>
+    </div>`:''}
+    <div class="grid g2" id="polls-container">
+      ${DATA.polls.length===0?'<div class="empty-state" style="grid-column:1/-1"><i class="fa fa-poll"></i><p>No polls yet</p></div>':
+        DATA.polls.map(p=>pollCard(p)).join('')}
+    </div>
+  `;
+}
+function pollCard(poll){
+  const total=(poll.votes||[]).reduce((a,v)=>a+v,0);
+  return`<div class="card" id="poll-${poll.id}">
+    <div style="font-weight:700;margin-bottom:12px">${poll.q}</div>
+    ${poll.options.map((opt,i)=>{
+      const v=(poll.votes||[])[i]||0,p=total?Math.round(v/total*100):0;
+      return`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${opt}</span><span class="font-mono">${p}%</span></div>
+        <div style="height:5px;background:var(--bg3);border-radius:99px"><div style="width:${p}%;height:100%;background:var(--accent);border-radius:99px;transition:.4s"></div></div>
+      </div>`;
+    }).join('')}
+    <div style="font-size:11px;color:var(--muted);margin:8px 0">${total} votes</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      ${poll.options.map((_,i)=>`<button class="btn btn-ghost btn-xs" onclick="castVote('${poll.id}',${i})">Vote ${i+1}</button>`).join('')}
+      ${isAdmin()?`<button class="btn btn-danger btn-xs" onclick="delPoll('${poll.id}')"><i class="fa fa-trash"></i></button>`:''}
+    </div>
+  </div>`;
+}
+function createPoll(){
+  const q=document.getElementById('pq').value.trim();
+  const opts=document.getElementById('po').value.split('\n').map(o=>o.trim()).filter(Boolean);
+  if(!q||opts.length<2)return toast('Need question + 2+ options','error');
+  DATA.polls.push({id:uid(),q,options:opts,votes:opts.map(()=>0),created:Date.now()});
+  save('polls');toast('Poll created','success');pgPolls();
+}
+function castVote(id,i){
+  const p=DATA.polls.find(p=>p.id===id);if(!p)return;
+  if(!p.votes)p.votes=p.options.map(()=>0);
+  p.votes[i]++;save('polls');pgPolls();
+}
+function delPoll(id){DATA.polls=DATA.polls.filter(p=>p.id!==id);save('polls');pgPolls();}
+
+// Boot
+init();
+</script>
+</body>
+</html>
