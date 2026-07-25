@@ -80,23 +80,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .lf-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentGlow)}
 .lf-input::placeholder{color:var(--textD)}
 .lf-input option{background:var(--bg3)}
-.lf-row{display:grid;grid-template-columns:1fr 80px;gap:.6rem}
-/* Discord OAuth loading card */
-.disc-loading{background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.2);border-radius:var(--r);
-  padding:1.25rem;text-align:center;display:none}
-.disc-loading.show{display:block}
-.disc-loading-spinner{width:28px;height:28px;border:2px solid rgba(88,101,242,.2);border-top-color:#5865F2;
-  border-radius:50%;animation:spin .75s linear infinite;margin:0 auto .75rem}
-.disc-user-card{background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);
-  padding:1rem;display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;display:none}
-.disc-user-card.show{display:flex}
-.disc-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(88,101,242,.4);object-fit:cover;flex-shrink:0}
-.disc-avatar-fallback{width:44px;height:44px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0}
-/* manual form collapse */
-#login-fields{display:none;animation:.25s ease fade-up}
-#login-fields.open{display:block}
-.manual-toggle{background:none;border:none;color:var(--textD);font-size:.8rem;cursor:pointer;padding:.35rem 0;text-decoration:underline;text-underline-offset:3px;transition:color .15s;font-family:'DM Sans',sans-serif}
-.manual-toggle:hover{color:var(--textM)}
+.lf-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+/* Auth mode tabs (Log In / Sign Up / Admin) */
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:1.1rem;background:var(--bg3);
+  border:1px solid var(--border);border-radius:var(--rS);padding:.25rem}
+.auth-tab{background:none;border:none;color:var(--textM);font-family:'DM Sans',sans-serif;font-size:.78rem;
+  font-weight:600;padding:.5rem .3rem;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;
+  align-items:center;justify-content:center;gap:.35rem;white-space:nowrap}
+.auth-tab:hover{color:var(--text)}
+.auth-tab.active{background:var(--accent);color:#fff}
+#auth-panel-login,#auth-panel-signup,#auth-panel-admin{animation:.25s ease fade-up}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.65rem 1.25rem;border:none;border-radius:var(--rS);font-family:'DM Sans',sans-serif;
   font-size:.87rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
@@ -165,6 +158,129 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   font-size:.72rem;font-weight:600;color:var(--red)}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1.2s ease infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
+
+/* ── STREAM OVERLAY (TikTok / OBS) — built for a vertical 9:16 canvas ─────
+   Add as a Browser Source in TikTok LIVE Studio (or OBS→TikTok RTMP).
+   Recommended source size: 1080×1920 (or any 9:16 ratio, it scales with vw/vh).
+   Single lower-third bar pinned to the bottom so it never covers gameplay. ─ */
+#overlay-root{display:none;position:fixed;inset:0;z-index:99999;background:transparent;
+  font-family:'DM Sans',sans-serif;flex-direction:column;justify-content:flex-end;
+  align-items:center;padding:0 3vw 3vh;box-sizing:border-box}
+#overlay-root.show{display:flex}
+.ov-lower{width:100%;max-width:960px;margin:0 auto;background:linear-gradient(135deg,rgba(9,12,20,.96),rgba(19,26,44,.96));
+  backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.12);border-radius:99px;overflow:hidden;
+  box-shadow:0 14px 55px rgba(0,0,0,.6);display:flex;align-items:center;gap:0;height:52px}
+.ov-lower-live{display:inline-flex;align-items:center;gap:.35rem;background:rgba(239,68,68,.15);
+  border-right:1px solid rgba(255,255,255,.1);color:#ff6b6b;font-weight:700;font-size:.66rem;letter-spacing:1px;
+  text-transform:uppercase;padding:0 1.1rem;flex-shrink:0;height:100%;display:flex;align-items:center}
+.ov-lower-live .dot{width:6px;height:6px;border-radius:50%;background:#ff6b6b;animation:pulse 1.2s infinite}
+.ov-lower-empty{color:rgba(255,255,255,.45);font-size:.8rem;padding:0 1.2rem}
+.ov-lower-ticker{position:relative;flex:1;min-width:0;overflow:hidden;white-space:nowrap;height:100%;
+  display:flex;align-items:center;padding:0 1.2rem}
+.ov-lower-ticker-track{display:inline-flex;align-items:center;gap:2.2rem;animation:ticker 95s linear infinite}
+.ov-lower-ticker-item{font-family:'DM Mono',monospace;font-size:.78rem;color:rgba(255,255,255,.78);
+  display:inline-flex;align-items:center;gap:.5rem;padding:0 .3rem}
+.ov-lower-ticker-item b{color:#fff;font-weight:700}
+@media (max-width:480px){.ov-lower{height:44px}.ov-lower-live{font-size:.58rem;padding:0 .8rem}.ov-lower-ticker-item{font-size:.68rem}}
+
+/* ── TDM player search / roster ─────────────────────────── */
+.tdm-search-results{position:relative;margin-top:.3rem;max-height:180px;overflow-y:auto;border-radius:var(--rS);
+  background:var(--bg3);border:1px solid var(--border)}
+.tdm-search-results:empty{display:none;border:none}
+.tdm-search-row{display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;cursor:pointer;font-size:.83rem;transition:background .12s}
+.tdm-search-row:hover{background:var(--surfaceH)}
+.tdm-search-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,.04)}
+.tdm-roster{display:flex;flex-direction:column;gap:.4rem;margin-top:.7rem;min-height:8px}
+.tdm-roster-row{display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--rS);padding:.4rem .6rem;font-size:.83rem}
+.tdm-roster-row .cell-av{width:26px;height:26px;font-size:.7rem}
+.tdm-roster-row .rm{margin-left:auto;cursor:pointer;color:var(--textD);transition:color .15s}
+.tdm-roster-row .rm:hover{color:var(--red)}
+
+/* ── TDM LIVE BROADCAST BANNER (1080×384) ─────────────────────────── */
+.tdm-banner{position:relative;width:100%;max-width:1080px;aspect-ratio:1080/384;margin:0 auto 1.2rem;border-radius:var(--r);
+  overflow:hidden;background:linear-gradient(150deg,#0a0d17 0%,#131a2c 38%,#171f34 58%,#171325 78%,#0c0a14 100%);
+  border:1px solid var(--borderH);box-shadow:var(--shadowL),inset 0 0 90px rgba(0,0,0,.55);display:flex;flex-direction:column}
+/* single unified backdrop wash — one continuous gradient, no colliding blobs */
+.tdm-banner-bg{position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 75% 90% at 50% 8%,rgba(255,255,255,.05) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 60% at 50% 46%,rgba(129,140,248,.10) 0%,transparent 70%),
+    linear-gradient(90deg,rgba(99,102,241,.20) 0%,rgba(99,102,241,.05) 32%,transparent 46%,transparent 54%,rgba(239,68,68,.05) 68%,rgba(239,68,68,.20) 100%);}
+/* fine layered grid — primary + secondary for depth */
+.tdm-banner-grid{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.7;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 0h1v40H0zM39 0h1v40h-1z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:64px 64px,64px 64px,40px 40px}
+/* subtle broadcast scanlines */
+.tdm-banner-scan{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0px,rgba(0,0,0,.22) 1px,transparent 1px,transparent 3px)}
+/* vignette to unify edges and darken corners into one cohesive frame */
+.tdm-banner-vignette{position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 120% 120% at 50% 50%,transparent 55%,rgba(6,8,14,.55) 100%),
+    linear-gradient(180deg,rgba(6,8,14,.35) 0%,transparent 16%,transparent 78%,rgba(6,8,14,.55) 100%)}
+/* thin top accent strip tying both team colors into the single backdrop */
+.tdm-banner-accentline{position:absolute;top:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,var(--accentL) 0%,rgba(129,140,248,.15) 40%,rgba(255,255,255,.2) 50%,rgba(252,165,165,.15) 60%,#fca5a5 100%)}
+/* broadcast-frame corner brackets */
+.tdm-banner-corner{position:absolute;width:20px;height:20px;z-index:2;pointer-events:none;opacity:.4}
+.tdm-banner-corner-tl{top:9px;left:9px;border-top:2px solid rgba(255,255,255,.5);border-left:2px solid rgba(255,255,255,.5);border-top-left-radius:4px}
+.tdm-banner-corner-tr{top:9px;right:9px;border-top:2px solid rgba(255,255,255,.5);border-right:2px solid rgba(255,255,255,.5);border-top-right-radius:4px}
+.tdm-banner-corner-bl{bottom:9px;left:9px;border-bottom:2px solid rgba(255,255,255,.5);border-left:2px solid rgba(255,255,255,.5);border-bottom-left-radius:4px}
+.tdm-banner-corner-br{bottom:9px;right:9px;border-bottom:2px solid rgba(255,255,255,.5);border-right:2px solid rgba(255,255,255,.5);border-bottom-right-radius:4px}
+.tdm-banner-live{position:absolute;top:.9rem;left:1.1rem;z-index:2;display:flex;align-items:center;gap:.4rem;
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fca5a5;font-family:'DM Mono',monospace;
+  font-size:.68rem;font-weight:700;letter-spacing:1.5px;padding:.28rem .65rem;border-radius:99px}
+.tdm-banner-live .dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.2s infinite}
+.tdm-banner-target{position:absolute;top:.9rem;right:1.1rem;z-index:2;font-family:'DM Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.55);letter-spacing:.5px}
+.tdm-banner-brand{position:absolute;bottom:2.6rem;right:1.1rem;z-index:2;font-family:'Syne',sans-serif;font-weight:800;
+  font-size:.7rem;letter-spacing:2px;color:rgba(255,255,255,.28)}
+.tdm-banner-main{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:1.6rem 2.2rem 0;gap:1rem}
+.tdm-banner-side{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.tdm-banner-side.b{align-items:flex-end;text-align:right}
+.tdm-banner-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:#fff;letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.tdm-banner-score{font-family:'DM Mono',monospace;font-weight:700;font-size:4.2rem;line-height:1;letter-spacing:-2px}
+.tdm-banner-side.a .tdm-banner-score{color:var(--accentL);text-shadow:0 0 30px rgba(99,102,241,.5)}
+.tdm-banner-side.b .tdm-banner-score{color:#fca5a5;text-shadow:0 0 30px rgba(239,68,68,.5)}
+.tdm-banner-mvp{font-size:.68rem;color:rgba(255,255,255,.5);font-family:'DM Mono',monospace;margin-top:.15rem}
+.tdm-banner-vs{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:rgba(255,255,255,.35);
+  padding-top:.3rem;position:relative;text-shadow:0 0 20px rgba(255,255,255,.15)}
+.tdm-banner-vs::before{content:'';position:absolute;top:50%;left:50%;width:70px;height:70px;
+  transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.08);border-radius:50%;pointer-events:none}
+.tdm-banner-bars{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;
+  padding:.5rem 2.2rem 0;align-items:center}
+.tdm-banner-bartrack{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.tdm-banner-side.b .tdm-banner-bartrack{direction:rtl}
+.tdm-banner-barfill{height:100%;border-radius:99px;transition:width .4s ease}
+.tdm-banner-ticker{position:relative;z-index:1;margin-top:auto;background:rgba(0,0,0,.35);border-top:1px solid rgba(255,255,255,.08);
+  overflow:hidden;white-space:nowrap;padding:.4rem 0}
+.tdm-banner-ticker-track{display:inline-flex;gap:2.4rem;animation:ticker 75s linear infinite}
+.tdm-banner-ticker-item{font-family:'DM Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.75);
+  display:inline-flex;align-items:center;gap:.5rem}
+.tdm-banner-ticker-item b{color:#fff;font-weight:700}
+@media (max-width:640px){.tdm-banner-score{font-size:2.6rem}.tdm-banner-name{font-size:.95rem}.tdm-banner-main{padding:1.2rem 1.1rem 0}.tdm-banner-bars{padding:.4rem 1.1rem 0}}
+
+/* ── Team recruiting ─────────────────────────── */
+.team-recruit-badge{display:inline-flex;align-items:center;gap:.3rem;background:rgba(16,185,129,.12);
+  border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:.62rem;font-weight:700;letter-spacing:.4px;
+  padding:.2rem .5rem;border-radius:99px;text-transform:uppercase}
+.teams-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+
+/* ── Stat transfer ─────────────────────────── */
+.xfer-lookup-results{position:relative;margin-top:.3rem;max-height:170px;overflow-y:auto;border-radius:var(--rS);
+  border:1px solid var(--border);background:var(--bg2)}
+.xfer-lookup-results:empty{display:none;border:none}
+.xfer-lookup-row{display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;cursor:pointer;font-size:.83rem;transition:background .12s}
+.xfer-lookup-row:hover{background:var(--surfaceH)}
+.xfer-req-row{display:flex;align-items:center;gap:.7rem;padding:.6rem .7rem;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--rS);margin-bottom:.5rem;font-size:.83rem;flex-wrap:wrap}
 .pill-season{background:var(--surface);border:1px solid var(--border);border-radius:99px;
   padding:.25rem .7rem;font-size:.72rem;color:var(--textM);font-weight:500}
 
@@ -513,6 +629,40 @@ tr:last-child td{border-bottom:none}
 .overflow-x{overflow-x:auto}
 .divider-line{height:1px;background:var(--border);margin:1.2rem 0}
 
+/* ── THEME CUSTOMIZER: display font + density ─────────── */
+:root{--font-display:'Syne',sans-serif}
+.font-syne,.sb-logo-text,.login-title,.sh-title,.card-title,.kpi-value,.map-hero-name,
+.modal-title,.tdm-banner-name,.tdm-banner-brand,.notif-title,.ls-brand,.group-title{font-family:var(--font-display)}
+body.density-compact .page-content{padding:.9rem}
+body.density-compact .card{padding:.85rem}
+body.density-compact .kpi{padding:.75rem .9rem}
+body.density-compact .sb-item{padding:.42rem .7rem}
+body.density-compact .g4,body.density-compact .g3,body.density-compact .g2{gap:.6rem}
+body.theme-light::before{opacity:.45}
+
+/* ── OVERLAY / BOTTOM BANNER — layout variants ─────────── */
+.ov-layout-minimal.tdm-banner .tdm-banner-ticker,
+.ov-layout-minimal.tdm-banner .tdm-banner-bars,
+.ov-layout-minimal.tdm-banner .tdm-banner-corner,
+.ov-layout-minimal.tdm-banner .tdm-banner-mvp{display:none !important}
+.ov-layout-scorecard.tdm-banner .tdm-banner-ticker{display:none !important}
+.ov-layout-scorecard.tdm-banner .tdm-banner-score{font-size:5rem}
+.ov-layout-minimal.ov-lower{height:36px}
+.ov-layout-minimal .ov-lower-ticker-item{font-size:.62rem}
+.ov-layout-scorecard .ov-lower-ticker-track{animation:none;justify-content:center;width:100%}
+
+/* ── OVERLAY / BOTTOM BANNER — theme variants ─────────── */
+.ov-theme-team.tdm-banner{background:linear-gradient(120deg,var(--accentD) 0%,#0b0e17 45%,#0b0e17 55%,var(--red) 100%)}
+.ov-theme-light.tdm-banner{background:linear-gradient(150deg,#eef0f6 0%,#e2e5ef 100%)}
+.ov-theme-light.tdm-banner .tdm-banner-name,.ov-theme-light.tdm-banner .tdm-banner-target{color:#161b24}
+.ov-theme-light.tdm-banner .tdm-banner-brand{color:rgba(10,12,20,.32)}
+.ov-theme-light.tdm-banner .tdm-banner-mvp{color:rgba(10,12,20,.5)}
+.ov-theme-team.ov-lower{background:linear-gradient(90deg,rgba(99,102,241,.88),rgba(9,12,20,.94) 45%,rgba(9,12,20,.94) 55%,rgba(239,68,68,.88))}
+.ov-theme-light.ov-lower{background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(238,239,246,.97));border-color:rgba(10,12,20,.12)}
+.ov-theme-light.ov-lower .ov-lower-ticker-item{color:rgba(10,20,30,.75)}
+.ov-theme-light.ov-lower .ov-lower-ticker-item b{color:#0c0f18}
+.ov-theme-light.ov-lower .ov-lower-live{color:#dc2626}
+
 @media(max-width:900px){.sidebar{width:200px}}
 @media(max-width:700px){
   #app{flex-direction:column}
@@ -531,17 +681,25 @@ tr:last-child td{border-bottom:none}
 <body>
 <div id="notifs"></div>
 
-<!-- Supabase init overlay -->
+<!-- ═══════ STREAM OVERLAY (TikTok / OBS browser source) — single sliding lower-third bar ═══════ -->
+<div id="overlay-root">
+  <div class="ov-lower" id="ov-lower">
+    <div class="ov-lower-live"><span class="dot"></span> LIVE</div>
+    <div class="ov-lower-ticker" id="ov-lower-ticker"></div>
+  </div>
+</div>
+
+<!-- Google Sheet init overlay -->
 <div id="sb-init-overlay">
   <div class="sb-spinner"></div>
   <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text)">RAGEISM</div>
   <div style="font-size:.8rem;color:var(--textM)" id="sb-init-msg">Connecting to server...</div>
 </div>
 
-<!-- Supabase live status bar -->
+<!-- Google Sheet live status bar -->
 <div id="sb-status-bar">
   <div class="sb-dot"></div>
-  <span id="sb-status-txt">Supabase connected</span>
+  <span id="sb-status-txt">Google Sheet connected</span>
   <span style="margin-left:auto;opacity:.5;font-weight:400" id="sb-last-sync"></span>
 </div>
 
@@ -561,89 +719,65 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="ls-right">
     <div class="login-box">
-      <div class="login-title">Welcome back</div>
-      <div class="login-sub">Sign in to access the tournament hub</div>
+      <div class="login-title" id="login-title-txt">Welcome back</div>
+      <div class="login-sub" id="login-sub-txt">Sign in with your username &amp; password</div>
 
-      <!-- Discord OAuth loading state -->
-      <div class="disc-loading" id="disc-loading">
-        <div class="disc-loading-spinner"></div>
-        <div style="font-size:.85rem;font-weight:600;color:#5865F2" id="disc-loading-msg">Connecting to Discord...</div>
+      <!-- Auth mode tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="auth-tab-login" onclick="setAuthMode('login')"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+        <button class="auth-tab" id="auth-tab-signup" onclick="setAuthMode('signup')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+        <button class="auth-tab" id="auth-tab-admin" onclick="setAuthMode('admin')"><i class="fa-solid fa-shield-halved"></i> Admin</button>
       </div>
 
-      <!-- Discord user confirmed card (shown after OAuth) -->
-      <div class="disc-user-card" id="disc-user-card">
-        <div class="disc-avatar-fallback" id="disc-av-fallback">?</div>
-        <img class="disc-avatar" id="disc-av-img" src="" alt="" style="display:none"/>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:.92rem" id="disc-display-name">—</div>
-          <div style="font-size:.75rem;color:#5865F2" id="disc-username-tag">—</div>
+      <!-- LOG IN panel -->
+      <div id="auth-panel-login">
+        <label class="lf-label">Username</label>
+        <input class="lf-input" id="li-user" placeholder="yourusername" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <label class="lf-label">Password</label>
+        <input class="lf-input" id="li-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="btn btn-accent btn-fw" onclick="doLogin()" style="margin-top:.3rem">
+          <i class="fa-solid fa-right-to-bracket"></i> Log In
+        </button>
+        <div style="text-align:center;margin-top:.7rem;font-size:.8rem;color:var(--textD)">
+          New here? <a href="javascript:void(0)" onclick="setAuthMode('signup')" style="color:var(--accentL);font-weight:600;text-decoration:none">Create an account</a>
         </div>
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
       </div>
 
-      <!-- Main Discord button (hidden after OAuth success) -->
-      <div id="disc-btn-wrap">
-        <button class="btn btn-disc btn-fw" onclick="doDiscordOAuth()">
-          <i class="fa-brands fa-discord"></i> Continue with Discord
-        </button>
-      </div>
-
-      <!-- Role picker shown after Discord OAuth -->
-      <div id="disc-role-wrap" style="display:none;margin-top:.8rem">
-        <label class="lf-label">Your Role</label>
-        <select class="lf-input" id="disc-role" style="margin-bottom:.5rem">
-          <option value="player">Player</option>
-          <option value="viewer">Viewer</option>
-          <option value="admin">Admin / Host</option>
-        </select>
-        <div id="disc-admin-pw" style="display:none">
-          <label class="lf-label">Admin Password</label>
-          <input class="lf-input" id="disc-pw" type="password" placeholder="Enter admin password"/>
+      <!-- SIGN UP panel -->
+      <div id="auth-panel-signup" style="display:none">
+        <label class="lf-label">In-Game ID (IGN)</label>
+        <input class="lf-input" id="su-ign" placeholder="Your PUBG in-game name"/>
+        <label class="lf-label">Username</label>
+        <input class="lf-input" id="su-user" placeholder="Pick a username"/>
+        <div class="lf-row">
+          <div><label class="lf-label">Password</label><input class="lf-input" id="su-pw" type="password" placeholder="••••••••" style="margin:0"/></div>
+          <div style="grid-column:span 1"><label class="lf-label">Confirm</label><input class="lf-input" id="su-pw2" type="password" placeholder="••••••••" style="margin:0"/></div>
         </div>
-        <button class="btn btn-accent btn-fw" onclick="finishDiscordLogin()">
-          <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
+        <button class="btn btn-accent btn-fw" onclick="doSignup()" style="margin-top:.9rem">
+          <i class="fa-solid fa-user-plus"></i> Create Account
         </button>
-        <button class="btn btn-ghost btn-fw" onclick="resetDiscordLogin()" style="margin-top:.4rem;font-size:.8rem">
-          <i class="fa-brands fa-discord" style="margin-right:.3rem"></i> Use different account
-        </button>
-      </div>
-
-      <div class="divider" style="margin:.9rem 0">or</div>
-
-      <!-- Manual login toggle -->
-      <div style="text-align:center;margin-bottom:.5rem">
-        <button class="manual-toggle" onclick="toggleManualLogin()">
-          <i class="fa-solid fa-keyboard" style="margin-right:.3rem;font-size:.72rem"></i>Sign in manually
-        </button>
-      </div>
-
-      <div id="login-fields">
-        <label class="lf-label">Discord Username</label>
-        <input class="lf-input" id="li-u" placeholder="yourname"/>
-        <div class="lf-row" style="margin-bottom:.9rem">
-          <div><label class="lf-label">In-Game Name</label><input class="lf-input" id="li-i" placeholder="IGN" style="margin:0"/></div>
-          <div><label class="lf-label">Tag</label><input class="lf-input" id="li-d" placeholder="#0001" style="margin:0;text-align:center"/></div>
+        <div style="text-align:center;margin-top:.7rem;font-size:.8rem;color:var(--textD)">
+          Already registered? <a href="javascript:void(0)" onclick="setAuthMode('login')" style="color:var(--accentL);font-weight:600;text-decoration:none">Log in</a>
         </div>
-        <label class="lf-label">Role</label>
-        <select class="lf-input" id="li-r" style="margin-bottom:.5rem">
-          <option value="player">Player</option>
-          <option value="viewer">Viewer</option>
-          <option value="admin">Admin / Host</option>
-        </select>
-        <div class="ls-admin-sec" id="admin-pw-sec">
-          <label class="lf-label">Admin Password</label>
-          <input class="lf-input" id="li-pw" type="password" placeholder="Enter admin password"/>
+      </div>
+
+      <!-- ADMIN MASTER LOGIN panel -->
+      <div id="auth-panel-admin" style="display:none">
+        <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:var(--rS);padding:.8rem 1rem;margin-bottom:1rem;font-size:.8rem;color:var(--textM)">
+          <i class="fa-solid fa-circle-info" style="color:var(--accentL);margin-right:.3rem"></i> For tournament hosts only. One shared master password — set it in Admin → Settings.
         </div>
-        <button class="btn btn-accent btn-fw" onclick="doLogin()">
-          <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
+        <label class="lf-label">Master Password</label>
+        <input class="lf-input" id="admin-master-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminMasterLogin()"/>
+        <button class="btn btn-accent btn-fw" onclick="doAdminMasterLogin()" style="margin-top:.3rem">
+          <i class="fa-solid fa-shield-halved"></i> Enter as Admin
         </button>
       </div>
 
-      <div style="margin-top:.8rem">
-        <button class="btn btn-ghost btn-fw" onclick="guestLogin()" style="font-size:.82rem;color:var(--textM)">
-          Continue as Guest Viewer
-        </button>
-      </div>
+      <div class="divider" style="margin:1rem 0 .6rem">or</div>
+      <button class="btn btn-ghost btn-fw" onclick="guestLogin()" style="font-size:.82rem;color:var(--textM)">
+        Continue as Guest Viewer
+      </button>
+
       <div id="sb-msg" style="font-size:.72rem;color:var(--textD);text-align:center;margin-top:.8rem"></div>
     </div>
   </div>
@@ -662,6 +796,7 @@ tr:last-child td{border-bottom:none}
       <div class="sb-section-label">Admin</div>
       <button class="sb-item" onclick="showPage('admin-overview')"><i class="fa-solid fa-gauge-high"></i> Overview <span class="sb-badge" id="alert-badge" style="display:none">0</span></button>
       <button class="sb-item" onclick="showPage('admin-results')"><i class="fa-solid fa-trophy"></i> Log Results</button>
+      <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM Control <span class="sb-badge" id="tdm-live-badge2" style="display:none;background:var(--red)">LIVE</span></button>
       <button class="sb-item" onclick="showPage('admin-players')"><i class="fa-solid fa-users-gear"></i> Players</button>
       <button class="sb-item" onclick="showPage('admin-teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
       <button class="sb-item" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Matches</button>
@@ -678,6 +813,7 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('groups')"><i class="fa-solid fa-layer-group"></i> Groups</button>
       <button class="sb-item" onclick="showPage('teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
       <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Matches</button>
+      <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM <span class="sb-badge" id="tdm-live-badge" style="display:none;background:var(--red)">LIVE</span></button>
       <button class="sb-item" onclick="showPage('analytics')"><i class="fa-solid fa-chart-mixed"></i> Analytics</button>
     </div>
 
@@ -830,6 +966,19 @@ tr:last-child td{border-bottom:none}
 
         <div id="announce-bar-wrap"></div>
 
+        <!-- Quick Actions — one click to the most common admin tasks -->
+        <div class="card mb3" style="padding:.9rem 1rem">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--textD);margin-bottom:.6rem">Quick Actions</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+            <button class="btn btn-accent btn-sm" onclick="showPage('admin-results')"><i class="fa-solid fa-trophy"></i> Log Match Results</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> Start / Manage TDM</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('admin-teams')"><i class="fa-solid fa-shield-halved"></i> Approve Teams</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('admin-players')"><i class="fa-solid fa-users-gear"></i> Manage Players</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Schedule Match</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('admin-settings')"><i class="fa-solid fa-gear"></i> Settings & Overlay</button>
+          </div>
+        </div>
+
         <!-- KPIs same as dashboard but with extra context -->
         <div class="g4 mb3">
           <div class="kpi" style="cursor:pointer" onclick="showPage('admin-players')">
@@ -978,7 +1127,16 @@ tr:last-child td{border-bottom:none}
 
       <!-- ░ ADMIN PLAYERS ░ -->
       <div class="page" id="page-admin-players">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Player <span style="color:var(--accentL)">Management</span></div></div></div>
+        <div class="sh-row">
+          <div class="sh"><div class="sh-title">Player <span style="color:var(--accentL)">Management</span></div><div class="sh-sub">Search, edit any stat, or remove a player</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="renderTransferRequests();openModal('transfer-request-modal')"><i class="fa-solid fa-right-left"></i> Transfer Requests <span id="transfer-req-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
+        </div>
+        <datalist id="ign-dl-teamnames"></datalist>
+        <div class="card mb2" style="padding:.8rem 1rem">
+          <div class="fg" style="margin:0;position:relative"><input class="fi" id="ap-search" placeholder="Search by name, IGN, UID, Discord, or team..." oninput="renderAPlayers();apShowLookup(this.value)" onfocus="apShowLookup(this.value)" onblur="setTimeout(()=>document.getElementById('ap-lookup-dd').style.display='none',200)"/>
+            <div id="ap-lookup-dd" class="xfer-lookup-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50"></div>
+          </div>
+        </div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>IGN</th><th>Discord</th><th>UID</th><th>Team</th><th>Kills</th><th>K/D</th><th>Rank</th><th></th></tr></thead><tbody id="ap-body"></tbody></table></div></div>
       </div>
 
@@ -1041,6 +1199,74 @@ tr:last-child td{border-bottom:none}
           </div>
           <div>
             <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-palette"></i> Theme Customizer</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Pick a preset or fine-tune colors, display font & density — applied across the dashboard, TDM banner, and the stream overlay.</div>
+              <div class="fg"><label class="fl">Preset</label>
+                <select class="fi fsel" id="cfg-theme-preset" onchange="applyPresetPreview()">
+                  <option value="dark">Dark Indigo (default)</option>
+                  <option value="midnight">Midnight Blue</option>
+                  <option value="crimson">Crimson Ops</option>
+                  <option value="neon">Neon Cyber</option>
+                  <option value="forest">Forest Ops</option>
+                  <option value="light">Light Mode</option>
+                </select>
+              </div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Team A / Accent Color</label><input class="fi" id="cfg-color-a" type="color" value="#6366f1" style="height:42px;padding:.25rem"/></div>
+                <div class="fg"><label class="fl">Team B / Alert Color</label><input class="fi" id="cfg-color-b" type="color" value="#ef4444" style="height:42px;padding:.25rem"/></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Display Font</label>
+                  <select class="fi fsel" id="cfg-theme-font">
+                    <option value="Syne">Syne (default)</option>
+                    <option value="Space Grotesk">Space Grotesk</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="DM Sans">DM Sans</option>
+                  </select>
+                </div>
+                <div class="fg"><label class="fl">Layout Density</label>
+                  <select class="fi fsel" id="cfg-theme-density">
+                    <option value="comfortable">Comfortable</option>
+                    <option value="compact">Compact</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-accent btn-fw" onclick="saveTheme()"><i class="fa-solid fa-floppy-disk"></i> Save Theme</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="resetThemeColors()"><i class="fa-solid fa-rotate-left"></i> Reset to Default</button>
+            </div>
+          </div>
+          <div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-tv"></i> Stream Overlay (TikTok LIVE Studio / OBS)</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">
+                Built for a <strong>vertical 9:16 canvas</strong> (recommended: 1080×1920). TikTok's mobile app can't layer browser overlays directly — you'll need <strong>TikTok LIVE Studio</strong> (free desktop app for gaming streams) or OBS routed to TikTok. In your scene: add this link as a <strong>Browser Source</strong>, sized to your full canvas, layered on top of your game capture. A single lower-third bar sits at the bottom; the middle stays clear for your gameplay or facecam.
+              </div>
+              <div class="fg"><input class="fi" id="ov-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
+              <button class="btn btn-ghost btn-fw" onclick="copyOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ov-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
+            </div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-table-columns"></i> Bottom Banner Style</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Layout & color theme for the bottom broadcast banner (TDM live banner + TikTok/OBS lower-third).</div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Layout</label>
+                  <select class="fi fsel" id="cfg-ov-layout">
+                    <option value="ticker">Ticker Bar (full)</option>
+                    <option value="scorecard">Scorecard (big score, no ticker)</option>
+                    <option value="minimal">Minimal (slim bar)</option>
+                  </select>
+                </div>
+                <div class="fg"><label class="fl">Color Theme</label>
+                  <select class="fi fsel" id="cfg-ov-theme">
+                    <option value="glass">Dark Glass (default)</option>
+                    <option value="team">Team Colors</option>
+                    <option value="light">Minimal Light</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-accent btn-fw" onclick="saveOverlayStyle()"><i class="fa-solid fa-floppy-disk"></i> Save Banner Style</button>
+            </div>
+            <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-bomb"></i> Danger Zone</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">These actions cannot be undone.</div>
               <div style="display:flex;flex-direction:column;gap:.5rem">
@@ -1071,10 +1297,31 @@ tr:last-child td{border-bottom:none}
           <div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Team Registration</div>
+              <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Look up each player by their <strong>PUBG UID</strong> — their registered name/IGN fills in automatically. Players must sign up individually first.</div>
               <div class="fg"><label class="fl">Team Name</label><input class="fi" id="tn" placeholder="e.g. Your Team Name"/></div>
-              <div class="frow"><div class="fg"><label class="fl">Tag</label><input class="fi" id="tt" placeholder="[TAG]" maxlength="5"/></div><div class="fg"><label class="fl">Captain IGN</label><input class="fi" id="tc" placeholder="Captain IGN" list="ign-dl"/><datalist id="ign-dl"></datalist></div></div>
-              <div class="fg"><label class="fl">Members (comma separated)</label><input class="fi" id="tm" placeholder="IGN1, IGN2, IGN3"/></div>
+              <div class="fg"><label class="fl">Tag</label><input class="fi" id="tt" placeholder="[TAG]" maxlength="5"/></div>
+
+              <div class="fg"><label class="fl">Captain — PUBG UID</label>
+                <div class="frow" style="grid-template-columns:1fr auto">
+                  <input class="fi" id="tr-cap-uid" placeholder="Enter captain's PUBG UID" onkeydown="if(event.key==='Enter'){event.preventDefault();trSetCaptain();}"/>
+                  <button class="btn btn-ghost btn-sm" onclick="trSetCaptain()"><i class="fa-solid fa-magnifying-glass"></i> Find</button>
+                </div>
+              </div>
+              <div id="tr-cap-chip" style="margin-bottom:.9rem"></div>
+
+              <div class="fg"><label class="fl">Add Member — PUBG UID</label>
+                <div class="frow" style="grid-template-columns:1fr auto">
+                  <input class="fi" id="tr-mem-uid" placeholder="Enter member's PUBG UID" onkeydown="if(event.key==='Enter'){event.preventDefault();trAddMember();}"/>
+                  <button class="btn btn-ghost btn-sm" onclick="trAddMember()"><i class="fa-solid fa-plus"></i> Add</button>
+                </div>
+              </div>
+              <div id="tr-mem-chips" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.9rem"></div>
+
               <div class="fg"><label class="fl">Preferred Map</label><select class="fi fsel" id="tmap"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
+              <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
+                <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:.4rem"><input type="checkbox" id="t-recruit" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> We're looking for more players</label>
+                <input class="fi" id="t-roles" placeholder="Roles needed, e.g. Sniper, IGL — optional"/>
+              </div>
               <button class="btn btn-ghost btn-fw" onclick="regTeam()"><i class="fa-solid fa-shield"></i> Register Team</button>
             </div>
           </div>
@@ -1082,6 +1329,44 @@ tr:last-child td{border-bottom:none}
         <div class="divider-line"></div>
         <div class="sh-row"><div class="sh"><div class="sh-title">All <span style="color:var(--accentL)">Registrations</span></div></div></div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>IGN</th><th>Discord</th><th>Team</th><th>Rank</th><th>Role</th><th>Region</th><th></th></tr></thead><tbody id="reg-body"></tbody></table></div></div>
+      </div>
+
+      <!-- ░ TDM (TEAM DEATHMATCH) ░ -->
+      <div class="page" id="page-tdm">
+        <div class="sh-row mb2"><div class="sh"><div class="sh-title">Team <span style="color:var(--accentL)">Deathmatch</span></div><div class="sh-sub">Search players from the database, build two squads, first to the kill target wins</div></div></div>
+
+        <div class="card mb2 admin-only" id="tdm-setup-card" style="display:none">
+          <div class="card-title"><i class="fa-solid fa-sliders"></i> Start a New TDM Match</div>
+          <div class="g2">
+            <div>
+              <div class="fg"><label class="fl">Squad A Name</label><input class="fi" id="tdm-a-name" placeholder="e.g. Squad Alpha"/></div>
+              <div class="fg"><label class="fl">Quick-fill from registered team</label><select class="fi fsel" id="tdm-a-team" onchange="tdmQuickFill('a')"><option value="">— none —</option></select></div>
+              <div class="fg"><label class="fl">Search Player</label>
+                <input class="fi" id="tdm-a-search" placeholder="Search by name or IGN..." oninput="tdmSearchPlayers('a')" autocomplete="off"/>
+                <div id="tdm-a-results" class="tdm-search-results"></div>
+              </div>
+              <div id="tdm-a-roster" class="tdm-roster"></div>
+            </div>
+            <div>
+              <div class="fg"><label class="fl">Squad B Name</label><input class="fi" id="tdm-b-name" placeholder="e.g. Squad Bravo"/></div>
+              <div class="fg"><label class="fl">Quick-fill from registered team</label><select class="fi fsel" id="tdm-b-team" onchange="tdmQuickFill('b')"><option value="">— none —</option></select></div>
+              <div class="fg"><label class="fl">Search Player</label>
+                <input class="fi" id="tdm-b-search" placeholder="Search by name or IGN..." oninput="tdmSearchPlayers('b')" autocomplete="off"/>
+                <div id="tdm-b-results" class="tdm-search-results"></div>
+              </div>
+              <div id="tdm-b-roster" class="tdm-roster"></div>
+            </div>
+          </div>
+          <div class="fg" style="margin-top:.5rem"><label class="fl">First to</label><input class="fi" id="tdm-target" type="number" value="10" min="1"/></div>
+          <button class="btn btn-accent btn-fw" onclick="startTdm()"><i class="fa-solid fa-play"></i> Start Match</button>
+        </div>
+
+        <div id="tdm-banner-wrap"></div>
+        <div id="tdm-live-wrap"></div>
+
+        <div class="divider-line"></div>
+        <div class="sh-row"><div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">History</span></div></div></div>
+        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Squad A</th><th>Score</th><th>Squad B</th><th>Winner</th><th>Date</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="tdm-history-body"></tbody></table></div></div>
       </div>
 
       <!-- ░ LEADERBOARD ░ -->
@@ -1147,6 +1432,10 @@ tr:last-child td{border-bottom:none}
       <!-- ░ TEAMS ░ -->
       <div class="page" id="page-teams">
         <div class="sh-row"><div class="sh"><div class="sh-title">Registered <span style="color:var(--accentL)">Teams</span></div><div class="sh-sub" id="teams-count">0 teams</div></div></div>
+        <div class="teams-toolbar">
+          <input class="fi" id="teams-search" style="max-width:280px" placeholder="Search teams by name, tag, or player..." oninput="renderTeams()"/>
+          <button class="btn btn-ghost btn-sm" id="teams-recruit-btn" onclick="toggleRecruitFilter()"><i class="fa-solid fa-bullhorn"></i> Recruiting Only</button>
+        </div>
         <div class="g3" id="teams-grid"></div>
       </div>
 
@@ -1279,7 +1568,7 @@ tr:last-child td{border-bottom:none}
               </div>
               <div class="disc-step">
                 <div class="disc-step-num">4</div>
-                <div><div class="disc-step-title">Call Discord API from Supabase Edge Function</div><div class="disc-step-body">In your Supabase Edge Function, send messages via <span class="disc-code">POST /channels/{id}/messages</span> with header <span class="disc-code">Authorization: Bot TOKEN</span>.</div></div>
+                <div><div class="disc-step-title">Call Discord API from a small server</div><div class="disc-step-body">From a lightweight backend (Cloudflare Worker, Node script, etc — never client-side), send messages via <span class="disc-code">POST /channels/{id}/messages</span> with header <span class="disc-code">Authorization: Bot TOKEN</span>.</div></div>
               </div>
             </div>
 
@@ -1298,35 +1587,25 @@ tr:last-child td{border-bottom:none}
         </div>
 
         <div class="card" style="margin-top:1.2rem">
-          <div class="card-title"><i class="fa-solid fa-database" style="color:#3ecf8e"></i> Supabase Integration — Quick Start</div>
+          <div class="card-title"><i class="fa-solid fa-table-cells" style="color:#22c55e"></i> Google Sheets Backend — Quick Start</div>
+          <div style="font-size:.82rem;color:var(--textM);margin-bottom:.8rem">Everything in RAGEISM — players, teams, matches, accounts, settings — is stored in <strong>one Google Sheet</strong>, synced live through <span class="disc-code">SheetDB</span>.</div>
           <div class="g3" style="margin-top:.5rem">
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#3ecf8e">① Create Project</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Go to <span class="disc-code">supabase.com</span> → <strong>New Project</strong>. Create tables: <span class="disc-code">players</span>, <span class="disc-code">teams</span>, <span class="disc-code">matches</span>, <span class="disc-code">result_logs</span>, <span class="disc-code">polls</span>.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22c55e">① Create the Sheet</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">In a new Google Sheet, make the header row exactly: <span class="disc-code">key</span>, <span class="disc-code">value</span>, <span class="disc-code">updated_at</span> (columns A, B, C).</div>
             </div>
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#3ecf8e">② Get API Keys</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6"><strong>Project Settings → API</strong>: copy <span class="disc-code">Project URL</span> and <span class="disc-code">anon key</span>. Add both as JS constants at the top of the file.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22c55e">② Connect SheetDB</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Go to <span class="disc-code">sheetdb.io</span> → connect that sheet → copy your API URL. Paste it as <span class="disc-code">SD_URL</span> near the top of the <span class="disc-code">&lt;script&gt;</span> in this file.</div>
             </div>
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#3ecf8e">③ Replace DB calls</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Swap <span class="disc-code">DB.get('players')</span> with <span class="disc-code">await supabase.from('players').select('*')</span>. Use <span class="disc-code">.insert()</span>, <span class="disc-code">.update()</span>, <span class="disc-code">.delete()</span> for writes.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22c55e">③ That's it</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Every <span class="disc-code">DB.set(key, value)</span> call already mirrors to that row in your sheet. No further code changes needed.</div>
             </div>
           </div>
-          <div style="margin-top:.8rem;background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.15);border-radius:var(--rS);padding:.8rem 1rem">
-            <div style="font-size:.78rem;font-weight:700;color:#3ecf8e;margin-bottom:.35rem"><i class="fa-solid fa-code"></i> Add Supabase JS to this file (in &lt;head&gt;)</div>
-            <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7">&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;
-
-const supabase = supabase.createClient(
-  'https://YOUR_PROJECT.supabase.co',
-  'YOUR_ANON_KEY'
-);
-
-// Fetch players (replaces DB.get('players'))
-const { data: players } = await supabase
-  .from('players')
-  .select('*')
-  .order('kills', { ascending: false });</div>
+          <div style="margin-top:.8rem;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:var(--rS);padding:.8rem 1rem">
+            <div style="font-size:.78rem;font-weight:700;color:#22c55e;margin-bottom:.35rem"><i class="fa-solid fa-circle-info"></i> Current sheet endpoint</div>
+            <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7" id="sd-endpoint-display">https://sheetdb.io/api/v1/nmdnjqgkd5xfu</div>
           </div>
         </div>
       </div>
@@ -1336,6 +1615,45 @@ const { data: players } = await supabase
 </div><!-- /app -->
 
 <!-- MODALS -->
+<div class="modal-overlay" id="edit-stats-modal">
+  <div class="modal-box" style="max-width:640px">
+    <button class="modal-close" onclick="closeModal('edit-stats-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title">Edit Player</div>
+    <input type="hidden" id="es-id"/>
+    <div class="g2">
+      <div>
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--textD);margin-bottom:.5rem">Profile</div>
+        <div class="fg"><label class="fl">Name</label><input class="fi" id="es-name"/></div>
+        <div class="fg"><label class="fl">IGN</label><input class="fi" id="es-ign"/></div>
+        <div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="es-uid"/></div>
+        <div class="fg"><label class="fl">Discord</label><input class="fi" id="es-discord"/></div>
+        <div class="fg"><label class="fl">Team</label><input class="fi" id="es-team" list="ign-dl-teamnames"/></div>
+        <div class="fg"><label class="fl">Region</label><input class="fi" id="es-region"/></div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--textD);margin-bottom:.5rem">Stats (editable)</div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Kills</label><input class="fi" id="es-kills" type="number" min="0"/></div>
+          <div class="fg"><label class="fl">Deaths</label><input class="fi" id="es-deaths" type="number" min="0"/></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Wins</label><input class="fi" id="es-wins" type="number" min="0"/></div>
+          <div class="fg"><label class="fl">Damage</label><input class="fi" id="es-damage" type="number" min="0"/></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Points</label><input class="fi" id="es-points" type="number" min="0"/></div>
+          <div class="fg"><label class="fl">Games Played</label><input class="fi" id="es-gp" type="number" min="0"/></div>
+        </div>
+        <div class="fg"><label class="fl">XP</label><input class="fi" id="es-xp" type="number" min="0"/></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem">
+      <button class="btn btn-accent btn-fw" onclick="saveEditStats()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+      <button class="btn btn-danger" onclick="closeModal('edit-stats-modal');delPlayer(v('es-id'))"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="match-modal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('match-modal')"><i class="fa-solid fa-xmark"></i></button>
@@ -1368,6 +1686,15 @@ const { data: players } = await supabase
     <button class="modal-close" onclick="closeModal('join-request-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-title">Pending Join Requests</div>
     <div id="join-request-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="transfer-request-modal">
+  <div class="modal-box" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('transfer-request-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title">Stat Transfer Requests</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Players requesting to move their career stats from one PUBG ID to another. Review carefully before approving — this is permanent.</div>
+    <div id="transfer-request-list"></div>
   </div>
 </div>
 
@@ -1441,31 +1768,14 @@ const { data: players } = await supabase
 <script>
 // ═══ DB ═══
 // ═══ SUPABASE — fetch-only, no SDK, CORS-safe ═══
-const SB_URL  = 'https://coeqrhxdomwfsafesaku.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZXFyaHhkb213ZnNhZmVzYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDE2NTIsImV4cCI6MjA4Nzk3NzY1Mn0.jY_6oocyPyAmUH4x_lDCuc6rJMU1OOSZ5EfZZCFfcAE';
-const SB_REST = SB_URL + '/rest/v1/rge_store';
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg'];
+// ═══ GOOGLE SHEETS BACKEND (via SheetDB) ═══
+// Every collection (players, teams, matches, accounts, cfg, ...) is stored as ONE ROW
+// in your Google Sheet, in two columns: "key" and "value" (value = JSON string).
+// Your sheet's first row (headers) must contain exactly: key | value | updated_at
+const SD_URL  = 'https://sheetdb.io/api/v1/nmdnjqgkd5xfu';
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','accounts','tdmMatches','teamRequests','joinRequests','adminRoles'];
 let SB_OK = false, SB_WRITES = 0;
-
-// Pass apikey as a query-param so GET requests stay "simple"
-// and don't trigger a CORS preflight OPTIONS request
-function sbUrl(params){
-  const u = new URL(SB_REST);
-  u.searchParams.set('apikey', SB_KEY);
-  if(params) Object.entries(params).forEach(([k,v]) => u.searchParams.set(k,v));
-  return u.toString();
-}
-
-// Only Content-Type + Authorization on write calls
-// (GET reads use query-param only — no custom headers = no preflight)
-function sbWriteHeaders(){
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + SB_KEY,
-    'apikey': SB_KEY,
-    'Prefer': 'resolution=merge-duplicates,return=minimal'
-  };
-}
+const SD_WRITE_QUEUE = new Map(); // key -> latest pending write (basic de-dupe)
 
 function sbStatus(type, msg){
   const bar = document.getElementById('sb-status-bar');
@@ -1481,63 +1791,56 @@ function sbHideOverlay(){
   if(o){ o.classList.add('hide'); setTimeout(() => o.remove(), 450); }
 }
 
-// Init: simple GET with apikey in URL — no preflight triggered
+// Init: quick GET to confirm the sheet is reachable
 async function sbInit(){
   try{
-    const res = await fetch(sbUrl({ select: 'key', limit: '1' }), {
-      method: 'GET'
-      // No custom headers on GET = simple request = no CORS preflight
-    });
-
-    if(res.status === 401){
-      sbStatus('err', 'Supabase: invalid API key'); return false;
-    }
+    const res = await fetch(SD_URL + '?limit=1', { method: 'GET' });
     if(!res.ok){
-      const body = await res.text().catch(() => '');
-      if(body.includes('rge_store') || res.status === 404){
-        sbStatus('err', 'Table missing — run the SQL schema first');
-        console.warn('[RAGEISM] rge_store not found. Run rageism_supabase_schema.sql in Supabase SQL Editor.');
-      } else {
-        sbStatus('err', 'Supabase HTTP ' + res.status);
-      }
+      sbStatus('err', 'Google Sheet HTTP ' + res.status);
+      console.warn('[RAGEISM] SheetDB not reachable, status', res.status);
       return false;
     }
-
     SB_OK = true;
-    sbStatus('ok', 'Supabase connected');
+    sbStatus('ok', 'Google Sheet connected');
     return true;
-
   } catch(e){
-    // "Failed to fetch" = network/CORS issue — app still works offline
+    // Network/CORS issue — app still works offline via localStorage
     sbStatus('err', 'Offline mode — data stored locally');
-    console.warn('[RAGEISM] Supabase unreachable, using localStorage fallback. Reason:', e.message);
+    console.warn('[RAGEISM] Google Sheet unreachable, using localStorage fallback. Reason:', e.message);
     return false;
   }
 }
 
-// Load: GET all rows, apikey in URL param
+// Load: GET all rows from the sheet
 async function sbLoad(){
   if(!SB_OK) return false;
   try{
-    sbInitMsg('Loading cloud data...');
-    const res = await fetch(sbUrl({ select: 'key,value' }), { method: 'GET' });
+    sbInitMsg('Loading data from Google Sheet...');
+    const res = await fetch(SD_URL, { method: 'GET' });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if(!rows || !rows.length) return false;
 
     let loaded = 0;
     rows.forEach(row => {
-      if(SB_SYNC.includes(row.key)){
-        localStorage.setItem('rge5_' + row.key, JSON.stringify(row.value));
-        loaded++;
+      if(row && row.key && SB_SYNC.includes(row.key) && row.value !== undefined){
+        try{
+          // value is stored as a JSON string in the sheet cell
+          JSON.parse(row.value); // validate
+          localStorage.setItem('rge5_' + row.key, row.value);
+          loaded++;
+        }catch{ /* skip malformed cell */ }
       }
     });
     // Don't overwrite cloud data with seed data
     const plRow = rows.find(r => r.key === 'players');
-    if(plRow && Array.isArray(plRow.value) && plRow.value.length > 0){
-      localStorage.setItem('rge5_s5', 'true');
+    if(plRow){
+      try{
+        const arr = JSON.parse(plRow.value);
+        if(Array.isArray(arr) && arr.length > 0) localStorage.setItem('rge5_s5', 'true');
+      }catch{}
     }
-    sbInitMsg('Loaded ' + loaded + ' collections from cloud');
+    sbInitMsg('Loaded ' + loaded + ' collections from sheet');
     return loaded > 0;
   } catch(e){
     console.warn('[RAGEISM] sbLoad failed:', e.message);
@@ -1545,19 +1848,37 @@ async function sbLoad(){
   }
 }
 
-// Write: POST with Authorization header (only writes trigger preflight, which is fine)
+// Write: PATCH the existing row for this key, or POST a new one if it doesn't exist yet
 async function sbWrite(key, val){
   if(!SB_OK || !SB_SYNC.includes(key)) return;
+  const value = JSON.stringify(val);
+  const nowIso = new Date().toISOString();
   try{
-    const res = await fetch(SB_REST, {
-      method: 'POST',
-      headers: sbWriteHeaders(),
-      body: JSON.stringify({ key, value: val, updated_at: new Date().toISOString() })
-    });
-    if(!res.ok){
-      const txt = await res.text().catch(() => '');
-      throw new Error('HTTP ' + res.status + (txt ? ' — ' + txt.slice(0, 100) : ''));
+    let updated = false;
+    try{
+      const upRes = await fetch(SD_URL + '/key/' + encodeURIComponent(key), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { value, updated_at: nowIso } })
+      });
+      if(upRes.ok){
+        const j = await upRes.json().catch(() => ({}));
+        updated = !!(j && (j.updated === undefined || j.updated > 0));
+      }
+    }catch{ /* fall through to insert */ }
+
+    if(!updated){
+      const insRes = await fetch(SD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { key, value, updated_at: nowIso } })
+      });
+      if(!insRes.ok){
+        const txt = await insRes.text().catch(() => '');
+        throw new Error('HTTP ' + insRes.status + (txt ? ' — ' + txt.slice(0, 120) : ''));
+      }
     }
+
     SB_WRITES++;
     const el = document.getElementById('sb-last-sync');
     if(el) el.textContent = 'Synced ' + new Date().toLocaleTimeString();
@@ -1568,7 +1889,7 @@ async function sbWrite(key, val){
   }
 }
 
-// ═══ DB (localStorage + Supabase mirror) ═══
+// ═══ DB (localStorage + Google Sheet mirror) ═══
 const DB={
   get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem('rge5_'+k))??d}catch{return d}},
   set:(k,v)=>{
@@ -1599,6 +1920,7 @@ function seed(){
   DB.set('teamRequests',[]);
   DB.set('joinRequests',[]);
   DB.set('adminRoles',[]);
+  DB.set('tdmMatches',[]);
   DB.set('s5',true);
 }
 // ═══ ANALYTICS ENGINE ═══
@@ -2184,164 +2506,85 @@ function notify(title,msg='',type='n-info',dur=3200){
   c.appendChild(n);setTimeout(()=>{const t=n.querySelector('.notif-timer');if(t)t.style.width='0';},50);setTimeout(()=>n.remove(),dur);
 }
 
-// ═══ DISCORD LOGIN via Supabase Auth ═══
-// Supabase handles the entire Discord OAuth flow.
-// Setup (one-time in Supabase dashboard):
-//   Authentication → Providers → Discord → Enable
-//   Add Site URL: https://killiumx.github.io/rageism/
-//   Add Redirect URL: https://killiumx.github.io/rageism/
-
-const SB_AUTH_URL = SB_URL + '/auth/v1';
-let DISC_USER = null;
-let SB_SESSION_TOKEN = null;
-
-function doDiscordOAuth(){
-  // Redirect to Supabase Auth — it handles Discord OAuth entirely
-  const redirectTo = encodeURIComponent('https://killiumx.github.io/rageism/');
-  window.location.href = `${SB_AUTH_URL}/authorize?provider=discord&redirect_to=${redirectTo}`;
+// ═══ LOGIN / SIGN UP — simple accounts stored in the 'accounts' sheet collection ═══
+// Note: passwords are lightly hashed client-side (not real cryptographic security —
+// this is a public spreadsheet-backed app, so don't reuse a sensitive password here).
+function pwHash(pw){
+  let h = 0;
+  const s = String(pw);
+  for(let i=0;i<s.length;i++){ h = (h<<5) - h + s.charCodeAt(i); h |= 0; }
+  return 'h' + Math.abs(h).toString(36) + '_' + s.length;
 }
 
-// On page load — Supabase redirects back with #access_token in the hash
-async function handleDiscordCallback(){
-  const hash = window.location.hash;
-  if(!hash.includes('access_token=')) return false;
-
-  const params = new URLSearchParams(hash.replace(/^#/, ''));
-  const token  = params.get('access_token');
-  if(!token) return false;
-
-  // Immediately clean the URL so refresh doesn't re-run this
-  history.replaceState(null, '', window.location.pathname + window.location.search);
-  SB_SESSION_TOKEN = token;
-
-  setDiscordLoading(true, 'Loading your profile...');
-
-  try{
-    // Fetch the Supabase user — includes Discord identity & metadata
-    const res = await fetch(`${SB_AUTH_URL}/user`, {
-      headers: {
-        'apikey':        SB_KEY,
-        'Authorization': 'Bearer ' + token
-      }
-    });
-    if(!res.ok) throw new Error('Auth response ' + res.status);
-    const sbUser = await res.json();
-    if(sbUser.error) throw new Error(sbUser.error_description || sbUser.error);
-
-    // Extract Discord data from Supabase user_metadata
-    const m = sbUser.user_metadata || {};
-    DISC_USER = {
-      id:       sbUser.id,
-      name:     m.full_name || m.name || m.custom_claims?.global_name || m.user_name || 'Player',
-      username: m.user_name  || m.preferred_username || '',
-      avatar:   m.avatar_url || null,
-      email:    sbUser.email || ''
-    };
-
-    showDiscordUserCard(DISC_USER);
-    return true;
-  } catch(e){
-    setDiscordLoading(false);
-    notify('Discord login failed', e.message, 'n-bad');
-    console.warn('[RAGEISM] Supabase Auth error:', e.message);
-    return false;
-  }
-}
-
-function setDiscordLoading(on, msg){
-  const el = document.getElementById('disc-loading');
-  const bw = document.getElementById('disc-btn-wrap');
-  if(!el) return;
-  el.classList.toggle('show', on);
-  if(bw) bw.style.display = on ? 'none' : '';
-  const m = document.getElementById('disc-loading-msg');
-  if(m && msg) m.textContent = msg;
-}
-
-function showDiscordUserCard(user){
-  setDiscordLoading(false);
-  document.getElementById('disc-btn-wrap').style.display  = 'none';
-  document.getElementById('disc-user-card').classList.add('show');
-  document.getElementById('disc-role-wrap').style.display = 'block';
-
-  document.getElementById('disc-display-name').textContent = user.name;
-  document.getElementById('disc-username-tag').textContent  = user.username ? '@' + user.username : user.email;
-
-  const avF = document.getElementById('disc-av-fallback');
-  const avI = document.getElementById('disc-av-img');
-  if(avF) avF.textContent = user.name[0].toUpperCase();
-  if(user.avatar && avI){
-    avI.src = user.avatar;
-    avI.style.display = 'block';
-    if(avF) avF.style.display = 'none';
-    avI.onerror = () => { avI.style.display='none'; if(avF) avF.style.display='flex'; };
-  }
-
-  const roleEl = document.getElementById('disc-role');
-  if(roleEl) roleEl.addEventListener('change', function(){
-    document.getElementById('disc-admin-pw').style.display = this.value === 'admin' ? 'block' : 'none';
+let AUTH_MODE = 'login'; // 'login' | 'signup' | 'admin'
+function setAuthMode(mode){
+  AUTH_MODE = mode;
+  ['login','signup','admin'].forEach(m=>{
+    const panel = document.getElementById('auth-panel-'+m);
+    if(panel) panel.style.display = (m===mode) ? 'block' : 'none';
+    const tab = document.getElementById('auth-tab-'+m);
+    if(tab) tab.classList.toggle('active', m===mode);
   });
+  const title = document.getElementById('login-title-txt');
+  const sub   = document.getElementById('login-sub-txt');
+  if(title && sub){
+    if(mode==='login'){ title.textContent='Welcome back'; sub.textContent='Sign in with your username & password'; }
+    else if(mode==='signup'){ title.textContent='Create your account'; sub.textContent='Just your in-game ID, a username & a password'; }
+    else { title.textContent='Admin Access'; sub.textContent='Master password for tournament hosts only'; }
+  }
 }
 
-function finishDiscordLogin(){
-  if(!DISC_USER){ notify('No session found','Try logging in again','n-bad'); return; }
-  const role = document.getElementById('disc-role')?.value || 'player';
-  if(role === 'admin'){
-    const pw  = document.getElementById('disc-pw')?.value || '';
-    const cfg = DB.get('cfg', { adminPw: 'RAGEISM2025' });
-    if(pw !== cfg.adminPw && pw !== 'RAGEISM2025'){ notify('Wrong password','Access denied','n-bad'); return; }
-    ADM = true;
+function doSignup(){
+  const ign = v('su-ign'), un = v('su-user').toLowerCase(), pw = v('su-pw'), pw2 = v('su-pw2');
+  if(!ign || !un || !pw) return notify('Fill in all fields','In-game ID, username & password are required','n-bad');
+  if(un.length<3) return notify('Username too short','Use at least 3 characters','n-bad');
+  if(pw.length<4) return notify('Password too short','Use at least 4 characters','n-bad');
+  if(pw!==pw2) return notify('Passwords don\'t match','','n-bad');
+  const accounts = DB.get('accounts',[]);
+  if(accounts.some(a=>a.username===un)) return notify('Username taken','Try another one','n-bad');
+  if(accounts.some(a=>a.ign.toLowerCase()===ign.toLowerCase())) return notify('In-game ID already registered','Log in instead','n-bad');
+  const acc = { username:un, ign, pwHash:pwHash(pw), createdAt:new Date().toISOString() };
+  accounts.push(acc); DB.set('accounts',accounts);
+  // Seed a lightweight player stats row so the player shows up right away
+  const players = DB.get('players',[]);
+  if(!players.some(p=>p.ign===ign)){
+    players.push({id:'p_'+Date.now().toString(36),ign,realName:'',kills:0,deaths:0,wins:0,damage:0,xp:0,points:0,gamesPlayed:0,rank:'Bronze'});
+    DB.set('players',players);
   }
-  CU = {
-    name:       DISC_USER.name,
-    ign:        DISC_USER.name,
-    role,
-    avatar:     DISC_USER.name[0].toUpperCase(),
-    disc:       DISC_USER.username ? '@' + DISC_USER.username : DISC_USER.email,
-    discAvatar: DISC_USER.avatar,
-    sbId:       DISC_USER.id
-  };
+  CU = { name:un, ign, role:'player', avatar:un[0].toUpperCase(), username:un };
+  ADM = false;
+  notify('Account created!','Welcome to RAGEISM','n-ok');
   finishLogin();
 }
 
-function resetDiscordLogin(){
-  DISC_USER = null; SB_SESSION_TOKEN = null;
-  document.getElementById('disc-btn-wrap').style.display  = '';
-  document.getElementById('disc-user-card').classList.remove('show');
-  document.getElementById('disc-role-wrap').style.display = 'none';
-  document.getElementById('disc-loading').classList.remove('show');
+function doLogin(){
+  const un = v('li-user').toLowerCase(), pw = v('li-pw');
+  if(!un || !pw) return notify('Enter username & password','','n-bad');
+  const accounts = DB.get('accounts',[]);
+  const acc = accounts.find(a=>a.username===un);
+  if(!acc || acc.pwHash!==pwHash(pw)) return notify('Invalid login','Check your username & password','n-bad');
+  CU = { name:acc.username, ign:acc.ign, role:'player', avatar:acc.username[0].toUpperCase(), username:acc.username };
+  ADM = false;
+  finishLogin();
 }
 
-function toggleManualLogin(){
-  const f = document.getElementById('login-fields');
-  if(!f) return;
-  f.classList.toggle('open');
-  const btn = document.querySelector('.manual-toggle');
-  if(btn) btn.innerHTML = f.classList.contains('open')
-    ? '<i class="fa-solid fa-chevron-up" style="margin-right:.3rem;font-size:.7rem"></i>Hide manual login'
-    : '<i class="fa-solid fa-keyboard" style="margin-right:.3rem;font-size:.72rem"></i>Sign in manually';
-}
-
-// ═══ LOGIN ═══
-function showLoginFields(){ toggleManualLogin(); }
-function attachRoleListener(){
-  const e = document.getElementById('li-r');
-  if(e) e.addEventListener('change', function(){
-    document.getElementById('admin-pw-sec').style.display = this.value === 'admin' ? 'block' : 'none';
-  });
+// ═══ ADMIN MASTER LOGIN — separate from player accounts, single master password ═══
+function doAdminMasterLogin(){
+  const pw = v('admin-master-pw');
+  const cfg = DB.get('cfg',{adminPw:'RAGEISM2025'});
+  const master = cfg.adminPw || 'RAGEISM2025';
+  if(!pw || pw!==master) return notify('Wrong master password','Access denied','n-bad');
+  CU = { name:'Host', ign:'HOST', role:'admin', avatar:'H' };
+  ADM = true;
+  finishLogin();
 }
 function guestLogin(){CU={name:'Guest',ign:'GUEST',role:'viewer',avatar:'G'};ADM=false;finishLogin();}
-function doLogin(){
-  const u=v('li-u'),ig=v('li-i'),role=v('li-r'),pw=v('li-pw'),d=v('li-d');
-  if(!u)return notify('Username required','','n-bad');
-  if(role==='admin'){const cfg=DB.get('cfg',{adminPw:'RAGEISM2025'});if(pw!==cfg.adminPw&&pw!=='RAGEISM2025')return notify('Wrong password','Access denied','n-bad');ADM=true;}
-  CU={name:u,ign:ig||u,role,avatar:u[0].toUpperCase(),disc:d};finishLogin();
-}
+
 function finishLogin(){
   DB.set('cu5',CU);DB.set('adm5',ADM);
   document.getElementById('ls').classList.add('out');setTimeout(()=>{document.getElementById('ls').style.display='none';},500);
   document.getElementById('app').classList.add('show');
-  updateSidebar();refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();
+  updateSidebar();refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();updateTdmBadge();
   if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('alert-badge').style.display='block';}
   if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
   notify(ADM?'Welcome back, Host!':'Welcome!',`Logged in as ${CU.name}`,ADM?'n-ok':'n-info',3500);
@@ -2369,6 +2612,8 @@ function updateSidebar(){
 function refreshDLs(){
   const pl=DB.get('players');const igns=pl.map(p=>`<option value="${p.ign}">`).join('');
   ['ign-dl','ign-dl2'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=igns;});
+  const teamNamesDl=document.getElementById('ign-dl-teamnames');
+  if(teamNamesDl){const tms=DB.get('teams');teamNamesDl.innerHTML=tms.map(t=>`<option value="${t.name}">`).join('');}
   // Populate match dropdown on result page
   const ms=DB.get('matches');
   const mSel=document.getElementById('res-mid');
@@ -2381,7 +2626,7 @@ function refreshDLs(){
 }
 
 // ═══ PAGES ═══
-const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-bracket':'Bracket Editor','admin-settings':'Settings','signup':'Sign Up','leaderboard':'Leaderboard','bracket':'Tournament Bracket','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','discord-setup':'Discord Setup'};
+const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-bracket':'Bracket Editor','admin-settings':'Settings','signup':'Sign Up','leaderboard':'Leaderboard','bracket':'Tournament Bracket','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','discord-setup':'Discord Setup','tdm':'Team Deathmatch'};
 function showPage(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
@@ -2392,17 +2637,30 @@ function showPage(n){
   if(n==='compare'){renderCmpSelects();doCompare();}if(n==='community'){renderPolls();renderSugs();}
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players')renderAPlayers();if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
-  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const wh=document.getElementById('cfg-wh');if(wh&&cfg.disc)wh.value=cfg.disc;}
+  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const wh=document.getElementById('cfg-wh');if(wh&&cfg.disc)wh.value=cfg.disc;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const tp=document.getElementById('cfg-theme-preset');if(tp)tp.value=cfg.themePreset||'dark';const tf=document.getElementById('cfg-theme-font');if(tf)tf.value=cfg.themeFont||'Syne';const td=document.getElementById('cfg-theme-density');if(td)td.value=cfg.themeDensity||'comfortable';const ol=document.getElementById('cfg-ov-layout');if(ol)ol.value=cfg.overlayLayout||'ticker';const ot=document.getElementById('cfg-ov-theme');if(ot)ot.value=cfg.overlayTheme||'glass';}
   if(n==='analytics')renderAnalytics('overview');
+  if(n==='tdm')renderTdmPage();
+  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';}
 }
 
 // ═══ TICKER ═══
 function buildTicker(){
   const el=document.getElementById('ticker');if(!el)return;
-  const pl=DB.get('players');const ms=DB.get('matches');let items=[];
-  if(pl.length>=2){const s=[...pl].sort((a,b)=>b.kills-a.kills);for(let i=0;i<Math.min(6,s.length-1);i++)items.push(`<span class="ticker-item">${s[i].ign} <span style="opacity:.5">·</span> ${s[i].kills}K · <span style="color:var(--textD)">K/D ${(s[i].kills/(s[i].deaths||1)).toFixed(1)}</span></span>`);}
-  else if(ms.length){items=ms.slice(0,4).map(m=>`<span class="ticker-item">${MI[m.map]||''} ${m.name} <span style="opacity:.5">·</span> ${m.status}</span>`);}
-  else{items=['<span class="ticker-item">RAGEISM PUBG Esports Tournament Hub</span>','<span class="ticker-item">Register your player and team to compete</span>','<span class="ticker-item">Admins: log in and set up your first match</span>'];}
+  const pl=DB.get('players');const ms=DB.get('matches');const liveTdm=tdmGetLive();let items=[];
+  if(liveTdm){
+    items.push(`<span class="ticker-item"><i class="fa-solid fa-skull-crossbones" style="color:var(--red)"></i> LIVE TDM <span style="opacity:.5">·</span> ${liveTdm.aName} ${liveTdm.scoreA} – ${liveTdm.scoreB} ${liveTdm.bName}</span>`);
+  }
+  if(pl.length>=2){
+    const byKills=[...pl].sort((a,b)=>b.kills-a.kills);
+    const byKD=[...pl].filter(p=>p.gamesPlayed>0||p.kills>0).sort((a,b)=>(b.kills/(b.deaths||1))-(a.kills/(a.deaths||1)));
+    const byWins=[...pl].sort((a,b)=>(b.wins||0)-(a.wins||0));
+    if(byKills[0])items.push(`<span class="ticker-item"><i class="fa-solid fa-crown" style="color:var(--amber)"></i> MVP <span style="opacity:.5">·</span> ${byKills[0].ign} — ${byKills[0].kills} kills</span>`);
+    if(byKD[0])items.push(`<span class="ticker-item"><i class="fa-solid fa-bolt" style="color:var(--accentL)"></i> Best K/D <span style="opacity:.5">·</span> ${byKD[0].ign} — ${(byKD[0].kills/(byKD[0].deaths||1)).toFixed(2)}</span>`);
+    if(byWins[0]&&byWins[0].wins>0)items.push(`<span class="ticker-item"><i class="fa-solid fa-trophy" style="color:var(--green)"></i> Most Wins <span style="opacity:.5">·</span> ${byWins[0].ign} — ${byWins[0].wins}</span>`);
+    const s=byKills;for(let i=0;i<Math.min(6,s.length-1);i++)items.push(`<span class="ticker-item">${s[i].ign} <span style="opacity:.5">·</span> ${s[i].kills}K · <span style="color:var(--textD)">K/D ${(s[i].kills/(s[i].deaths||1)).toFixed(1)}</span></span>`);
+  }
+  else if(ms.length){items=items.concat(ms.slice(0,4).map(m=>`<span class="ticker-item">${MI[m.map]||''} ${m.name} <span style="opacity:.5">·</span> ${m.status}</span>`));}
+  else{items=items.concat(['<span class="ticker-item">RAGEISM PUBG Esports Tournament Hub</span>','<span class="ticker-item">Register your player and team to compete</span>','<span class="ticker-item">Admins: log in and set up your first match</span>']);}
   const sep=`<span style="opacity:.3;margin:0 .8rem">◆</span>`;const html=items.join(sep);el.innerHTML=html+sep+html;
 }
 
@@ -2502,12 +2760,60 @@ function regPlayer(){
   DB.set('players',pl);['rn','ri','ru','rt','rd','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderReg();updateStats();buildTicker();refreshDLs();notify('Registered!',`${ig} joined the arena`,'n-ok');
 }
+// ═══ TEAM REGISTRATION — PUBG UID LOOKUP ═══
+let TR_CAPTAIN=null; // resolved player {uid,ign,name}
+let TR_MEMBERS=[];   // array of resolved player {uid,ign,name}
+
+function trFindByUid(uid){
+  if(!uid)return null;
+  const players=DB.get('players');
+  return players.find(p=>String(p.uid).trim()===String(uid).trim())||null;
+}
+
+function trSetCaptain(){
+  const uid=v('tr-cap-uid');if(!uid)return notify('Enter a PUBG UID','','n-bad');
+  const p=trFindByUid(uid);
+  if(!p)return notify('No player found','That PUBG UID isn\'t registered yet — ask them to sign up first.','n-bad');
+  TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name};
+  TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==p.uid); // captain can't also be a plain member
+  trRenderCapChip();trRenderMemChips();
+  const el=document.getElementById('tr-cap-uid');if(el)el.value='';
+  notify('Captain found!',`${p.name} (${p.ign})`,'n-ok');
+}
+
+function trAddMember(){
+  const uid=v('tr-mem-uid');if(!uid)return notify('Enter a PUBG UID','','n-bad');
+  const p=trFindByUid(uid);
+  if(!p)return notify('No player found','That PUBG UID isn\'t registered yet — ask them to sign up first.','n-bad');
+  if(TR_CAPTAIN&&TR_CAPTAIN.uid===p.uid)return notify('Already captain','This player is already set as captain.','n-bad');
+  if(TR_MEMBERS.find(m=>m.uid===p.uid))return notify('Already added','','n-bad');
+  TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name});
+  trRenderMemChips();
+  const el=document.getElementById('tr-mem-uid');if(el)el.value='';
+  notify('Member added!',`${p.name} (${p.ign})`,'n-ok');
+}
+
+function trRemoveMember(uid){TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);trRenderMemChips();}
+function trRemoveCaptain(){TR_CAPTAIN=null;trRenderCapChip();}
+
+function trRenderCapChip(){
+  const el=document.getElementById('tr-cap-chip');if(!el)return;
+  el.innerHTML=TR_CAPTAIN?`<span class="chip chip-accent" style="font-size:.78rem;padding:.35rem .7rem"><i class="fa-solid fa-crown" style="margin-right:.3rem;color:var(--amber)"></i>${TR_CAPTAIN.name} <span style="opacity:.7">(${TR_CAPTAIN.ign})</span> <i class="fa-solid fa-xmark" style="margin-left:.4rem;cursor:pointer" onclick="trRemoveCaptain()"></i></span>`:'';
+}
+function trRenderMemChips(){
+  const el=document.getElementById('tr-mem-chips');if(!el)return;
+  el.innerHTML=TR_MEMBERS.map(m=>`<span class="chip chip-neutral" style="font-size:.78rem;padding:.35rem .7rem">${m.name} <span style="opacity:.7">(${m.ign})</span> <i class="fa-solid fa-xmark" style="margin-left:.4rem;cursor:pointer" onclick="trRemoveMember('${m.uid}')"></i></span>`).join('');
+}
+
 function regTeam(){
-  const name=v('tn'),cap=v('tc');if(!name||!cap)return notify('Name & captain required','','n-bad');
+  const name=v('tn');if(!name)return notify('Team name required','','n-bad');
+  if(!TR_CAPTAIN)return notify('Captain required','Look up the captain by PUBG UID first.','n-bad');
   const teams=DB.get('teams');if(teams.find(t=>t.name===name))return notify('Name taken','','n-bad');
-  const mems=v('tm')?v('tm').split(',').map(m=>m.trim()):[cap];if(!mems.includes(cap))mems.unshift(cap);
-  teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:cap,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString()});
-  DB.set('teams',teams);['tn','tt','tc','tm'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const mems=[TR_CAPTAIN.ign,...TR_MEMBERS.map(m=>m.ign)];
+  teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:TR_CAPTAIN.ign,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting:!!document.getElementById('t-recruit')?.checked,recruitNote:v('t-roles')||''});
+  DB.set('teams',teams);['tn','tt','tr-cap-uid','tr-mem-uid','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
+  TR_CAPTAIN=null;TR_MEMBERS=[];trRenderCapChip();trRenderMemChips();
   updateStats();refreshDLs();updatePendingBadges();
   notify('Team submitted!','Awaiting admin approval before appearing publicly.','n-ok');
 }
@@ -2530,6 +2836,340 @@ function renderReg(){
   </tr>`).join('');
 }
 function delPlayer(id){if(!ADM)return notify('Admins only','','n-bad');let pl=DB.get('players');pl=pl.filter(p=>p.id!==id);DB.set('players',pl);renderReg();renderAPlayers();updateStats();buildTicker();refreshDLs();notify('Player removed','','n-ok');}
+
+// ═══ TDM (TEAM DEATHMATCH — SEARCH PLAYERS, BUILD SQUADS, FIRST TO N) ═══
+function tdmGetLive(){return DB.get('tdmMatches',[]).find(m=>m.status==='live')||null;}
+
+let TDM_A=[]; // roster for squad A: [{id,ign,name}]
+let TDM_B=[]; // roster for squad B
+
+function renderTdmPage(){
+  const setup=document.getElementById('tdm-setup-card');
+  if(setup)setup.style.display=ADM?'block':'none';
+  if(ADM){
+    const teams=DB.get('teams').filter(t=>t.approved);
+    const opts='<option value="">— none —</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    ['tdm-a-team','tdm-b-team'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+    tdmRenderRoster('a');tdmRenderRoster('b');
+    ['tdm-a-results','tdm-b-results'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  }
+  renderTdmLive();renderTdmHistory();updateTdmBadge();
+}
+
+function tdmSearchPlayers(side){
+  const q=v('tdm-'+side+'-search').toLowerCase();
+  const resEl=document.getElementById('tdm-'+side+'-results');if(!resEl)return;
+  if(!q){resEl.innerHTML='';return;}
+  const roster=side==='a'?TDM_A:TDM_B;
+  const otherRoster=side==='a'?TDM_B:TDM_A;
+  const players=DB.get('players').filter(p=>
+    (p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q)) &&
+    !roster.find(r=>r.id===p.id) && !otherRoster.find(r=>r.id===p.id)
+  ).slice(0,8);
+  if(!players.length){resEl.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching players</div>';return;}
+  resEl.innerHTML=players.map(p=>`<div class="tdm-search-row" onclick="tdmAddPlayer('${side}','${p.id}')"><div class="cell-av">${p.ign[0]}</div><div><div style="font-weight:600">${p.name}</div><div class="text-dim" style="font-size:.72rem">${p.ign}${p.team?' · '+p.team:''}</div></div></div>`).join('');
+}
+
+function tdmAddPlayer(side,id){
+  const p=DB.get('players').find(x=>x.id===id);if(!p)return;
+  const roster=side==='a'?TDM_A:TDM_B;
+  if(roster.find(r=>r.id===id))return;
+  roster.push({id:p.id,ign:p.ign,name:p.name});
+  const searchEl=document.getElementById('tdm-'+side+'-search');if(searchEl)searchEl.value='';
+  document.getElementById('tdm-'+side+'-results').innerHTML='';
+  tdmRenderRoster(side);
+}
+
+function tdmRemovePlayer(side,id){
+  if(side==='a')TDM_A=TDM_A.filter(r=>r.id!==id);else TDM_B=TDM_B.filter(r=>r.id!==id);
+  tdmRenderRoster(side);
+}
+
+function tdmRenderRoster(side){
+  const el=document.getElementById('tdm-'+side+'-roster');if(!el)return;
+  const roster=side==='a'?TDM_A:TDM_B;
+  if(!roster.length){el.innerHTML='<div class="text-dim" style="font-size:.78rem;padding:.3rem 0">No players added yet.</div>';return;}
+  el.innerHTML=roster.map(p=>`<div class="tdm-roster-row"><div class="cell-av">${p.ign[0]}</div><div>${p.name} <span class="text-dim" style="font-size:.72rem">(${p.ign})</span></div><i class="fa-solid fa-xmark rm" onclick="tdmRemovePlayer('${side}','${p.id}')"></i></div>`).join('');
+}
+
+function tdmQuickFill(side){
+  const teamId=v('tdm-'+side+'-team');if(!teamId)return;
+  const team=DB.get('teams').find(t=>t.id===teamId);if(!team)return;
+  const nameEl=document.getElementById('tdm-'+side+'-name');if(nameEl&&!nameEl.value)nameEl.value=team.name;
+  const players=DB.get('players');
+  const roster=side==='a'?TDM_A:TDM_B;
+  (team.members||[]).forEach(ign=>{
+    const p=players.find(x=>x.ign===ign);
+    if(p&&!roster.find(r=>r.id===p.id))roster.push({id:p.id,ign:p.ign,name:p.name});
+  });
+  tdmRenderRoster(side);
+}
+
+function startTdm(){
+  if(!ADM)return notify('Admins only','','n-bad');
+  if(tdmGetLive())return notify('A match is already live','Finish or end it before starting another.','n-bad');
+  const aName=v('tdm-a-name')||'Squad A',bName=v('tdm-b-name')||'Squad B';
+  if(!TDM_A.length||!TDM_B.length)return notify('Add players to both squads','Search and add at least one player per squad.','n-bad');
+  if(aName===bName)return notify('Squad names must be different','','n-bad');
+  const target=parseInt(v('tdm-target'))||10;
+  const ms=DB.get('tdmMatches',[]);
+  ms.push({id:'tdm'+Date.now(),aName,bName,aRoster:TDM_A.slice(),bRoster:TDM_B.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString()});
+  DB.set('tdmMatches',ms);
+  TDM_A=[];TDM_B=[];
+  ['tdm-a-name','tdm-b-name','tdm-a-search','tdm-b-search'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  tdmRenderRoster('a');tdmRenderRoster('b');
+  renderTdmLive();renderTdmHistory();updateTdmBadge();
+  notify('TDM match started!',`${aName} vs ${bName} · First to ${target}`,'n-ok');
+}
+
+function tdmPlayerKillCount(m,ign){
+  return (m.killLog||[]).filter(k=>k.ign===ign).length;
+}
+
+// Lets an admin type in a player's FINAL kill count directly — handy once the
+// match is over and you're logging results from a killfeed/replay instead of
+// clicking +1 live. Reconciles the team score and the player's global stats.
+function tdmSetPlayerKills(side,playerId){
+  if(!ADM)return notify('Admins only','','n-bad');
+  const ms=DB.get('tdmMatches',[]);const m=ms.find(x=>x.status==='live'||x.status==='done');if(!m)return;
+  const roster=side==='a'?m.aRoster:m.bRoster;
+  const p=roster.find(r=>r.id===playerId);if(!p)return;
+  const input=document.getElementById(`tdm-kc-${side}-${playerId}`);if(!input)return;
+  const newVal=Math.max(0,parseInt(input.value)||0);
+  const oldVal=tdmPlayerKillCount(m,p.ign);
+  const diff=newVal-oldVal;
+  if(diff===0)return;
+  m.killLog=(m.killLog||[]).filter(k=>k.ign!==p.ign);
+  for(let i=0;i<newVal;i++)m.killLog.push({ign:p.ign,name:p.name,side,ts:new Date().toISOString()});
+  const key=side==='a'?'scoreA':'scoreB';
+  m[key]=Math.max(0,(m[key]||0)+diff);
+  const players=DB.get('players');const gp=players.find(x=>x.id===playerId||x.ign===p.ign);
+  if(gp){gp.kills=Math.max(0,(gp.kills||0)+diff);DB.set('players',players);}
+  if(m.status==='live'&&(m.scoreA>=m.target||m.scoreB>=m.target)){
+    m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
+    const teams=DB.get('teams');const wt=teams.find(t=>t.name===m.winner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+  }
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  notify('Kills updated',`${p.ign}: ${oldVal} → ${newVal}`,'n-ok');
+}
+
+function addTdmKill(side,playerId){
+  if(!ADM)return notify('Admins only','','n-bad');
+  const ms=DB.get('tdmMatches',[]);const m=ms.find(x=>x.status==='live');if(!m)return;
+  const roster=side==='a'?m.aRoster:m.bRoster;
+  const p=roster.find(r=>r.id===playerId);if(!p)return;
+  const key=side==='a'?'scoreA':'scoreB';
+  m[key]=(m[key]||0)+1;
+  m.killLog=m.killLog||[];
+  m.killLog.push({ign:p.ign,name:p.name,side,ts:new Date().toISOString()});
+  // reflect onto the player's persistent stats too
+  const players=DB.get('players');const gp=players.find(x=>x.id===playerId||x.ign===p.ign);
+  if(gp){gp.kills=(gp.kills||0)+1;DB.set('players',players);}
+  if(m.scoreA>=m.target||m.scoreB>=m.target){
+    m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
+    const teams=DB.get('teams');const wt=teams.find(t=>t.name===m.winner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    notify('Match complete!',`${m.winner} wins ${Math.max(m.scoreA,m.scoreB)}-${Math.min(m.scoreA,m.scoreB)}!`,'n-ok');
+  }
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+}
+
+function undoTdmKill(){
+  if(!ADM)return;
+  const ms=DB.get('tdmMatches',[]);const m=ms.find(x=>x.status==='live');if(!m||!m.killLog||!m.killLog.length)return;
+  const last=m.killLog.pop();
+  const key=last.side==='a'?'scoreA':'scoreB';m[key]=Math.max(0,(m[key]||0)-1);
+  const players=DB.get('players');const gp=players.find(x=>x.ign===last.ign);
+  if(gp){gp.kills=Math.max(0,(gp.kills||0)-1);DB.set('players',players);}
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Last kill undone','','n-ok');
+}
+
+function endTdmMatch(){
+  if(!ADM)return;
+  if(!confirm('End this TDM match early?'))return;
+  const ms=DB.get('tdmMatches',[]);const m=ms.find(x=>x.status==='live');if(!m)return;
+  m.status='done';m.winner=m.scoreA===m.scoreB?'Draw':(m.scoreA>m.scoreB?m.aName:m.bName);m.doneTs=new Date().toISOString();
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Match ended','','n-ok');
+}
+
+function delTdmMatch(id){
+  if(!ADM)return;
+  let ms=DB.get('tdmMatches',[]);ms=ms.filter(m=>m.id!==id);DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Match removed','','n-ok');
+}
+
+// ═══ LIVE TDM BROADCAST BANNER — 1080×384, backdrop/pinned-thumbnail sized ═══
+function tdmBannerTickerItems(m,side){
+  const roster=side==='a'?m.aRoster:m.bRoster;
+  const pl=DB.get('players');
+  return roster.map(r=>{
+    const kc=tdmPlayerKillCount(m,r.ign);
+    const full=pl.find(p=>p.ign===r.ign);
+    const kd=full?(full.kills/(full.deaths||1)).toFixed(1):'—';
+    const wins=full?(full.wins||0):0;
+    const played=full?(full.gamesPlayed||0):0;
+    return `<span class="tdm-banner-ticker-item"><b>${r.ign}</b> ${kc} kills this match <span style="opacity:.4">·</span> career K/D <b>${kd}</b> <span style="opacity:.4">·</span> ${wins}W / ${played} played</span>`;
+  });
+}
+// Head-to-head comparison badges (MVP / Best K-D / Most Wins) across everyone in the live match — same icon style as the main site ticker
+function tdmLiveComparisonItems(m){
+  const pl=DB.get('players');
+  const roster=[...m.aRoster,...m.bRoster];
+  const full=roster.map(r=>({ign:r.ign,kc:tdmPlayerKillCount(m,r.ign),full:pl.find(p=>p.ign===r.ign)}));
+  const items=[];
+  const byKc=[...full].sort((a,b)=>b.kc-a.kc);
+  if(byKc[0]&&byKc[0].kc>0)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-crown" style="color:var(--amber)"></i> MVP this match <span style="opacity:.4">·</span> <b>${byKc[0].ign}</b> — ${byKc[0].kc} kills</span>`);
+  const byKd=[...full].filter(x=>x.full).sort((a,b)=>(b.full.kills/(b.full.deaths||1))-(a.full.kills/(a.full.deaths||1)));
+  if(byKd[0])items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-bolt" style="color:var(--accentL)"></i> Best K/D <span style="opacity:.4">·</span> <b>${byKd[0].ign}</b> — ${(byKd[0].full.kills/(byKd[0].full.deaths||1)).toFixed(1)}</span>`);
+  const byWins=[...full].filter(x=>x.full&&x.full.wins>0).sort((a,b)=>b.full.wins-a.full.wins);
+  if(byWins[0])items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-trophy" style="color:var(--green)"></i> Most Wins <span style="opacity:.4">·</span> <b>${byWins[0].ign}</b> — ${byWins[0].full.wins}</span>`);
+  return items;
+}
+// Live score as one ticker chip (used when the whole banner becomes a single slide)
+function tdmScoreChipItem(m){
+  return `<span class="tdm-banner-ticker-item" style="font-size:1.05em"><i class="fa-solid fa-skull-crossbones" style="color:var(--red)"></i> <b style="color:var(--accentL)">${m.aName} ${m.scoreA}</b> <span style="opacity:.4">–</span> <b style="color:#ff6b6b">${m.scoreB} ${m.bName}</b> <span style="opacity:.5;margin-left:.3rem">First to ${m.target}</span></span>`;
+}
+// Overall best player across the whole roster (not just this match) — season-wide standout
+function tdmOverallBestItem(){
+  const pl=DB.get('players',[]);
+  const ranked=[...pl].filter(p=>(p.kills||0)>0).sort((a,b)=>(b.kills||0)-(a.kills||0));
+  if(!ranked.length)return '';
+  const best=ranked[0];
+  const kd=(best.kills/(best.deaths||1)).toFixed(1);
+  return `<span class="tdm-banner-ticker-item"><i class="fa-solid fa-medal" style="color:var(--amber)"></i> Best Player Overall <span style="opacity:.4">·</span> <b>${best.ign}</b> — ${best.kills} kills <span style="opacity:.4">·</span> K/D ${kd}</span>`;
+}
+function renderTdmBanner(){
+  const bwrap=document.getElementById('tdm-banner-wrap');if(!bwrap)return;
+  const m=tdmGetLive();
+  if(!m){bwrap.innerHTML='';return;}
+  const pctA=Math.min(100,(m.scoreA/m.target)*100),pctB=Math.min(100,(m.scoreB/m.target)*100);
+  const allPl=DB.get('players');
+  const mvpOf=(roster)=>{let best=null;roster.forEach(r=>{const kc=tdmPlayerKillCount(m,r.ign);if(!best||kc>best.kc)best={ign:r.ign,kc};});return best;};
+  const mvpA=mvpOf(m.aRoster),mvpB=mvpOf(m.bRoster);
+  const overallItem=tdmOverallBestItem();
+  const items=[tdmScoreChipItem(m),...tdmLiveComparisonItems(m),...tdmBannerTickerItems(m,'a'),...tdmBannerTickerItems(m,'b'),...(overallItem?[overallItem]:[])];
+  const sep=`<span style="opacity:.3;margin:0 .6rem">◆</span>`;const tickHtml=items.join(sep);
+  const ovCfg=DB.get('cfg',{});const ovLayout=ovCfg.overlayLayout||'ticker',ovTheme=ovCfg.overlayTheme||'glass';
+  bwrap.innerHTML=`<div class="tdm-banner ov-layout-${ovLayout} ov-theme-${ovTheme}" id="tdm-banner-el">
+    <div class="tdm-banner-bg"></div>
+    <div class="tdm-banner-grid"></div>
+    <div class="tdm-banner-scan"></div>
+    <div class="tdm-banner-vignette"></div>
+    <div class="tdm-banner-accentline"></div>
+    <div class="tdm-banner-corner tdm-banner-corner-tl"></div>
+    <div class="tdm-banner-corner tdm-banner-corner-tr"></div>
+    <div class="tdm-banner-corner tdm-banner-corner-bl"></div>
+    <div class="tdm-banner-corner tdm-banner-corner-br"></div>
+    <div class="tdm-banner-target">FIRST TO ${m.target}</div>
+    <div class="tdm-banner-brand">RAGEISM · TDM</div>
+    <div class="tdm-banner-main">
+      <div class="tdm-banner-side a">
+        <div class="tdm-banner-name">${m.aName}</div>
+        <div class="tdm-banner-score">${m.scoreA}</div>
+        ${mvpA?`<div class="tdm-banner-mvp"><i class="fa-solid fa-crosshairs"></i> ${mvpA.ign} · ${mvpA.kc} kills</div>`:''}
+      </div>
+      <div class="tdm-banner-vs">VS</div>
+      <div class="tdm-banner-side b">
+        <div class="tdm-banner-name">${m.bName}</div>
+        <div class="tdm-banner-score">${m.scoreB}</div>
+        ${mvpB?`<div class="tdm-banner-mvp"><i class="fa-solid fa-crosshairs"></i> ${mvpB.ign} · ${mvpB.kc} kills</div>`:''}
+      </div>
+    </div>
+    <div class="tdm-banner-bars">
+      <div class="tdm-banner-side a"><div class="tdm-banner-bartrack"><div class="tdm-banner-barfill" style="width:${pctA}%;background:var(--accent)"></div></div></div>
+      <div style="width:20px"></div>
+      <div class="tdm-banner-side b"><div class="tdm-banner-bartrack"><div class="tdm-banner-barfill" style="width:${pctB}%;background:var(--red)"></div></div></div>
+    </div>
+    <div class="tdm-banner-ticker"><div class="tdm-banner-ticker-track">${tickHtml}${sep}${tickHtml}</div></div>
+  </div>`;
+}
+
+function renderTdmLive(){
+  const wrap=document.getElementById('tdm-live-wrap');if(!wrap)return;
+  renderTdmBanner();
+  const m=tdmGetLive();
+  if(!m){wrap.innerHTML=`<div class="card" style="text-align:center;padding:2.5rem;color:var(--textD)"><i class="fa-solid fa-skull-crossbones" style="font-size:1.6rem;margin-bottom:.6rem;display:block"></i>No TDM match is live right now.</div>`;return;}
+  const pctA=Math.min(100,(m.scoreA/m.target)*100),pctB=Math.min(100,(m.scoreB/m.target)*100);
+  const rosterBtns=(side,roster)=>roster.map(p=>{
+    const kc=tdmPlayerKillCount(m,p.ign);
+    return `<div class="tdm-roster-row" style="justify-content:space-between;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:.5rem"><div class="cell-av">${p.ign[0]}</div>${p.ign}</div>
+      ${ADM?`<div style="display:flex;align-items:center;gap:.35rem">
+        <input type="number" min="0" value="${kc}" id="tdm-kc-${side}-${p.id}" class="fi" style="width:52px;padding:.25rem .3rem;text-align:center;font-size:.78rem" onkeydown="if(event.key==='Enter'){event.preventDefault();tdmSetPlayerKills('${side}','${p.id}');}"/>
+        <button class="btn btn-ghost btn-xs" title="Save this player's kill count" onclick="tdmSetPlayerKills('${side}','${p.id}')"><i class="fa-solid fa-check"></i></button>
+        <button class="btn btn-xs ${side==='a'?'btn-accent':'btn-danger'}" title="+1 kill" onclick="addTdmKill('${side}','${p.id}')"><i class="fa-solid fa-plus"></i></button>
+      </div>`:`<span class="text-dim font-mono" style="font-size:.78rem">${kc} kills</span>`}
+    </div>`;
+  }).join('');
+  wrap.innerHTML=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1rem"><span class="status-live"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.4s infinite"></span> LIVE</span><span class="text-dim" style="font-size:.8rem">First to ${m.target}</span></div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1.2rem;align-items:start;text-align:center;margin-bottom:1rem">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;margin-bottom:.4rem">${m.aName}</div>
+        <div class="font-mono" style="font-size:3rem;font-weight:700;color:var(--accentL)">${m.scoreA}</div>
+        <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:.5rem"><div style="width:${pctA}%;height:100%;background:var(--accent);transition:width .3s"></div></div>
+        <div style="margin-top:.7rem;text-align:left">${rosterBtns('a',m.aRoster)}</div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--textD);padding-top:1.5rem">VS</div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;margin-bottom:.4rem">${m.bName}</div>
+        <div class="font-mono" style="font-size:3rem;font-weight:700;color:var(--red)">${m.scoreB}</div>
+        <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:.5rem"><div style="width:${pctB}%;height:100%;background:var(--red);transition:width .3s"></div></div>
+        <div style="margin-top:.7rem;text-align:left">${rosterBtns('b',m.bRoster)}</div>
+      </div>
+    </div>
+    ${ADM?`<div style="text-align:center;display:flex;gap:.5rem;justify-content:center"><button class="btn btn-ghost btn-sm" onclick="undoTdmKill()"><i class="fa-solid fa-rotate-left"></i> Undo Last Kill</button><button class="btn btn-ghost btn-sm" onclick="endTdmMatch()"><i class="fa-solid fa-flag-checkered"></i> End Match Early</button></div>`:''}
+  </div>`;
+}
+
+function renderTdmHistory(){
+  const body=document.getElementById('tdm-history-body');if(!body)return;
+  const ms=DB.get('tdmMatches',[]).filter(m=>m.status==='done').slice().reverse();
+  if(!ms.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--textD)">No completed TDM matches yet.</td></tr>';return;}
+  body.innerHTML=ms.map((m,i)=>`<tr>
+    <td class="text-dim font-mono" style="font-size:.72rem">#${ms.length-i}</td>
+    <td style="font-weight:${m.winner===m.aName?700:400};color:${m.winner===m.aName?'var(--accentL)':'var(--text)'}">${m.aName}</td>
+    <td class="font-mono">${m.scoreA} – ${m.scoreB}</td>
+    <td style="font-weight:${m.winner===m.bName?700:400};color:${m.winner===m.bName?'var(--red)':'var(--text)'}">${m.bName}</td>
+    <td><span class="chip chip-accent">${m.winner||'—'}</span></td>
+    <td class="text-dim" style="font-size:.75rem">${tdmFmtDate(m.doneTs||m.ts)}</td>
+    <td class="admin-only" style="display:${ADM?'table-cell':'none'}"><button class="btn btn-danger btn-xs" onclick="delTdmMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`).join('');
+}
+
+function tdmFmtDate(iso){try{return new Date(iso).toLocaleString();}catch{return iso||'';}}
+
+
+function updateTdmBadge(){
+  const live=tdmGetLive();
+  const b=document.getElementById('tdm-live-badge');if(b)b.style.display=live?'inline-block':'none';
+  const b2=document.getElementById('tdm-live-badge2');if(b2)b2.style.display=live?'inline-block':'none';
+}
+
+// ═══ STREAM OVERLAY (TikTok / OBS) ═══
+// ═══ STREAM OVERLAY — single sliding lower-third bar: LIVE chip + one continuous slide with all match + player data ═══
+function renderOverlay(){
+  const tickEl=document.getElementById('ov-lower-ticker');
+  if(!tickEl)return;
+
+  const tdm=tdmGetLive();
+  let items=[];
+  if(tdm){
+    const overallItem=tdmOverallBestItem();
+    items=[tdmScoreChipItem(tdm),...tdmLiveComparisonItems(tdm),...tdmBannerTickerItems(tdm,'a'),...tdmBannerTickerItems(tdm,'b'),...(overallItem?[overallItem]:[])];
+  }else{
+    const matches=DB.get('matches',[]);
+    const live=matches.find(m=>m.status==='live');
+    const upcoming=matches.find(m=>m.status==='upcoming');
+    if(live)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-gamepad"></i> ${live.name} <span style="opacity:.4">·</span> ${MI[live.map]||''} ${live.map||''}</span>`);
+    else if(upcoming)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clock"></i> Up next <span style="opacity:.4">·</span> ${upcoming.name}</span>`);
+    else items.push(`<span class="tdm-banner-ticker-item">No live match right now</span>`);
+    const overallItem=tdmOverallBestItem();
+    if(overallItem)items.push(overallItem);
+  }
+  if(!items.length){tickEl.innerHTML='';return;}
+  const sep=`<span style="opacity:.3;margin:0 .3rem">◆</span>`;
+  const tickHtml=items.join(sep);
+  tickEl.innerHTML=`<div class="ov-lower-ticker-track">${tickHtml}${sep}${tickHtml}</div>`;
+}
 
 // ═══ GROUPS ═══
 function drawGroups(){
@@ -3052,6 +3692,17 @@ function buildProfileCardHTML(p,isOwn=false){
         </div>
         <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Receive personal match notifications via Discord</div>
       </div>
+      <div style="padding:.7rem;background:var(--bg3);border:1px solid rgba(99,102,241,.2);border-radius:var(--rS);margin-bottom:.6rem;position:relative">
+        <div style="font-size:.73rem;font-weight:700;color:var(--accentL);margin-bottom:.3rem"><i class="fa-solid fa-right-left"></i> Transfer My Stats to Another ID</div>
+        <div style="font-size:.72rem;color:var(--textD);margin-bottom:.5rem">Switching PUBG accounts? Move your kills, wins, and history to a different registered ID. Requires admin approval.</div>
+        <input type="hidden" id="xfer-target-id"/>
+        <input class="fi" id="xfer-search" placeholder="Search target player by IGN or UID..." style="font-size:.82rem" autocomplete="off"
+          oninput="xferLookup(this.value,'${p.id}')" onfocus="xferLookup(this.value,'${p.id}')" onblur="setTimeout(()=>document.getElementById('xfer-lookup-dd').style.display='none',200)"/>
+        <div id="xfer-lookup-dd" class="xfer-lookup-results" style="display:none"></div>
+        <div id="xfer-selected-chip" style="margin-top:.5rem"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:.5rem;width:100%" onclick="requestStatTransfer('${p.id}')"><i class="fa-solid fa-paper-plane"></i> Request Transfer</button>
+        <div id="xfer-my-status" style="margin-top:.5rem">${myTransferStatusHTML(p.id)}</div>
+      </div>
       <button class="btn btn-danger btn-fw" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
     </div>`:''}
   </div>`;
@@ -3154,6 +3805,30 @@ function buildMyProfile(){
 }
 
 // Also update openEditAdmin to populate new fields
+function openEditStats(id){
+  const p=DB.get('players').find(x=>x.id===id);if(!p)return;
+  const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val??'';};
+  set('es-id',p.id);set('es-name',p.name);set('es-ign',p.ign);set('es-uid',p.uid);
+  set('es-discord',p.discord);set('es-team',p.team);set('es-region',p.region);
+  set('es-kills',p.kills||0);set('es-deaths',p.deaths||0);set('es-wins',p.wins||0);
+  set('es-damage',p.damage||0);set('es-points',p.points||0);set('es-gp',p.gamesPlayed||0);set('es-xp',p.xp||0);
+  openModal('edit-stats-modal');
+}
+function saveEditStats(){
+  const id=v('es-id');const pl=DB.get('players');const p=pl.find(x=>x.id===id);if(!p)return;
+  const newIgn=v('es-ign');
+  if(newIgn&&newIgn!==p.ign&&pl.find(x=>x.ign===newIgn&&x.id!==id))return notify('IGN already taken','','n-bad');
+  p.name=v('es-name')||p.name;p.ign=newIgn||p.ign;p.uid=v('es-uid')||p.uid;
+  p.discord=v('es-discord');p.team=v('es-team');p.region=v('es-region');
+  p.kills=Math.max(0,parseInt(v('es-kills'))||0);p.deaths=Math.max(0,parseInt(v('es-deaths'))||0);
+  p.wins=Math.max(0,parseInt(v('es-wins'))||0);p.damage=Math.max(0,parseInt(v('es-damage'))||0);
+  p.points=Math.max(0,parseInt(v('es-points'))||0);p.gamesPlayed=Math.max(0,parseInt(v('es-gp'))||0);
+  p.xp=Math.max(0,parseInt(v('es-xp'))||0);
+  DB.set('players',pl);
+  closeModal('edit-stats-modal');
+  renderAPlayers();renderReg();updateStats();buildTicker();refreshDLs();
+  notify('Player updated!',`${p.ign}'s profile & stats saved`,'n-ok');
+}
 function openEditAdmin(id){
   const p=DB.get('players').find(x=>x.id===id);if(!p)return;
   const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val||'';};
@@ -3166,9 +3841,98 @@ function openEditAdmin(id){
 function updatePendingBadges(){
   const pending=DB.get('teams').filter(t=>!t.approved).length;
   const joinPending=DB.get('joinRequests',[]).filter(r=>r.status==='pending').length;
+  const xferPending=DB.get('transferRequests',[]).filter(r=>r.status==='pending').length;
   const ptb=document.getElementById('pending-teams-badge');if(ptb)ptb.textContent=pending;
   const jrb=document.getElementById('join-req-badge');if(jrb)jrb.textContent=joinPending;
-  const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending;
+  const xrb=document.getElementById('transfer-req-badge');if(xrb)xrb.textContent=xferPending;
+  const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending+xferPending;
+}
+
+// ═══ PLAYER LOOKUP (autocomplete dropdown by IGN, name, or UID) ═══
+function playerLookupRowHTML(p){
+  return `<div class="xfer-lookup-row" data-id="${p.id}"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div>
+    <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ign}</div>
+    <div style="font-size:.68rem;color:var(--textD)">UID ${p.uid||'—'} ${p.team?'· '+p.team:''}</div></div></div>`;
+}
+function apShowLookup(q){
+  const dd=document.getElementById('ap-lookup-dd');if(!dd)return;
+  q=(q||'').trim().toLowerCase();
+  if(!q){dd.style.display='none';dd.innerHTML='';return;}
+  const matches=DB.get('players').filter(p=>[p.ign,p.name,p.uid].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))).slice(0,8);
+  if(!matches.length){dd.style.display='none';dd.innerHTML='';return;}
+  dd.innerHTML=matches.map(playerLookupRowHTML).join('');
+  dd.style.display='block';
+  dd.querySelectorAll('.xfer-lookup-row').forEach(row=>row.onmousedown=()=>{openEditStats(row.dataset.id);dd.style.display='none';});
+}
+function xferLookup(q,myId){
+  const dd=document.getElementById('xfer-lookup-dd');if(!dd)return;
+  q=(q||'').trim().toLowerCase();
+  if(!q){dd.style.display='none';dd.innerHTML='';return;}
+  const matches=DB.get('players').filter(p=>p.id!==myId&&[p.ign,p.name,p.uid].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))).slice(0,8);
+  if(!matches.length){dd.innerHTML='<div class="xfer-lookup-row" style="cursor:default;color:var(--textD)">No matching players found</div>';dd.style.display='block';return;}
+  dd.innerHTML=matches.map(playerLookupRowHTML).join('');
+  dd.style.display='block';
+  dd.querySelectorAll('.xfer-lookup-row').forEach(row=>row.onmousedown=()=>{
+    const p=DB.get('players').find(x=>x.id===row.dataset.id);if(!p)return;
+    document.getElementById('xfer-target-id').value=p.id;
+    document.getElementById('xfer-search').value=p.ign;
+    document.getElementById('xfer-selected-chip').innerHTML=`<span class="chip chip-accent" style="font-size:.72rem">Target: ${p.ign} (UID ${p.uid||'—'})</span>`;
+    dd.style.display='none';
+  });
+}
+function requestStatTransfer(fromId){
+  const toId=v('xfer-target-id');
+  if(!toId)return notify('Pick a target player','Search and select a player from the dropdown first.','n-bad');
+  if(toId===fromId)return notify("Can't transfer to yourself",'','n-bad');
+  const pl=DB.get('players');const from=pl.find(p=>p.id===fromId),to=pl.find(p=>p.id===toId);
+  if(!from||!to)return notify('Player not found','','n-bad');
+  const reqs=DB.get('transferRequests',[]);
+  if(reqs.find(r=>r.status==='pending'&&r.fromId===fromId))return notify('Request already pending','You already have a transfer request awaiting admin review.','n-bad');
+  reqs.push({id:'xr'+Date.now(),fromId,fromIgn:from.ign,fromUid:from.uid,toId,toIgn:to.ign,toUid:to.uid,status:'pending',ts:new Date().toLocaleString()});
+  DB.set('transferRequests',reqs);
+  updatePendingBadges();buildMyProfile();
+  notify('Transfer requested!','An admin will review and approve or deny it.','n-ok');
+}
+function myTransferStatusHTML(playerId){
+  const req=DB.get('transferRequests',[]).filter(r=>r.fromId===playerId).sort((a,b)=>b.ts.localeCompare(a.ts))[0];
+  if(!req)return '';
+  const col=req.status==='pending'?'var(--amber)':req.status==='approved'?'var(--green)':'var(--red)';
+  const label=req.status==='pending'?'Awaiting admin approval':req.status==='approved'?'Approved — stats moved':'Denied by admin';
+  return `<div style="font-size:.75rem;color:${col}"><i class="fa-solid fa-circle-info"></i> Transfer to ${req.toIgn}: ${label}</div>`;
+}
+function renderTransferRequests(){
+  const list=document.getElementById('transfer-request-list');if(!list)return;
+  const reqs=DB.get('transferRequests',[]).filter(r=>r.status==='pending');
+  if(!reqs.length){list.innerHTML='<div class="text-dim" style="padding:1rem;font-size:.85rem">No pending transfer requests.</div>';return;}
+  list.innerHTML=reqs.map(r=>`<div class="xfer-req-row">
+    <div style="flex:1;min-width:180px"><b>${r.fromIgn}</b> <span style="color:var(--textD)">(UID ${r.fromUid||'—'})</span> <i class="fa-solid fa-arrow-right" style="margin:0 .4rem;color:var(--textD)"></i> <b>${r.toIgn}</b> <span style="color:var(--textD)">(UID ${r.toUid||'—'})</span></div>
+    <span class="chip chip-neutral" style="font-size:.65rem">${r.ts}</span>
+    <button class="btn btn-accent btn-xs" onclick="approveTransfer('${r.id}')"><i class="fa-solid fa-check"></i> Approve</button>
+    <button class="btn btn-danger btn-xs" onclick="denyTransfer('${r.id}')"><i class="fa-solid fa-xmark"></i> Deny</button>
+  </div>`).join('');
+}
+function approveTransfer(id){
+  if(!ADM)return notify('Admins only','','n-bad');
+  const reqs=DB.get('transferRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
+  const pl=DB.get('players');const from=pl.find(p=>p.id===r.fromId),to=pl.find(p=>p.id===r.toId);
+  if(from&&to){
+    to.kills=(to.kills||0)+(from.kills||0);to.deaths=(to.deaths||0)+(from.deaths||0);
+    to.wins=(to.wins||0)+(from.wins||0);to.damage=(to.damage||0)+(from.damage||0);
+    to.xp=(to.xp||0)+(from.xp||0);to.points=(to.points||0)+(from.points||0);
+    to.gamesPlayed=(to.gamesPlayed||0)+(from.gamesPlayed||0);
+    from.kills=0;from.deaths=0;from.wins=0;from.damage=0;from.xp=0;from.points=0;from.gamesPlayed=0;from.statsTransferredTo=to.ign;
+    DB.set('players',pl);
+  }
+  r.status='approved';DB.set('transferRequests',reqs);
+  renderTransferRequests();updatePendingBadges();renderAPlayers();updateStats();buildTicker();refreshDLs();buildMyProfile();
+  notify('Transfer approved',`${r.fromIgn}'s stats moved to ${r.toIgn}`,'n-ok');
+}
+function denyTransfer(id){
+  if(!ADM)return notify('Admins only','','n-bad');
+  const reqs=DB.get('transferRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
+  r.status='denied';DB.set('transferRequests',reqs);
+  renderTransferRequests();updatePendingBadges();buildMyProfile();
+  notify('Transfer denied','','n-info');
 }
 
 function buildMyProfile(){
@@ -3398,11 +4162,22 @@ function addBracketMatch(k){const b=DB.get('bracket',{qf:[],sf:[],final:[]});b[k
 function saveBracket(){const b=DB.get('bracket',{qf:[],sf:[],final:[]});['qf','sf','final'].forEach(rk=>{(b[rk]||[]).forEach((_,i)=>{const g=id=>document.getElementById(id)?.value||'';b[rk][i]={a:g(`ba-${rk}-${i}-a`),b:g(`ba-${rk}-${i}-b`),sa:parseInt(g(`ba-${rk}-${i}-sa`))||0,sb:parseInt(g(`ba-${rk}-${i}-sb`))||0,winner:g(`ba-${rk}-${i}-w`)};});});DB.set('bracket',b);renderBkt();notify('Bracket saved!','','n-ok');}
 
 // ═══ TEAMS ═══
+let TEAMS_RECRUIT_ONLY=false;
+function toggleRecruitFilter(){
+  TEAMS_RECRUIT_ONLY=!TEAMS_RECRUIT_ONLY;
+  const btn=document.getElementById('teams-recruit-btn');
+  if(btn)btn.className=TEAMS_RECRUIT_ONLY?'btn btn-accent btn-sm':'btn btn-ghost btn-sm';
+  renderTeams();
+}
 function renderTeams(){
-  const allTeams=DB.get('teams');const teams=allTeams.filter(t=>t.approved);const g=document.getElementById('teams-grid');if(!g)return;
+  const allTeams=DB.get('teams');let teams=allTeams.filter(t=>t.approved);const g=document.getElementById('teams-grid');if(!g)return;
   const roles=['IGL','Fragger','Sniper','Support'];
+  const q=(document.getElementById('teams-search')?.value||'').toLowerCase().trim();
   document.getElementById('teams-count').textContent=`${teams.length} team${teams.length!==1?'s':''}`;
-  if(!teams.length){g.innerHTML='<div class="text-dim" style="padding:2rem;font-size:.85rem">No approved teams yet.</div>';return;}
+  if(q)teams=teams.filter(t=>[t.name,t.tag,...(t.members||[])].filter(Boolean).some(f=>String(f).toLowerCase().includes(q)));
+  if(TEAMS_RECRUIT_ONLY)teams=teams.filter(t=>t.recruiting);
+  if(!allTeams.filter(t=>t.approved).length){g.innerHTML='<div class="text-dim" style="padding:2rem;font-size:.85rem">No approved teams yet.</div>';return;}
+  if(!teams.length){g.innerHTML=`<div class="text-dim" style="padding:2rem;font-size:.85rem">No teams match your filters.</div>`;return;}
   g.innerHTML=teams.map(t=>`<div class="team-card">
     <div class="team-header">
       <div class="team-icon" style="background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'}"><i class="fa-solid fa-shield-halved"></i></div>
@@ -3410,6 +4185,7 @@ function renderTeams(){
       <span class="chip chip-green">${t.wins||0}W</span>
     </div>
     <div class="team-body">
+      ${t.recruiting?`<div class="team-recruit-badge" style="margin-bottom:.6rem"><i class="fa-solid fa-bullhorn"></i> Recruiting${t.recruitNote?' · '+t.recruitNote:''}</div>`:''}
       ${t.members.map((m,i)=>`<div class="team-member"><div class="member-dot" style="background:${['#6366f1','#ef4444','#3b82f6','#10b981'][i]||'var(--accent)'}"></div><div style="flex:1">${m}</div><div style="font-size:.7rem;color:var(--textD)">${roles[i]||'Member'}</div>${m===t.captain?`<span class="chip chip-accent" style="font-size:.6rem">CAP</span>`:m===t.manager?`<span class="chip chip-neutral" style="font-size:.6rem">MGR</span>`:''}</div>`).join('')}
       <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:.8rem">
         <span class="text-muted">Kills: <span class="text-accent font-mono fw6">${t.kills||0}</span></span>
@@ -3429,7 +4205,30 @@ function renderMatches(filter='all'){
   }).join('');
 }
 function filterMatches(f,btn){document.querySelectorAll('#page-matches .topbar-pills,.btn-filter,.btn-accent.btn-sm,.btn-ghost.btn-sm').forEach(b=>{if(b.getAttribute('onclick')?.includes('filterMatches'))b.className='btn btn-ghost btn-sm';});if(btn){btn.className='btn btn-accent btn-sm';}renderMatches(f);}
-function cycleMatchStatus(id){const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;const s=['upcoming','live','done'];m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();notify(`#${id} → ${m.status}!`,'','n-ok');}
+function cycleMatchStatus(id){
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;
+  const s=['upcoming','live','done'];const wasNotDone=m.status!=='done';
+  m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);
+  renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();
+  notify(`#${id} → ${m.status}!`,'','n-ok');
+  if(wasNotDone && m.status==='done') sendMatchToDiscord(id);
+}
+
+// ═══ Send match results to Discord (manual button OR auto-fired on match finish) ═══
+function sendMatchToDiscord(matchId){
+  const cfg=DB.get('cfg',{});
+  if(!cfg.disc || !cfg.disc.startsWith('https://discord.com/api/webhooks/')){
+    if(ADM) notify('No Discord webhook set','Add one in Admin → Settings','n-bad');
+    return;
+  }
+  const ms=DB.get('matches');const match=ms.find(x=>x.id===matchId);if(!match)return;
+  const logs=DB.get('rlogs5',[]);
+  const log=[...logs].reverse().find(l=>l.matchId===matchId) || {
+    id:'auto'+Date.now(), matchId, matchName:match.name, map:match.map, winnerIGN:'', winnerTeam:'', entries:[]
+  };
+  fireWebhook(cfg.disc, log, match);
+  notify('Sent to Discord!',`Results for ${match.name||matchId} posted`,'n-ok');
+}
 function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,mode:v('mm-md'),notes:''});DB.set('matches',ms);closeModal('match-modal');renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,'','n-ok');}
 
 // ═══ COMPARE ═══
@@ -3489,8 +4288,14 @@ function delSug(id){let s=DB.get('suggestions');s=s.filter(x=>x.id!==id);DB.set(
 function submitSug(){const ign=v('sug-ign'),cat=v('sug-cat'),text=v('sug-text');if(!ign||!text)return notify('IGN & text required','','n-bad');const s=DB.get('suggestions');s.push({id:'s'+Date.now(),author:ign,cat,text,votes:0,ts:'Just now'});DB.set('suggestions',s);document.getElementById('sug-ign').value='';document.getElementById('sug-text').value='';renderSugs();notify('Submitted!','','n-ok');}
 
 // ═══ ADMIN RENDERS ═══
-function renderAPlayers(){const pl=DB.get('players');const body=document.getElementById('ap-body');if(!body)return;if(!pl.length){body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players.</td></tr>';return;}
-  body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span></td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="openEditAdmin('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-xs" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
+function renderAPlayers(){
+  const all=DB.get('players');const body=document.getElementById('ap-body');if(!body)return;
+  const q=(document.getElementById('ap-search')?.value||'').toLowerCase().trim();
+  const pl=q?all.filter(p=>[p.ign,p.name,p.uid,p.discord,p.team,p.region].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))):all;
+  if(!all.length){body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players registered yet.</td></tr>';return;}
+  if(!pl.length){body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players match "${q}".</td></tr>`;return;}
+  body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span></td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Edit stats & profile" onclick="openEditStats('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-ghost btn-xs" title="View profile" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-danger btn-xs" title="Delete player" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');
+}
 
 function renderATeams(){
   const teams=DB.get('teams');const pending=teams.filter(t=>!t.approved);const approved=teams.filter(t=>t.approved);
@@ -3517,6 +4322,10 @@ function openManageTeam(id){
   <div class="frow"><div class="fg"><label class="fl">Tag</label><input class="fi" id="mt-tag" value="${t.tag||''}"/></div><div class="fg"><label class="fl">Captain IGN</label><input class="fi" id="mt-cap" value="${t.captain}" list="ign-dl"/></div></div>
   <div class="fg"><label class="fl">Team Color</label><input class="fi" id="mt-color" type="color" value="${t.color||'#6366f1'}"/></div>
   <div class="fg"><label class="fl">Manager IGN</label><input class="fi" id="mt-mgr" value="${t.manager||''}" list="ign-dl" placeholder="Assign a team manager (optional)"/></div>
+  <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
+    <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:${t.recruiting?'.5rem':'0'}"><input type="checkbox" id="mt-recruit" ${t.recruiting?'checked':''} onchange="document.getElementById('mt-roles-wrap').style.display=this.checked?'block':'none'" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> Looking for players (show as recruiting)</label>
+    <div id="mt-roles-wrap" style="display:${t.recruiting?'block':'none'}"><input class="fi" id="mt-roles" value="${t.recruitNote||''}" placeholder="Roles needed, e.g. Sniper, IGL — optional note"/></div>
+  </div>
   <div class="card-title" style="margin-top:.8rem;margin-bottom:.5rem"><i class="fa-solid fa-users"></i> Roster</div>
   <div id="mt-members">${t.members.map((m,i)=>`<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.35rem"><input class="fi" style="flex:1" value="${m}" id="mt-m-${i}" list="ign-dl"/><button class="btn btn-danger btn-xs" onclick="removeMtMember(${i})"><i class="fa-solid fa-trash"></i></button></div>`).join('')}</div>
   <button class="btn btn-ghost btn-sm" onclick="addMtMember()" style="margin-bottom:.7rem"><i class="fa-solid fa-plus"></i> Add Member</button>
@@ -3542,6 +4351,8 @@ function saveManageTeam(id){
   t.captain=document.getElementById('mt-cap')?.value||t.captain;
   t.color=document.getElementById('mt-color')?.value||t.color;
   t.manager=document.getElementById('mt-mgr')?.value||'';
+  t.recruiting=!!document.getElementById('mt-recruit')?.checked;
+  t.recruitNote=document.getElementById('mt-roles')?.value.trim()||'';
   const mems=[];document.querySelectorAll('#mt-members input').forEach(i=>{if(i.value.trim())mems.push(i.value.trim());});
   if(mems.length)t.members=mems;
   DB.set('teams',teams);closeModal('manage-team-modal');renderATeams();renderTeams();notify('Team saved!','','n-ok');
@@ -3645,10 +4456,137 @@ function saveProfileWebhook(){
   p.webhook=wh;DB.set('players',players);notify('Webhook saved!','','n-ok');
 }
 function delTeam(id){if(!ADM)return;let t=DB.get('teams');t=t.filter(x=>x.id!==id);DB.set('teams',t);renderATeams();renderTeams();notify('Team removed','','n-ok');}
-function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
+function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Cycle status" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-ghost btn-xs" title="Send results to Discord" style="color:#7289da" onclick="sendMatchToDiscord('${m.id}')"><i class="fa-brands fa-discord"></i></button><button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
 function delMatch(id){if(!ADM)return;let ms=DB.get('matches');ms=ms.filter(x=>x.id!==id);DB.set('matches',ms);renderAMatches();renderMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify('Match removed','','n-ok');}
 function renderAPolls(){const polls=DB.get('polls');const el=document.getElementById('apo-list');if(!el)return;el.innerHTML=polls.map(p=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><div><div style="font-weight:600;font-size:.87rem">${p.q}</div><div class="text-dim" style="font-size:.72rem">${p.votes.reduce((a,b)=>a+b,0)} votes · ${p.active?'Open':'Closed'}</div></div><div style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="closePoll('${p.id}')"><i class="fa-solid fa-lock"></i></button><button class="btn btn-danger btn-xs" onclick="delPoll('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')||'<div class="text-dim" style="font-size:.82rem">No polls.</div>';}
-function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),adminPw:v('cfg-pw'),disc:v('cfg-wh')||v('cfg-dc'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};DB.set('cfg',cfg);notify('Settings saved!','','n-ok');if(ADM)renderAdminOverview();}
+function copyOverlayLink(){
+  const el=document.getElementById('ov-link');if(!el)return;
+  if(!el.value)el.value=location.origin+location.pathname+'?overlay=1';
+  el.select();el.setSelectionRange(0,9999);
+  try{navigator.clipboard.writeText(el.value);notify('Overlay link copied!','Paste it as a Browser Source in OBS or TikTok Live Studio.','n-ok');}
+  catch{document.execCommand('copy');notify('Link copied!','','n-ok');}
+}
+function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),adminPw:v('cfg-pw'),disc:v('cfg-wh')||v('cfg-dc'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
+  const prev=DB.get('cfg',{});DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');if(ADM)renderAdminOverview();}
+
+// ── THEME CUSTOMIZER — colors, fonts, layout density, background — all as CSS custom properties ──
+function ovHexToRgb(hex){hex=(hex||'').replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const n=parseInt(hex,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
+function ovShade(hex,percent){const{r,g,b}=ovHexToRgb(hex);const t=percent<0?0:255;const p=Math.abs(percent)/100;
+  const c=v=>Math.round((t-v)*p+v);return'#'+[c(r),c(g),c(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+const THEME_PRESETS={
+  dark:      {label:'Dark Indigo',  bg:'#0d1117',bg2:'#161b24',bg3:'#1c2333',bg4:'#212940',colorA:'#6366f1',colorB:'#ef4444',font:'Syne'},
+  midnight:  {label:'Midnight Blue',bg:'#060a14',bg2:'#0d1424',bg3:'#131c33',bg4:'#1a2540',colorA:'#3b82f6',colorB:'#f59e0b',font:'Space Grotesk'},
+  crimson:   {label:'Crimson Ops',  bg:'#120608',bg2:'#1c0c0f',bg3:'#251215',bg4:'#33181c',colorA:'#ef4444',colorB:'#f59e0b',font:'Syne'},
+  neon:      {label:'Neon Cyber',   bg:'#060812',bg2:'#0c1020',bg3:'#12172e',bg4:'#191f3d',colorA:'#a855f7',colorB:'#06b6d4',font:'Space Grotesk'},
+  forest:    {label:'Forest Ops',   bg:'#0a120d',bg2:'#101c14',bg3:'#16261b',bg4:'#1c3223',colorA:'#10b981',colorB:'#f59e0b',font:'Syne'},
+  light:     {label:'Light Mode',   bg:'#f4f5f8',bg2:'#ffffff',bg3:'#eef0f5',bg4:'#e3e6ee',colorA:'#4f46e5',colorB:'#dc2626',font:'Syne',light:true}
+};
+const THEME_FONTS={Syne:"'Syne',sans-serif",'Space Grotesk':"'Space Grotesk',sans-serif",Poppins:"'Poppins',sans-serif",'DM Sans':"'DM Sans',sans-serif"};
+const THEME_FONT_URLS={'Space Grotesk':'Space+Grotesk:wght@600;700;800',Poppins:'Poppins:wght@600;700;800'};
+
+function ensureFontLoaded(fontName){
+  if(!THEME_FONT_URLS[fontName])return; // Syne/DM Sans already loaded in <head>
+  const id='gf-'+fontName.replace(/\s+/g,'-');
+  if(document.getElementById(id))return;
+  const link=document.createElement('link');link.id=id;link.rel='stylesheet';
+  link.href='https://fonts.googleapis.com/css2?family='+THEME_FONT_URLS[fontName]+'&display=swap';
+  document.head.appendChild(link);
+}
+
+function applyThemeColors(colorA,colorB){
+  const root=document.documentElement.style;
+  const a=colorA||'#6366f1',b=colorB||'#ef4444';
+  root.setProperty('--accent',a);root.setProperty('--accentL',ovShade(a,25));root.setProperty('--accentD',ovShade(a,-20));
+  const ra=ovHexToRgb(a);root.setProperty('--accentGlow',`rgba(${ra.r},${ra.g},${ra.b},.25)`);
+  root.setProperty('--red',b);
+  const rb=ovHexToRgb(b);root.setProperty('--redGlow',`rgba(${rb.r},${rb.g},${rb.b},.2)`);
+}
+
+// Applies the FULL theme (colors + background shades + font + density) from cfg
+function applyTheme(cfg){
+  cfg=cfg||{};
+  const presetKey=cfg.themePreset||'dark';
+  const preset=THEME_PRESETS[presetKey]||THEME_PRESETS.dark;
+  const colorA=cfg.themeColorA||preset.colorA;
+  const colorB=cfg.themeColorB||preset.colorB;
+  applyThemeColors(colorA,colorB);
+
+  const root=document.documentElement.style;
+  root.setProperty('--bg',preset.bg);root.setProperty('--bg2',preset.bg2);
+  root.setProperty('--bg3',preset.bg3);root.setProperty('--bg4',preset.bg4);
+  if(preset.light){
+    root.setProperty('--text','#161b24');root.setProperty('--textM','#4b5566');root.setProperty('--textD','#8a93a3');
+    root.setProperty('--border','rgba(15,20,30,.1)');root.setProperty('--borderH','rgba(15,20,30,.18)');
+    root.setProperty('--surface','rgba(15,20,30,.03)');root.setProperty('--surfaceH','rgba(15,20,30,.06)');
+  } else {
+    root.setProperty('--text','#e2e8f0');root.setProperty('--textM','#94a3b8');root.setProperty('--textD','#475569');
+    root.setProperty('--border','rgba(255,255,255,.07)');root.setProperty('--borderH','rgba(255,255,255,.14)');
+    root.setProperty('--surface','rgba(255,255,255,.035)');root.setProperty('--surfaceH','rgba(255,255,255,.055)');
+  }
+
+  const fontName=cfg.themeFont||preset.font||'Syne';
+  ensureFontLoaded(fontName);
+  root.setProperty('--font-display',THEME_FONTS[fontName]||THEME_FONTS.Syne);
+  document.querySelectorAll('.font-syne, .sb-logo-text, .login-title, .sh-title, .card-title, .kpi-value, .map-hero-name, .modal-title, .login-title, .tdm-banner-name, .tdm-banner-brand').forEach(()=>{}); // no-op, CSS var handles it
+  document.documentElement.style.setProperty('--font-display',THEME_FONTS[fontName]||THEME_FONTS.Syne);
+
+  document.body.classList.toggle('density-compact',cfg.themeDensity==='compact');
+  document.body.classList.toggle('theme-light',!!preset.light);
+}
+
+function saveTheme(){
+  const cfg=DB.get('cfg',{});
+  cfg.themePreset=v('cfg-theme-preset')||'dark';
+  cfg.themeColorA=v('cfg-color-a')||THEME_PRESETS[cfg.themePreset].colorA;
+  cfg.themeColorB=v('cfg-color-b')||THEME_PRESETS[cfg.themePreset].colorB;
+  cfg.themeFont=v('cfg-theme-font')||'Syne';
+  cfg.themeDensity=v('cfg-theme-density')||'comfortable';
+  DB.set('cfg',cfg);
+  applyTheme(cfg);
+  notify('Theme saved!','Applied across the dashboard, banner & overlay','n-ok');
+}
+function applyPresetPreview(){
+  const key=v('cfg-theme-preset')||'dark';const p=THEME_PRESETS[key]||THEME_PRESETS.dark;
+  const a=document.getElementById('cfg-color-a');if(a)a.value=p.colorA;
+  const b=document.getElementById('cfg-color-b');if(b)b.value=p.colorB;
+  const f=document.getElementById('cfg-theme-font');if(f)f.value=p.font;
+}
+function resetThemeColors(){
+  const cfg=DB.get('cfg',{});
+  delete cfg.themeColorA;delete cfg.themeColorB;delete cfg.themePreset;delete cfg.themeFont;delete cfg.themeDensity;
+  DB.set('cfg',cfg);
+  applyTheme(cfg);
+  const a=document.getElementById('cfg-color-a');if(a)a.value='#6366f1';
+  const b=document.getElementById('cfg-color-b');if(b)b.value='#ef4444';
+  const p=document.getElementById('cfg-theme-preset');if(p)p.value='dark';
+  const f=document.getElementById('cfg-theme-font');if(f)f.value='Syne';
+  const d=document.getElementById('cfg-theme-density');if(d)d.value='comfortable';
+  notify('Theme reset to default','','n-ok');
+}
+
+// ── OVERLAY / BOTTOM BANNER — layout + theme options ──
+function applyOverlayStyle(cfg){
+  cfg=cfg||{};
+  const layout=cfg.overlayLayout||'ticker';   // 'ticker' | 'scorecard' | 'minimal'
+  const theme =cfg.overlayTheme ||'glass';    // 'glass' | 'team' | 'light'
+  const lower=document.getElementById('ov-lower');
+  const banner=document.getElementById('tdm-banner-el');
+  [lower,banner].forEach(el=>{
+    if(!el)return;
+    el.classList.remove('ov-layout-ticker','ov-layout-scorecard','ov-layout-minimal',
+                         'ov-theme-glass','ov-theme-team','ov-theme-light');
+    el.classList.add('ov-layout-'+layout,'ov-theme-'+theme);
+  });
+}
+function saveOverlayStyle(){
+  const cfg=DB.get('cfg',{});
+  cfg.overlayLayout=v('cfg-ov-layout')||'ticker';
+  cfg.overlayTheme=v('cfg-ov-theme')||'glass';
+  DB.set('cfg',cfg);
+  applyOverlayStyle(cfg);
+  notify('Banner style saved!','Applies to the bottom broadcast banner & TikTok/OBS overlay','n-ok');
+}
 function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();notify(`${what} cleared!`,'','n-ok');}
 function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
@@ -3658,11 +4596,27 @@ function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ═══ INIT ═══
 window.addEventListener('DOMContentLoaded',async()=>{
-  // ── 0. Check for Discord OAuth callback FIRST (before overlay)
-  const isDiscordCallback = window.location.hash.includes('access_token=');
+  // ── -1. Stream overlay mode (?overlay=1) — bypass login/app entirely ──
+  const isOverlayMode = new URLSearchParams(window.location.search).has('overlay');
+  if(isOverlayMode){
+    sbInitMsg('Connecting to Google Sheet...');
+    const sbR = await sbInit();
+    if(sbR){await sbLoad();}
+    sbHideOverlay();
+    seed();
+    applyTheme(DB.get('cfg',{}));
+    document.getElementById('ls').style.display='none';
+    document.body.style.background='transparent';
+    document.getElementById('overlay-root').classList.add('show');
+    applyOverlayStyle(DB.get('cfg',{}));
+    renderOverlay();
+    setInterval(renderOverlay,2000);
+    window.addEventListener('storage',renderOverlay);
+    return; // don't boot the normal dashboard
+  }
 
-  // ── 1. Init Supabase ──
-  sbInitMsg('Connecting to Supabase...');
+  // ── 1. Init Google Sheet backend ──
+  sbInitMsg('Connecting to Google Sheet...');
   const sbReady = await sbInit();
   if(sbReady){
     await sbLoad();
@@ -3673,16 +4627,13 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
   // ── 2. Hide overlay and boot app ──
   sbHideOverlay();
-  seed(); attachRoleListener(); startCountdown();
+  seed(); startCountdown();
+  applyTheme(DB.get('cfg',{}));
+  applyOverlayStyle(DB.get('cfg',{}));
   setTimeout(()=>{document.querySelectorAll('.progress-fill,.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});},400);
   document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-  // ── 3. Handle Discord OAuth callback ──
-  if(isDiscordCallback){
-    await handleDiscordCallback();
-  }
-
-  // ── 4. Restore existing session ──
+  // ── 3. Restore existing session ──
   const cu = DB.get('cu5', null);
   if(cu && cu.name){
     CU=cu; ADM=DB.get('adm5',false);
@@ -3691,7 +4642,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     updateSidebar();
     if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('alert-badge').style.display='block';}
     if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
-    refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();
+    refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();updateTdmBadge();
     if(ADM){updatePendingBadges();}
   }
   renderBkt();
