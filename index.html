@@ -3,11 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<script>(function(){try{var t=localStorage.getItem('rge5_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <title>RAGEISM · PUBG Esports</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-:root {
+/* ── LIGHT THEME (default) ─────────────────────────── */
+:root, [data-theme="light"] {
+  --bg:        #f7f8fb;
+  --bg2:       #ffffff;
+  --bg3:       #f1f3f8;
+  --bg4:       #e7eaf2;
+  --surface:   rgba(15,23,42,.035);
+  --surfaceH:  rgba(15,23,42,.06);
+  --border:    rgba(15,23,42,.09);
+  --borderH:   rgba(15,23,42,.16);
+  --hairline:  rgba(15,23,42,.07);
+  --accent:    #6366f1;
+  --accentL:   #4f46e5;
+  --accentD:   #4338ca;
+  --accentGlow:rgba(99,102,241,.18);
+  --green:     #059669;
+  --greenGlow: rgba(5,150,105,.15);
+  --red:       #dc2626;
+  --redGlow:   rgba(220,38,38,.15);
+  --amber:     #d97706;
+  --amberGlow: rgba(217,119,6,.15);
+  --blue:      #2563eb;
+  --text:      #0f172a;
+  --textM:     #52607a;
+  --textD:     #94a0b8;
+  --shadow:    0 4px 24px rgba(15,23,42,.08);
+  --shadowL:   0 8px 40px rgba(15,23,42,.12);
+  --r:         10px;
+  --rS:        7px;
+}
+[data-theme="dark"] {
   --bg:        #0d1117;
   --bg2:       #161b24;
   --bg3:       #1c2333;
@@ -16,6 +47,7 @@
   --surfaceH:  rgba(255,255,255,.055);
   --border:    rgba(255,255,255,.07);
   --borderH:   rgba(255,255,255,.14);
+  --hairline:  rgba(255,255,255,.045);
   --accent:    #6366f1;
   --accentL:   #818cf8;
   --accentD:   #4f46e5;
@@ -32,9 +64,9 @@
   --textD:     #475569;
   --shadow:    0 4px 24px rgba(0,0,0,.4);
   --shadowL:   0 8px 40px rgba(0,0,0,.5);
-  --r:         10px;
-  --rS:        7px;
 }
+/* Smooth cross-fade whenever the theme variable set changes */
+body,.card,.sidebar,.login-box,.modal,input,select,textarea,button{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5}
@@ -45,6 +77,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px}
+
+/* ── THEME TOGGLE BUBBLE ─────────────────────────── */
+#theme-bubble{position:fixed;bottom:1.3rem;right:1.3rem;z-index:99998;width:52px;height:52px;border-radius:50%;
+  background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadowL);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:var(--accentL);
+  transition:transform .18s ease,box-shadow .18s ease,background .25s ease,border-color .25s ease;user-select:none}
+#theme-bubble:hover{transform:scale(1.08);box-shadow:0 10px 34px rgba(99,102,241,.3)}
+#theme-bubble:active{transform:scale(.94)}
+#theme-bubble i{transition:transform .35s ease}
+#theme-bubble.spin i{transform:rotate(360deg)}
+@media (max-width:640px){#theme-bubble{bottom:1rem;right:1rem;width:46px;height:46px;font-size:1rem}}
 
 /* ── LOGIN ─────────────────────────── */
 #ls{position:fixed;inset:0;z-index:9000;display:flex;background:var(--bg)}
@@ -80,16 +123,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .lf-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentGlow)}
 .lf-input::placeholder{color:var(--textD)}
 .lf-input option{background:var(--bg3)}
-.lf-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
-/* Auth mode tabs (Log In / Sign Up / Admin) */
-.auth-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:1.1rem;background:var(--bg3);
-  border:1px solid var(--border);border-radius:var(--rS);padding:.25rem}
-.auth-tab{background:none;border:none;color:var(--textM);font-family:'DM Sans',sans-serif;font-size:.78rem;
-  font-weight:600;padding:.5rem .3rem;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;
-  align-items:center;justify-content:center;gap:.35rem;white-space:nowrap}
-.auth-tab:hover{color:var(--text)}
-.auth-tab.active{background:var(--accent);color:#fff}
-#auth-panel-login,#auth-panel-signup,#auth-panel-admin{animation:.25s ease fade-up}
+.lf-row{display:grid;grid-template-columns:1fr 80px;gap:.6rem}
+#login-fields{animation:.25s ease fade-up}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.65rem 1.25rem;border:none;border-radius:var(--rS);font-family:'DM Sans',sans-serif;
   font-size:.87rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
@@ -104,11 +139,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .btn-sm{padding:.4rem .85rem;font-size:.8rem}
 .btn-xs{padding:.28rem .6rem;font-size:.75rem}
 .btn-fw{width:100%}
-.btn-disc{background:#5865F2;color:#fff}
-.btn-disc:hover{background:#6d77f5;transform:translateY(-1px)}
 .divider{display:flex;align-items:center;gap:.8rem;margin:.8rem 0;color:var(--textD);font-size:.8rem}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .ls-admin-sec{display:none}
+.ls-tabs{display:flex;gap:.35rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.25rem;margin-bottom:1.4rem}
+.ls-tab-btn{flex:1;padding:.55rem .6rem;border:none;background:transparent;border-radius:calc(var(--rS) - 2px);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:var(--textM);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.ls-tab-btn.active{background:var(--accent);color:#fff}
+.ls-tab-btn:not(.active):hover{color:var(--text)}
+.li-lookup-wrap{position:relative}
+.li-lookup-wrap .xfer-lookup-results{position:absolute;top:100%;left:0;right:0;z-index:60;margin-top:.3rem;box-shadow:var(--shadowL)}
 
 @media(max-width:720px){.ls-left{display:none}.ls-right{width:100%}}
 
@@ -190,7 +229,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .tdm-search-results:empty{display:none;border:none}
 .tdm-search-row{display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;cursor:pointer;font-size:.83rem;transition:background .12s}
 .tdm-search-row:hover{background:var(--surfaceH)}
-.tdm-search-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,.04)}
+.tdm-search-row:not(:last-child){border-bottom:1px solid var(--hairline)}
 .tdm-roster{display:flex;flex-direction:column;gap:.4rem;margin-top:.7rem;min-height:8px}
 .tdm-roster-row{display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px solid var(--border);
   border-radius:var(--rS);padding:.4rem .6rem;font-size:.83rem}
@@ -205,7 +244,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* single unified backdrop wash — one continuous gradient, no colliding blobs */
 .tdm-banner-bg{position:absolute;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 75% 90% at 50% 8%,rgba(255,255,255,.05) 0%,transparent 60%),
+    radial-gradient(ellipse 75% 90% at 50% 8%,var(--hairline) 0%,transparent 60%),
     radial-gradient(ellipse 55% 60% at 50% 46%,rgba(129,140,248,.10) 0%,transparent 70%),
     linear-gradient(90deg,rgba(99,102,241,.20) 0%,rgba(99,102,241,.05) 32%,transparent 46%,transparent 54%,rgba(239,68,68,.05) 68%,rgba(239,68,68,.20) 100%);}
 /* fine layered grid — primary + secondary for depth */
@@ -324,7 +363,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 table{width:100%;border-collapse:collapse}
 th{padding:.6rem 1rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--textD);
   text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.88rem;transition:background .15s}
+td{padding:.7rem 1rem;border-bottom:1px solid var(--hairline);font-size:.88rem;transition:background .15s}
 tr:hover td{background:var(--surface)}
 tr:last-child td{border-bottom:none}
 .rank-1 td:first-child{border-left:2px solid #f59e0b}
@@ -352,7 +391,7 @@ tr:last-child td{border-bottom:none}
 .progress-label{display:flex;justify-content:space-between;font-size:.77rem;margin-bottom:.3rem}
 .progress-label span:first-child{color:var(--textM);font-weight:500}
 .progress-label span:last-child{color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem}
-.progress-track{height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
+.progress-track{height:4px;background:var(--border);border-radius:99px;overflow:hidden}
 .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accentD),var(--accentL));transition:width 1.8s cubic-bezier(.4,0,.2,1)}
 
 /* ── MATCH ITEMS ───────────────────── */
@@ -397,7 +436,7 @@ tr:last-child td{border-bottom:none}
 .qa-arrow{margin-left:auto;color:var(--textD);font-size:.8rem;transition:transform .2s}
 .quick-action:hover .qa-arrow{transform:translateX(3px);color:var(--textM)}
 
-.activity-item{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.activity-item{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--hairline)}
 .activity-item:last-child{border-bottom:none}
 .act-av{width:28px;height:28px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--accentL);font-family:'DM Mono',monospace;flex-shrink:0}
 .act-text{font-size:.83rem;flex:1;color:var(--textM)}<br>.act-text strong{color:var(--text);font-weight:600}
@@ -411,7 +450,7 @@ tr:last-child td{border-bottom:none}
 .b-match{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rS);overflow:hidden;transition:border-color .2s}
 .b-match:hover{border-color:var(--borderH)}
 .b-team{display:flex;align-items:center;justify-content:space-between;padding:.5rem .8rem;font-size:.84rem;font-weight:500;gap:.5rem}
-.b-team:first-child{border-bottom:1px solid rgba(255,255,255,.05)}
+.b-team:first-child{border-bottom:1px solid var(--hairline)}
 .b-team.winner{background:rgba(99,102,241,.08);color:var(--accentL);font-weight:600}
 .b-team.loser{color:var(--textD)}
 .b-team.tbd{color:var(--textD);font-style:italic}
@@ -438,7 +477,7 @@ tr:last-child td{border-bottom:none}
 .team-name-text{font-weight:700;font-size:.92rem}
 .team-tag{font-size:.72rem;color:var(--textM)}
 .team-body{padding:.9rem 1.1rem}
-.team-member{display:flex;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem;font-weight:500}
+.team-member{display:flex;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid var(--hairline);font-size:.85rem;font-weight:500}
 .team-member:last-child{border-bottom:none}
 .member-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
@@ -490,7 +529,7 @@ tr:last-child td{border-bottom:none}
 .prf-team-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;cursor:pointer;transition:border-color .15s}
 .prf-team-card:hover{border-color:var(--borderH)}
 /* xp track */
-.xp-track{height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:.4rem}
+.xp-track{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:.4rem}
 .xp-fill{height:100%;background:linear-gradient(90deg,var(--accentD),var(--accentL));border-radius:99px;transition:width 2s ease}
 .res-team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s}
 .res-team-card:focus-within{border-color:var(--accent)40}
@@ -589,10 +628,10 @@ tr:last-child td{border-bottom:none}
 .ma-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
 .ma-stat-val{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:500;line-height:1;margin-bottom:.2rem}
 .ma-stat-lbl{font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.7px}
-.kill-bar-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.kill-bar-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid var(--hairline)}
 .kill-bar-row:last-child{border:none}
 .kill-bar-name{font-size:.85rem;font-weight:600;width:130px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kill-bar-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.kill-bar-track{flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
 .kill-bar-fill{height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 .kill-bar-num{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--textM);width:32px;text-align:right;flex-shrink:0}
 .disc-step{display:flex;gap:.9rem;align-items:flex-start;padding:.9rem 0;border-bottom:1px solid var(--border)}
@@ -610,7 +649,7 @@ tr:last-child td{border-bottom:none}
 .mab-card.green{background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border-color:rgba(16,185,129,.2)}
 .mab-card.red{background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.02));border-color:rgba(239,68,68,.2)}
 @media(max-width:700px){.kill-bar-name{width:90px}.map-hero-name{font-size:1.2rem}}
-/* ── SUPABASE STATUS ─────────────────── */
+/* ── SHEETDB STATUS ─────────────────── */
 #sb-status-bar{position:fixed;bottom:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(62,207,142,.15),rgba(62,207,142,.08));border-top:1px solid rgba(62,207,142,.25);padding:.45rem 1rem;display:none;align-items:center;gap:.7rem;font-size:.75rem;color:#3ecf8e;font-weight:600}
 #sb-status-bar.show{display:flex}
 #sb-status-bar.sb-err{background:linear-gradient(90deg,rgba(239,68,68,.12),rgba(239,68,68,.06));border-color:rgba(239,68,68,.25);color:var(--red)}
@@ -628,40 +667,6 @@ tr:last-child td{border-bottom:none}
 .fw6{font-weight:600}.fw7{font-weight:700}
 .overflow-x{overflow-x:auto}
 .divider-line{height:1px;background:var(--border);margin:1.2rem 0}
-
-/* ── THEME CUSTOMIZER: display font + density ─────────── */
-:root{--font-display:'Syne',sans-serif}
-.font-syne,.sb-logo-text,.login-title,.sh-title,.card-title,.kpi-value,.map-hero-name,
-.modal-title,.tdm-banner-name,.tdm-banner-brand,.notif-title,.ls-brand,.group-title{font-family:var(--font-display)}
-body.density-compact .page-content{padding:.9rem}
-body.density-compact .card{padding:.85rem}
-body.density-compact .kpi{padding:.75rem .9rem}
-body.density-compact .sb-item{padding:.42rem .7rem}
-body.density-compact .g4,body.density-compact .g3,body.density-compact .g2{gap:.6rem}
-body.theme-light::before{opacity:.45}
-
-/* ── OVERLAY / BOTTOM BANNER — layout variants ─────────── */
-.ov-layout-minimal.tdm-banner .tdm-banner-ticker,
-.ov-layout-minimal.tdm-banner .tdm-banner-bars,
-.ov-layout-minimal.tdm-banner .tdm-banner-corner,
-.ov-layout-minimal.tdm-banner .tdm-banner-mvp{display:none !important}
-.ov-layout-scorecard.tdm-banner .tdm-banner-ticker{display:none !important}
-.ov-layout-scorecard.tdm-banner .tdm-banner-score{font-size:5rem}
-.ov-layout-minimal.ov-lower{height:36px}
-.ov-layout-minimal .ov-lower-ticker-item{font-size:.62rem}
-.ov-layout-scorecard .ov-lower-ticker-track{animation:none;justify-content:center;width:100%}
-
-/* ── OVERLAY / BOTTOM BANNER — theme variants ─────────── */
-.ov-theme-team.tdm-banner{background:linear-gradient(120deg,var(--accentD) 0%,#0b0e17 45%,#0b0e17 55%,var(--red) 100%)}
-.ov-theme-light.tdm-banner{background:linear-gradient(150deg,#eef0f6 0%,#e2e5ef 100%)}
-.ov-theme-light.tdm-banner .tdm-banner-name,.ov-theme-light.tdm-banner .tdm-banner-target{color:#161b24}
-.ov-theme-light.tdm-banner .tdm-banner-brand{color:rgba(10,12,20,.32)}
-.ov-theme-light.tdm-banner .tdm-banner-mvp{color:rgba(10,12,20,.5)}
-.ov-theme-team.ov-lower{background:linear-gradient(90deg,rgba(99,102,241,.88),rgba(9,12,20,.94) 45%,rgba(9,12,20,.94) 55%,rgba(239,68,68,.88))}
-.ov-theme-light.ov-lower{background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(238,239,246,.97));border-color:rgba(10,12,20,.12)}
-.ov-theme-light.ov-lower .ov-lower-ticker-item{color:rgba(10,20,30,.75)}
-.ov-theme-light.ov-lower .ov-lower-ticker-item b{color:#0c0f18}
-.ov-theme-light.ov-lower .ov-lower-live{color:#dc2626}
 
 @media(max-width:900px){.sidebar{width:200px}}
 @media(max-width:700px){
@@ -689,14 +694,14 @@ body.theme-light::before{opacity:.45}
   </div>
 </div>
 
-<!-- Google Sheet init overlay -->
+<!-- SheetDB init overlay -->
 <div id="sb-init-overlay">
   <div class="sb-spinner"></div>
   <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text)">RAGEISM</div>
   <div style="font-size:.8rem;color:var(--textM)" id="sb-init-msg">Connecting to server...</div>
 </div>
 
-<!-- Google Sheet live status bar -->
+<!-- SheetDB live status bar -->
 <div id="sb-status-bar">
   <div class="sb-dot"></div>
   <span id="sb-status-txt">Google Sheet connected</span>
@@ -719,64 +724,50 @@ body.theme-light::before{opacity:.45}
   </div>
   <div class="ls-right">
     <div class="login-box">
-      <div class="login-title" id="login-title-txt">Welcome back</div>
-      <div class="login-sub" id="login-sub-txt">Sign in with your username &amp; password</div>
+      <div class="login-title">Welcome back</div>
+      <div class="login-sub">Sign in to access the tournament hub</div>
 
-      <!-- Auth mode tabs -->
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="auth-tab-login" onclick="setAuthMode('login')"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
-        <button class="auth-tab" id="auth-tab-signup" onclick="setAuthMode('signup')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
-        <button class="auth-tab" id="auth-tab-admin" onclick="setAuthMode('admin')"><i class="fa-solid fa-shield-halved"></i> Admin</button>
+      <div class="ls-tabs">
+        <button class="ls-tab-btn active" id="ls-tab-player" onclick="lsSwitchTab('player')" type="button"><i class="fa-solid fa-user"></i> Player</button>
+        <button class="ls-tab-btn" id="ls-tab-master" onclick="lsSwitchTab('master')" type="button"><i class="fa-solid fa-shield-halved"></i> Master Admin</button>
       </div>
 
-      <!-- LOG IN panel -->
-      <div id="auth-panel-login">
+      <!-- PLAYER LOGIN — smart IGN/name lookup, existing accounts only -->
+      <div id="login-fields" class="open">
+        <label class="lf-label">IGN or Name</label>
+        <div class="li-lookup-wrap">
+          <input class="lf-input" id="li-u" placeholder="Start typing your IGN or name..." autocomplete="off"
+            oninput="liShowLookup(this.value)" onfocus="liShowLookup(this.value)"
+            onblur="setTimeout(()=>{const dd=document.getElementById('li-lookup-dd');if(dd)dd.style.display='none';},200)"/>
+          <div id="li-lookup-dd" class="xfer-lookup-results" style="display:none"></div>
+        </div>
+        <label class="lf-label" style="margin-top:.9rem">Password</label>
+        <input class="lf-input" id="li-pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"/>
+        <div style="font-size:.72rem;color:var(--textD);margin:.6rem 0 .8rem" id="player-hint">Enter your registered IGN &amp; password. No account yet? <a href="#" onclick="event.preventDefault();goToSignup()" style="color:var(--accentL);font-weight:700;text-decoration:none">Sign up here</a>.</div>
+        <button class="btn btn-accent btn-fw" onclick="doLogin()">
+          <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
+        </button>
+      </div>
+
+      <!-- MASTER ADMIN LOGIN — single fixed account, password only -->
+      <div id="login-fields-master" style="display:none">
         <label class="lf-label">Username</label>
-        <input class="lf-input" id="li-user" placeholder="yourusername" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <label class="lf-label">Password</label>
-        <input class="lf-input" id="li-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <button class="btn btn-accent btn-fw" onclick="doLogin()" style="margin-top:.3rem">
-          <i class="fa-solid fa-right-to-bracket"></i> Log In
-        </button>
-        <div style="text-align:center;margin-top:.7rem;font-size:.8rem;color:var(--textD)">
-          New here? <a href="javascript:void(0)" onclick="setAuthMode('signup')" style="color:var(--accentL);font-weight:600;text-decoration:none">Create an account</a>
-        </div>
-      </div>
-
-      <!-- SIGN UP panel -->
-      <div id="auth-panel-signup" style="display:none">
-        <label class="lf-label">In-Game ID (IGN)</label>
-        <input class="lf-input" id="su-ign" placeholder="Your PUBG in-game name"/>
-        <label class="lf-label">Username</label>
-        <input class="lf-input" id="su-user" placeholder="Pick a username"/>
-        <div class="lf-row">
-          <div><label class="lf-label">Password</label><input class="lf-input" id="su-pw" type="password" placeholder="••••••••" style="margin:0"/></div>
-          <div style="grid-column:span 1"><label class="lf-label">Confirm</label><input class="lf-input" id="su-pw2" type="password" placeholder="••••••••" style="margin:0"/></div>
-        </div>
-        <button class="btn btn-accent btn-fw" onclick="doSignup()" style="margin-top:.9rem">
-          <i class="fa-solid fa-user-plus"></i> Create Account
-        </button>
-        <div style="text-align:center;margin-top:.7rem;font-size:.8rem;color:var(--textD)">
-          Already registered? <a href="javascript:void(0)" onclick="setAuthMode('login')" style="color:var(--accentL);font-weight:600;text-decoration:none">Log in</a>
-        </div>
-      </div>
-
-      <!-- ADMIN MASTER LOGIN panel -->
-      <div id="auth-panel-admin" style="display:none">
-        <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:var(--rS);padding:.8rem 1rem;margin-bottom:1rem;font-size:.8rem;color:var(--textM)">
-          <i class="fa-solid fa-circle-info" style="color:var(--accentL);margin-right:.3rem"></i> For tournament hosts only. One shared master password — set it in Admin → Settings.
-        </div>
-        <label class="lf-label">Master Password</label>
-        <input class="lf-input" id="admin-master-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminMasterLogin()"/>
-        <button class="btn btn-accent btn-fw" onclick="doAdminMasterLogin()" style="margin-top:.3rem">
-          <i class="fa-solid fa-shield-halved"></i> Enter as Admin
+        <input class="lf-input" value="master" disabled style="opacity:.55;cursor:not-allowed"/>
+        <label class="lf-label" style="margin-top:.9rem">Password</label>
+        <input class="lf-input" id="lm-pw" type="password" placeholder="Master admin password" onkeydown="if(event.key==='Enter'){event.preventDefault();masterLogin();}"/>
+        <div style="font-size:.72rem;color:var(--textD);margin:.6rem 0 .8rem">One master account for the tournament host. The password can be changed anytime from Admin → Settings.</div>
+        <button class="btn btn-accent btn-fw" onclick="masterLogin()">
+          <i class="fa-solid fa-shield-halved"></i> Enter as Master
         </button>
       </div>
 
-      <div class="divider" style="margin:1rem 0 .6rem">or</div>
-      <button class="btn btn-ghost btn-fw" onclick="guestLogin()" style="font-size:.82rem;color:var(--textM)">
-        Continue as Guest Viewer
-      </button>
+      <div style="font-size:.7rem;color:var(--textD);margin-top:.5rem;text-align:center">Passwords are hashed before saving to the sheet — still, this is a lightweight tournament tool, not enterprise security. Don't reuse a sensitive password.</div>
+
+      <div style="margin-top:.8rem">
+        <button class="btn btn-ghost btn-fw" onclick="guestLogin()" style="font-size:.82rem;color:var(--textM)">
+          Continue as Guest Viewer
+        </button>
+      </div>
 
       <div id="sb-msg" style="font-size:.72rem;color:var(--textD);text-align:center;margin-top:.8rem"></div>
     </div>
@@ -1036,9 +1027,9 @@ body.theme-light::before{opacity:.45}
               <div><div class="qa-label">Draw Groups</div><div class="qa-sub">Randomly assign teams to groups</div></div>
               <i class="fa-solid fa-chevron-right qa-arrow"></i>
             </div>
-            <div class="quick-action" onclick="openModal('grant-admin-modal');renderAdminRolesList()">
+            <div class="quick-action master-only" onclick="openModal('grant-admin-modal');renderAdminRolesList()">
               <div class="qa-icon" style="background:rgba(99,102,241,.1);color:var(--accentL)"><i class="fa-solid fa-user-shield"></i></div>
-              <div><div class="qa-label">Manage Admin Roles</div><div class="qa-sub">Grant admin / manager permissions</div></div>
+              <div><div class="qa-label">Manage Admin Roles</div><div class="qa-sub">Master only — grant admin / manager permissions</div></div>
               <i class="fa-solid fa-chevron-right qa-arrow"></i>
             </div>
             <div class="quick-action" onclick="showPage('admin-bracket')">
@@ -1147,7 +1138,7 @@ body.theme-light::before{opacity:.45}
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="renderTeamRequests();openModal('team-request-modal')"><i class="fa-solid fa-clock"></i> Pending <span id="pending-teams-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
             <button class="btn btn-ghost btn-sm" onclick="renderJoinRequests();openModal('join-request-modal')"><i class="fa-solid fa-person-walking-arrow-right"></i> Join Requests <span id="join-req-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
-            <button class="btn btn-accent btn-sm" onclick="openModal('grant-admin-modal');renderAdminRolesList()"><i class="fa-solid fa-user-shield"></i> Manage Roles</button>
+            <button class="btn btn-accent btn-sm master-only" onclick="openModal('grant-admin-modal');renderAdminRolesList()"><i class="fa-solid fa-user-shield"></i> Manage Roles</button>
           </div>
         </div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Team</th><th>Tag</th><th>Captain</th><th>Members</th><th>Wins</th><th>Status</th><th></th></tr></thead><tbody id="at-body"></tbody></table></div></div>
@@ -1191,47 +1182,43 @@ body.theme-light::before{opacity:.45}
             <div class="fg"><label class="fl">Tournament Name</label><input class="fi" id="cfg-name" value="RAGEISM PUBG ESPORTS — Season 01"/></div>
             <div class="frow"><div class="fg"><label class="fl">Season</label><input class="fi" id="cfg-s" value="01"/></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="cfg-st"><option>Registration Open</option><option>Group Stage</option><option>Knockout Stage</option><option>Finals</option><option>Completed</option></select></div></div>
             <div class="frow"><div class="fg"><label class="fl">Max Players</label><input class="fi" id="cfg-mp" type="number" value="300"/></div><div class="fg"><label class="fl">Max Teams</label><input class="fi" id="cfg-mt" type="number" value="40"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Prize Pool ($)</label><input class="fi" id="cfg-pr" type="number" value="5000"/></div><div class="fg"><label class="fl">Admin Password</label><input class="fi" id="cfg-pw" type="password" value="RAGEISM2025"/></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Prize Pool ($)</label><input class="fi" id="cfg-pr" type="number" value="5000"/></div>
+              <div class="fg master-only"><label class="fl">Master Admin Password</label><input class="fi" id="cfg-pw" type="password" value="RAGEISM2025"/><div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Used for the "master" login on the sign-in screen. Master only.</div></div>
+            </div>
             <div class="fg"><label class="fl">Discord Invite Link</label><input class="fi" id="cfg-dc" placeholder="https://discord.gg/..."/></div>
-            <div class="fg"><label class="fl">Discord Webhook URL (auto-posts results)</label><input class="fi" id="cfg-wh" placeholder="https://discord.com/api/webhooks/..."/></div>
+            <div class="fg"><label class="fl">Match Results Webhook <span style="color:var(--textD);font-weight:400">(auto-posts final results)</span></label>
+              <div style="display:flex;gap:.5rem">
+                <input class="fi" id="cfg-wh" placeholder="https://discord.com/api/webhooks/..." style="flex:1"/>
+                <button class="btn btn-accent btn-sm" onclick="saveWebhook()" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+              </div>
+            </div>
+            <div class="fg master-only">
+              <label class="fl"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Webhook <span style="color:var(--textD);font-weight:400">(master only)</span></label>
+              <div style="display:flex;gap:.5rem">
+                <input class="fi" id="cfg-audit-wh" placeholder="https://discord.com/api/webhooks/..." style="flex:1"/>
+                <button class="btn btn-accent btn-sm" onclick="saveAuditWebhook()" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+              </div>
+              <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Every admin change — role grants/revokes, settings edits, resets, and deletions — is posted here so the master admin can audit what happened.</div>
+            </div>
             <div class="fg"><label class="fl">Announcement Banner</label><textarea class="fta" id="cfg-ann" placeholder="Broadcast a message to all players..."></textarea></div>
             <button class="btn btn-accent btn-fw" onclick="saveCfg()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
           </div>
           <div>
             <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-palette"></i> Theme Customizer</div>
-              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Pick a preset or fine-tune colors, display font & density — applied across the dashboard, TDM banner, and the stream overlay.</div>
-              <div class="fg"><label class="fl">Preset</label>
-                <select class="fi fsel" id="cfg-theme-preset" onchange="applyPresetPreview()">
-                  <option value="dark">Dark Indigo (default)</option>
-                  <option value="midnight">Midnight Blue</option>
-                  <option value="crimson">Crimson Ops</option>
-                  <option value="neon">Neon Cyber</option>
-                  <option value="forest">Forest Ops</option>
-                  <option value="light">Light Mode</option>
-                </select>
-              </div>
+              <div class="card-title"><i class="fa-solid fa-table" style="color:#22a565"></i> Google Sheet Data</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Every collection (players, teams, matches, config, etc.) lives in your Google Sheet as <span class="disc-code">key</span> / <span class="disc-code">value</span> rows. Open it to bulk-edit or fix data directly — spreadsheet-style — then pull it back into the app.</div>
+              <button class="btn btn-ghost btn-fw" onclick="window.open('https://docs.google.com/spreadsheets/d/1EIIMEcpzqnOchSd08gy8_coSWT8Y63qflWBWNr1QIY0/edit','_blank')"><i class="fa-solid fa-up-right-from-square"></i> Open Google Sheet</button>
+              <button class="btn btn-accent btn-fw" style="margin-top:.5rem" onclick="pullFromSheet()"><i class="fa-solid fa-arrows-rotate"></i> Pull Latest from Sheet</button>
+              <div style="font-size:.72rem;color:var(--textD);margin-top:.6rem">Editing a <span class="disc-code">value</span> cell by hand? It must stay valid JSON (e.g. <span class="disc-code">[]</span> for an empty list, <span class="disc-code">{}</span> for empty settings) or that row will be skipped on the next pull.</div>
+            </div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-palette"></i> Theme Colors</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Controls the accent color used for Team A / highlights, and the color used for Team B / alerts — across the dashboard, TDM banner, and the TikTok overlay.</div>
               <div class="frow">
                 <div class="fg"><label class="fl">Team A / Accent Color</label><input class="fi" id="cfg-color-a" type="color" value="#6366f1" style="height:42px;padding:.25rem"/></div>
                 <div class="fg"><label class="fl">Team B / Alert Color</label><input class="fi" id="cfg-color-b" type="color" value="#ef4444" style="height:42px;padding:.25rem"/></div>
               </div>
-              <div class="frow">
-                <div class="fg"><label class="fl">Display Font</label>
-                  <select class="fi fsel" id="cfg-theme-font">
-                    <option value="Syne">Syne (default)</option>
-                    <option value="Space Grotesk">Space Grotesk</option>
-                    <option value="Poppins">Poppins</option>
-                    <option value="DM Sans">DM Sans</option>
-                  </select>
-                </div>
-                <div class="fg"><label class="fl">Layout Density</label>
-                  <select class="fi fsel" id="cfg-theme-density">
-                    <option value="comfortable">Comfortable</option>
-                    <option value="compact">Compact</option>
-                  </select>
-                </div>
-              </div>
-              <button class="btn btn-accent btn-fw" onclick="saveTheme()"><i class="fa-solid fa-floppy-disk"></i> Save Theme</button>
+              <button class="btn btn-accent btn-fw" onclick="saveThemeColors()"><i class="fa-solid fa-floppy-disk"></i> Save Colors</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="resetThemeColors()"><i class="fa-solid fa-rotate-left"></i> Reset to Default</button>
             </div>
           </div>
@@ -1239,32 +1226,16 @@ body.theme-light::before{opacity:.45}
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-tv"></i> Stream Overlay (TikTok LIVE Studio / OBS)</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">
-                Built for a <strong>vertical 9:16 canvas</strong> (recommended: 1080×1920). TikTok's mobile app can't layer browser overlays directly — you'll need <strong>TikTok LIVE Studio</strong> (free desktop app for gaming streams) or OBS routed to TikTok. In your scene: add this link as a <strong>Browser Source</strong>, sized to your full canvas, layered on top of your game capture. A single lower-third bar sits at the bottom; the middle stays clear for your gameplay or facecam.
+                Built for a <strong>vertical 9:16 canvas</strong> (recommended: 1080×1920). TikTok's mobile app can't layer browser overlays directly — you'll need <strong>TikTok LIVE Studio</strong> (free desktop app for gaming streams) or OBS routed to TikTok. In your scene: add this link as a <strong>Browser Source</strong>, sized to your full canvas, layered on top of your game capture. The live score sits at the top, a rotating Best/Recent/Weekly leaderboard sits at the bottom, and the middle stays clear for your gameplay or facecam.
               </div>
               <div class="fg"><input class="fi" id="ov-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ov-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
             </div>
-            <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-table-columns"></i> Bottom Banner Style</div>
-              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Layout & color theme for the bottom broadcast banner (TDM live banner + TikTok/OBS lower-third).</div>
-              <div class="frow">
-                <div class="fg"><label class="fl">Layout</label>
-                  <select class="fi fsel" id="cfg-ov-layout">
-                    <option value="ticker">Ticker Bar (full)</option>
-                    <option value="scorecard">Scorecard (big score, no ticker)</option>
-                    <option value="minimal">Minimal (slim bar)</option>
-                  </select>
-                </div>
-                <div class="fg"><label class="fl">Color Theme</label>
-                  <select class="fi fsel" id="cfg-ov-theme">
-                    <option value="glass">Dark Glass (default)</option>
-                    <option value="team">Team Colors</option>
-                    <option value="light">Minimal Light</option>
-                  </select>
-                </div>
-              </div>
-              <button class="btn btn-accent btn-fw" onclick="saveOverlayStyle()"><i class="fa-solid fa-floppy-disk"></i> Save Banner Style</button>
+            <div class="card mb2 master-only">
+              <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Log <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
+              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Role grants/revokes, settings changes, resets, and deletions performed by any admin — mirrored to your Admin Activity Webhook above if set.</div>
+              <div id="admin-audit-list" style="max-height:260px;overflow-y:auto"></div>
             </div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-bomb"></i> Danger Zone</div>
@@ -1286,11 +1257,12 @@ body.theme-light::before{opacity:.45}
         <div class="g2">
           <div class="card">
             <div class="card-title"><i class="fa-solid fa-user-plus"></i> Individual Registration</div>
-            <div class="frow"><div class="fg"><label class="fl">Real Name</label><input class="fi" id="rn" placeholder="John Doe"/></div><div class="fg"><label class="fl">IGN</label><input class="fi" id="ri" placeholder="RAGEISM_001"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Discord</label><input class="fi" id="rd" placeholder="user#0001"/></div><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="rrk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div><div class="fg"><label class="fl">Role</label><select class="fi fsel" id="rro"><option>Fragger</option><option>Support</option><option>Sniper</option><option>IGL</option><option>Entry Fragger</option><option>Flanker</option></select></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="rpl"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div><div class="fg"><label class="fl">Team (optional)</label><input class="fi" id="rtm" placeholder="Leave blank if solo"/></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Real Name</label><input class="fi" id="rn" placeholder="John Doe"/></div><div class="fg"><label class="fl">IGN (used as your login username)</label><input class="fi" id="ri" placeholder="RAGEISM_001"/></div></div>
+            <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"><label class="fl">Password</label><input class="fi" id="rpw" type="password" placeholder="Choose a password"/></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Discord</label><input class="fi" id="rd" placeholder="user#0001"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="rrk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Role</label><select class="fi fsel" id="rro"><option>Fragger</option><option>Support</option><option>Sniper</option><option>IGL</option><option>Entry Fragger</option><option>Flanker</option></select></div><div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="rpl"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Team (optional)</label><input class="fi" id="rtm" placeholder="Leave blank if solo"/></div><div class="fg"></div></div>
             <div class="fg"><label class="fl">Bio</label><textarea class="fta" id="rb" placeholder="Your playstyle, favourite weapons..."></textarea></div>
             <button class="btn btn-accent btn-fw" onclick="regPlayer()"><i class="fa-solid fa-right-to-bracket"></i> Register to Arena</button>
           </div>
@@ -1568,7 +1540,7 @@ body.theme-light::before{opacity:.45}
               </div>
               <div class="disc-step">
                 <div class="disc-step-num">4</div>
-                <div><div class="disc-step-title">Call Discord API from a small server</div><div class="disc-step-body">From a lightweight backend (Cloudflare Worker, Node script, etc — never client-side), send messages via <span class="disc-code">POST /channels/{id}/messages</span> with header <span class="disc-code">Authorization: Bot TOKEN</span>.</div></div>
+                <div><div class="disc-step-title">Call Discord API from Supabase Edge Function</div><div class="disc-step-body">In your Supabase Edge Function, send messages via <span class="disc-code">POST /channels/{id}/messages</span> with header <span class="disc-code">Authorization: Bot TOKEN</span>.</div></div>
               </div>
             </div>
 
@@ -1587,25 +1559,24 @@ body.theme-light::before{opacity:.45}
         </div>
 
         <div class="card" style="margin-top:1.2rem">
-          <div class="card-title"><i class="fa-solid fa-table-cells" style="color:#22c55e"></i> Google Sheets Backend — Quick Start</div>
-          <div style="font-size:.82rem;color:var(--textM);margin-bottom:.8rem">Everything in RAGEISM — players, teams, matches, accounts, settings — is stored in <strong>one Google Sheet</strong>, synced live through <span class="disc-code">SheetDB</span>.</div>
+          <div class="card-title"><i class="fa-solid fa-table" style="color:#22a565"></i> Google Sheets Integration (via SheetDB) — Quick Start</div>
           <div class="g3" style="margin-top:.5rem">
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22c55e">① Create the Sheet</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">In a new Google Sheet, make the header row exactly: <span class="disc-code">key</span>, <span class="disc-code">value</span>, <span class="disc-code">updated_at</span> (columns A, B, C).</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">① Sheet layout</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Row 1 of the sheet is just two headers: <span class="disc-code">key</span> and <span class="disc-code">value</span>. Every collection (<span class="disc-code">players</span>, <span class="disc-code">teams</span>, <span class="disc-code">matches</span>, <span class="disc-code">cfg</span>, etc.) is stored as one row, with its data as a JSON string in <span class="disc-code">value</span>.</div>
             </div>
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22c55e">② Connect SheetDB</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Go to <span class="disc-code">sheetdb.io</span> → connect that sheet → copy your API URL. Paste it as <span class="disc-code">SD_URL</span> near the top of the <span class="disc-code">&lt;script&gt;</span> in this file.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">② Connect at sheetdb.io</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">At <span class="disc-code">sheetdb.io</span>, create a new API from this sheet. Copy the generated endpoint — it looks like <span class="disc-code">https://sheetdb.io/api/v1/xxxxxxxxxxxxx</span>.</div>
             </div>
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22c55e">③ That's it</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Every <span class="disc-code">DB.set(key, value)</span> call already mirrors to that row in your sheet. No further code changes needed.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">③ Already wired up</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">This file already points <span class="disc-code">SDB_URL</span> at that endpoint. <span class="disc-code">DB.get()</span>/<span class="disc-code">DB.set()</span> automatically mirror every read/write to the sheet — no further code changes needed.</div>
             </div>
           </div>
-          <div style="margin-top:.8rem;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:var(--rS);padding:.8rem 1rem">
-            <div style="font-size:.78rem;font-weight:700;color:#22c55e;margin-bottom:.35rem"><i class="fa-solid fa-circle-info"></i> Current sheet endpoint</div>
-            <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7" id="sd-endpoint-display">https://sheetdb.io/api/v1/nmdnjqgkd5xfu</div>
+          <div style="margin-top:.8rem;background:rgba(34,165,101,.06);border:1px solid rgba(34,165,101,.15);border-radius:var(--rS);padding:.8rem 1rem">
+            <div style="font-size:.78rem;font-weight:700;color:#22a565;margin-bottom:.35rem"><i class="fa-solid fa-code"></i> Current SheetDB endpoint (set near the top of the script)</div>
+            <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7">const SDB_URL = 'https://sheetdb.io/api/v1/nmdnjqgkd5xfu';</div>
           </div>
         </div>
       </div>
@@ -1702,7 +1673,16 @@ body.theme-light::before{opacity:.45}
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('grant-admin-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-title">Manage Admin Roles</div>
-    <div class="fg"><label class="fl">Player IGN</label><input class="fi" id="ga-ign" placeholder="Player IGN" list="ign-dl"/></div>
+    <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Search for a registered player, pick them from the list, then choose the role to grant. Granting <strong>Admin</strong> gives them the full admin dashboard next time they log in with their own IGN &amp; password.</div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Select Player</label>
+      <input class="fi" id="ga-ign-search" placeholder="Search by IGN or name..." autocomplete="off"
+        oninput="gaShowLookup(this.value)" onfocus="gaShowLookup(this.value)"
+        onblur="setTimeout(()=>{const dd=document.getElementById('ga-lookup-dd');if(dd)dd.style.display='none';},200)"/>
+      <div id="ga-lookup-dd" class="xfer-lookup-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60"></div>
+      <input type="hidden" id="ga-ign"/>
+    </div>
+    <div id="ga-selected-chip" style="margin:-.3rem 0 .6rem"></div>
     <div class="fg"><label class="fl">Role to Grant</label>
       <select class="fi fsel" id="ga-role">
         <option value="admin">Admin</option>
@@ -1766,16 +1746,32 @@ body.theme-light::before{opacity:.45}
 </div>
 
 <script>
+// ═══ THEME ═══ light is the default; dark is opt-in and remembered per-browser
+function currentTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';}
+function syncThemeIcon(){
+  const icon=document.getElementById('theme-bubble-icon');if(!icon)return;
+  icon.className=currentTheme()==='dark'?'fa-solid fa-sun':'fa-solid fa-moon';
+}
+function toggleTheme(){
+  const next=currentTheme()==='dark'?'light':'dark';
+  if(next==='dark')document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+  try{localStorage.setItem('rge5_theme',next);}catch(e){}
+  const bubble=document.getElementById('theme-bubble');
+  if(bubble){bubble.classList.add('spin');setTimeout(()=>bubble.classList.remove('spin'),350);}
+  syncThemeIcon();
+}
+document.addEventListener('DOMContentLoaded',syncThemeIcon);
+</script>
+
+<script>
 // ═══ DB ═══
-// ═══ SUPABASE — fetch-only, no SDK, CORS-safe ═══
-// ═══ GOOGLE SHEETS BACKEND (via SheetDB) ═══
-// Every collection (players, teams, matches, accounts, cfg, ...) is stored as ONE ROW
-// in your Google Sheet, in two columns: "key" and "value" (value = JSON string).
-// Your sheet's first row (headers) must contain exactly: key | value | updated_at
-const SD_URL  = 'https://sheetdb.io/api/v1/nmdnjqgkd5xfu';
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','accounts','tdmMatches','teamRequests','joinRequests','adminRoles'];
+// ═══ SHEETDB — Google Sheet as the data store ═══
+// Sheet: https://docs.google.com/spreadsheets/d/1EIIMEcpzqnOchSd08gy8_coSWT8Y63qflWBWNr1QIY0/edit
+// Row 1 of the sheet must be exactly two headers: key | value
+const SDB_URL = 'https://sheetdb.io/api/v1/nmdnjqgkd5xfu';
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests'];
 let SB_OK = false, SB_WRITES = 0;
-const SD_WRITE_QUEUE = new Map(); // key -> latest pending write (basic de-dupe)
 
 function sbStatus(type, msg){
   const bar = document.getElementById('sb-status-bar');
@@ -1791,56 +1787,62 @@ function sbHideOverlay(){
   if(o){ o.classList.add('hide'); setTimeout(() => o.remove(), 450); }
 }
 
-// Init: quick GET to confirm the sheet is reachable
+// Init: simple GET to confirm the sheet/API is reachable
 async function sbInit(){
   try{
-    const res = await fetch(SD_URL + '?limit=1', { method: 'GET' });
+    const res = await fetch(SDB_URL + '?limit=1', { method: 'GET' });
+
+    if(res.status === 401 || res.status === 403){
+      sbStatus('err', 'SheetDB: access denied — check API settings'); return false;
+    }
     if(!res.ok){
-      sbStatus('err', 'Google Sheet HTTP ' + res.status);
-      console.warn('[RAGEISM] SheetDB not reachable, status', res.status);
+      if(res.status === 404){
+        sbStatus('err', 'Sheet not found — check the SheetDB API URL');
+      } else {
+        sbStatus('err', 'SheetDB HTTP ' + res.status);
+      }
       return false;
     }
+
     SB_OK = true;
     sbStatus('ok', 'Google Sheet connected');
     return true;
+
   } catch(e){
-    // Network/CORS issue — app still works offline via localStorage
+    // "Failed to fetch" = network/CORS issue — app still works offline
     sbStatus('err', 'Offline mode — data stored locally');
-    console.warn('[RAGEISM] Google Sheet unreachable, using localStorage fallback. Reason:', e.message);
+    console.warn('[RAGEISM] SheetDB unreachable, using localStorage fallback. Reason:', e.message);
     return false;
   }
 }
 
-// Load: GET all rows from the sheet
+// Load: GET all rows from the sheet (each row is {key, value} with value as a JSON string)
 async function sbLoad(){
   if(!SB_OK) return false;
   try{
-    sbInitMsg('Loading data from Google Sheet...');
-    const res = await fetch(SD_URL, { method: 'GET' });
+    sbInitMsg('Loading cloud data...');
+    const res = await fetch(SDB_URL, { method: 'GET' });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if(!rows || !rows.length) return false;
 
     let loaded = 0;
+    let playersVal = null;
     rows.forEach(row => {
-      if(row && row.key && SB_SYNC.includes(row.key) && row.value !== undefined){
-        try{
-          // value is stored as a JSON string in the sheet cell
-          JSON.parse(row.value); // validate
-          localStorage.setItem('rge5_' + row.key, row.value);
-          loaded++;
-        }catch{ /* skip malformed cell */ }
+      if(SB_SYNC.includes(row.key)){
+        let parsed;
+        try{ parsed = JSON.parse(row.value); }
+        catch{ parsed = row.value; } // fall back to raw string if not valid JSON
+        localStorage.setItem('rge5_' + row.key, JSON.stringify(parsed));
+        if(row.key === 'players') playersVal = parsed;
+        loaded++;
       }
     });
     // Don't overwrite cloud data with seed data
-    const plRow = rows.find(r => r.key === 'players');
-    if(plRow){
-      try{
-        const arr = JSON.parse(plRow.value);
-        if(Array.isArray(arr) && arr.length > 0) localStorage.setItem('rge5_s5', 'true');
-      }catch{}
+    if(Array.isArray(playersVal) && playersVal.length > 0){
+      localStorage.setItem('rge5_s5', 'true');
     }
-    sbInitMsg('Loaded ' + loaded + ' collections from sheet');
+    sbInitMsg('Loaded ' + loaded + ' collections from cloud');
     return loaded > 0;
   } catch(e){
     console.warn('[RAGEISM] sbLoad failed:', e.message);
@@ -1848,34 +1850,35 @@ async function sbLoad(){
   }
 }
 
-// Write: PATCH the existing row for this key, or POST a new one if it doesn't exist yet
+// Write: upsert a row in the sheet — PATCH if the key already exists, else POST a new row.
 async function sbWrite(key, val){
   if(!SB_OK || !SB_SYNC.includes(key)) return;
-  const value = JSON.stringify(val);
-  const nowIso = new Date().toISOString();
   try{
-    let updated = false;
-    try{
-      const upRes = await fetch(SD_URL + '/key/' + encodeURIComponent(key), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: { value, updated_at: nowIso } })
-      });
-      if(upRes.ok){
-        const j = await upRes.json().catch(() => ({}));
-        updated = !!(j && (j.updated === undefined || j.updated > 0));
-      }
-    }catch{ /* fall through to insert */ }
+    const payload = JSON.stringify(val);
+
+    // Try updating the existing row for this key first
+    const patchRes = await fetch(SDB_URL + '/key/' + encodeURIComponent(key), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: { value: payload } })
+    });
+
+    let updated = 0;
+    if(patchRes.ok){
+      const j = await patchRes.json().catch(() => ({}));
+      updated = j && j.updated ? j.updated : 0;
+    }
 
     if(!updated){
-      const insRes = await fetch(SD_URL, {
+      // No existing row for this key — create one
+      const postRes = await fetch(SDB_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: { key, value, updated_at: nowIso } })
+        body: JSON.stringify({ data: { key, value: payload } })
       });
-      if(!insRes.ok){
-        const txt = await insRes.text().catch(() => '');
-        throw new Error('HTTP ' + insRes.status + (txt ? ' — ' + txt.slice(0, 120) : ''));
+      if(!postRes.ok){
+        const txt = await postRes.text().catch(() => '');
+        throw new Error('HTTP ' + postRes.status + (txt ? ' — ' + txt.slice(0, 100) : ''));
       }
     }
 
@@ -1889,7 +1892,7 @@ async function sbWrite(key, val){
   }
 }
 
-// ═══ DB (localStorage + Google Sheet mirror) ═══
+// ═══ DB (localStorage + Google Sheet mirror via SheetDB) ═══
 const DB={
   get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem('rge5_'+k))??d}catch{return d}},
   set:(k,v)=>{
@@ -1899,6 +1902,16 @@ const DB={
 };
 const v=id=>document.getElementById(id)?.value?.trim()||'';
 let CU=null,ADM=false;
+// ── Password hashing (SHA-256 via Web Crypto) — so raw passwords never sit in the sheet ──
+async function hashPw(str){
+  try{
+    if(window.crypto && crypto.subtle && crypto.subtle.digest){
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  }catch(e){ console.warn('[RAGEISM] hashPw fallback:', e.message); }
+  return 'plain:'+str; // only hit on non-secure contexts where Web Crypto is unavailable
+}
 const RC={Bronze:'#cd7f32',Silver:'#94a3b8',Gold:'#f59e0b',Platinum:'#06b6d4',Diamond:'#3b82f6',Master:'#a855f7',Conqueror:'#ef4444'};
 const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
 // ── PUBG Esports Points System (PGC standard) ──
@@ -2095,7 +2108,7 @@ function anOverview(el){
       <div class="card-title"><i class="fa-solid fa-person-rifle" style="color:var(--accentL)"></i> Role Distribution</div>
       ${Object.entries(roles).sort((a,b)=>b[1]-a[1]).map(([role,cnt],i)=>anBar(role,cnt,roleMax,BAR_COLS[i],i+1)).join('')}
       <div style="margin-top:1rem"><div class="card-title" style="margin-bottom:.6rem"><i class="fa-solid fa-ranking-star"></i> Rank Distribution</div>
-      ${Object.entries(ranks).map(([rank,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem"><span style="color:${RC[rank]||'var(--textM)'}">${rank}</span><span class="font-mono" style="color:${RC[rank]||'var(--textM)'};font-size:.78rem">${cnt} player${cnt!==1?'s':''}</span></div>`).join('')}
+      ${Object.entries(ranks).map(([rank,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--hairline);font-size:.83rem"><span style="color:${RC[rank]||'var(--textM)'}">${rank}</span><span class="font-mono" style="color:${RC[rank]||'var(--textM)'};font-size:.78rem">${cnt} player${cnt!==1?'s':''}</span></div>`).join('')}
       </div>
     </div>
   </div>`;
@@ -2297,10 +2310,10 @@ function anTeams(el){
           <div style="text-align:right"><div class="font-mono" style="font-size:1rem;color:var(--red)">${p.kills}</div><div style="font-size:.6rem;color:var(--textD)">KILLS</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem;text-align:center">
-          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--amber)">${kd}</div><div style="font-size:.58rem;color:var(--textD)">K/D</div></div>
-          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--green)">${p.wins}</div><div style="font-size:.58rem;color:var(--textD)">WINS</div></div>
-          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--textM)">${p.deaths}</div><div style="font-size:.58rem;color:var(--textD)">DEATHS</div></div>
-          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--blue)">${(p.damage||0).toLocaleString()}</div><div style="font-size:.58rem;color:var(--textD)">DMG</div></div>
+          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--amber)">${kd}</div><div style="font-size:.58rem;color:var(--textD)">K/D</div></div>
+          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--green)">${p.wins}</div><div style="font-size:.58rem;color:var(--textD)">WINS</div></div>
+          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--textM)">${p.deaths}</div><div style="font-size:.58rem;color:var(--textD)">DEATHS</div></div>
+          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--blue)">${(p.damage||0).toLocaleString()}</div><div style="font-size:.58rem;color:var(--textD)">DMG</div></div>
         </div>
       </div>`;}).join(''):'<div class="text-dim" style="font-size:.83rem">No registered players matched to this team.</div>'}
     </div>
@@ -2351,7 +2364,7 @@ function anPlayers(el){
   function playerRow(p,i,val,color){
     const kd=(p.kills/(p.deaths||1)).toFixed(1);
     const lvl=Math.floor((p.xp||0)/500)+1;
-    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--hairline)">
       <span style="color:var(--textD);font-size:.7rem;width:18px;text-align:right;flex-shrink:0">${i+1}.</span>
       <div style="width:28px;height:28px;border-radius:7px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${p.ign[0]}</div>
       <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openProfile('${p.id}')" style="cursor:pointer">${p.ign}</div><div style="font-size:.7rem;color:var(--textM)">${p.team||'No Team'}</div></div>
@@ -2456,14 +2469,14 @@ function anMatches(el){
           <div class="${sc}" style="flex-shrink:0">${sl}</div>
           <span class="font-mono" style="font-size:.72rem;color:var(--textD)">#${m.id}</span>
         </div>
-        ${m.entries.length?`<div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.05);display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
+        ${m.entries.length?`<div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--hairline);display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
           <div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-skull-crossbones" style="color:var(--red);margin-right:.3rem"></i>Total Kills: <strong class="text-red">${m.totalK}</strong></div>
           ${m.topK?`<div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-crosshairs" style="color:var(--amber);margin-right:.3rem"></i>Top Fragger: <strong style="color:var(--amber)">${m.topK.ign} (${m.topK.kills}K)</strong></div>`:''}
           ${m.winner?`<div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-trophy" style="color:var(--green);margin-right:.3rem"></i>Winner: <strong style="color:var(--green)">${m.winner.ign}</strong></div>`:''}
           <div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-users" style="color:var(--accent);margin-right:.3rem"></i>Entries: <strong>${m.entries.length} players</strong></div>
         </div>
         <div style="margin-top:.5rem">${m.entries.slice(0,5).map(e=>`<span class="chip" style="font-size:.65rem;margin:.15rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'var(--surface)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.ign} ${e.kills}K</span>`).join('')}${m.entries.length>5?`<span class="chip" style="font-size:.62rem;color:var(--textD)">+${m.entries.length-5} more</span>`:''}</div>`
-        :m.status==='done'?'<div style="font-size:.78rem;color:var(--textD);margin-top:.5rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.04)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.3rem"></i>No results logged yet</div>':''}
+        :m.status==='done'?'<div style="font-size:.78rem;color:var(--textD);margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--hairline)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.3rem"></i>No results logged yet</div>':''}
       </div>`;
     }).join(''):'<div class="text-dim" style="padding:1rem;font-size:.85rem">No matches found</div>'}
   </div>
@@ -2477,7 +2490,7 @@ function anMatches(el){
         </div>
         <span class="text-dim font-mono" style="font-size:.68rem">${log.ts}</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:.2rem">${log.entries.map(e=>`<span class="chip" style="font-size:.63rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'rgba(255,255,255,.03)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.placement===1?'<i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>':''}${e.ign} ${e.kills}K</span>`).join('')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.2rem">${log.entries.map(e=>`<span class="chip" style="font-size:.63rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'var(--hairline)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.placement===1?'<i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>':''}${e.ign} ${e.kills}K</span>`).join('')}</div>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -2492,9 +2505,9 @@ function doGlobalSearch(q){
   const matches=DB.get('matches').filter(m=>m.name.toLowerCase().includes(ql)||m.id.toLowerCase().includes(ql));
   if(!players.length&&!teams.length&&!matches.length){el.innerHTML='<div style="padding:.7rem 1rem;color:var(--textD);font-size:.83rem">No results found.</div>';return;}
   let html='';
-  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
-  if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||t.name[0]).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
-  if(matches.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Matches</div>`;html+=matches.slice(0,3).map(m=>`<div style="padding:.5rem 1rem;cursor:pointer;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('matches')"><div style="font-weight:600">${m.name}</div><div style="font-size:.7rem;color:var(--textD)">${m.map} · ${m.status}</div></div>`).join('');}
+  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid var(--hairline)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
+  if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid var(--hairline)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||t.name[0]).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
+  if(matches.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Matches</div>`;html+=matches.slice(0,3).map(m=>`<div style="padding:.5rem 1rem;cursor:pointer;font-size:.84rem;border-bottom:1px solid var(--hairline)" onmousedown="showPage('matches')"><div style="font-weight:600">${m.name}</div><div style="font-size:.7rem;color:var(--textD)">${m.map} · ${m.status}</div></div>`).join('');}
   el.innerHTML=html;
 }
 
@@ -2506,89 +2519,99 @@ function notify(title,msg='',type='n-info',dur=3200){
   c.appendChild(n);setTimeout(()=>{const t=n.querySelector('.notif-timer');if(t)t.style.width='0';},50);setTimeout(()=>n.remove(),dur);
 }
 
-// ═══ LOGIN / SIGN UP — simple accounts stored in the 'accounts' sheet collection ═══
-// Note: passwords are lightly hashed client-side (not real cryptographic security —
-// this is a public spreadsheet-backed app, so don't reuse a sensitive password here).
-function pwHash(pw){
-  let h = 0;
-  const s = String(pw);
-  for(let i=0;i<s.length;i++){ h = (h<<5) - h + s.charCodeAt(i); h |= 0; }
-  return 'h' + Math.abs(h).toString(36) + '_' + s.length;
+// ═══ LOGIN ═══
+// Toggle between the Player and Master Admin login panes
+function lsSwitchTab(tab){
+  const pPane=document.getElementById('login-fields'),mPane=document.getElementById('login-fields-master');
+  const pBtn=document.getElementById('ls-tab-player'),mBtn=document.getElementById('ls-tab-master');
+  if(!pPane||!mPane)return;
+  if(tab==='master'){
+    pPane.style.display='none';mPane.style.display='block';
+    pBtn.classList.remove('active');mBtn.classList.add('active');
+    setTimeout(()=>document.getElementById('lm-pw')?.focus(),50);
+  } else {
+    pPane.style.display='block';mPane.style.display='none';
+    mBtn.classList.remove('active');pBtn.classList.add('active');
+    setTimeout(()=>document.getElementById('li-u')?.focus(),50);
+  }
 }
-
-let AUTH_MODE = 'login'; // 'login' | 'signup' | 'admin'
-function setAuthMode(mode){
-  AUTH_MODE = mode;
-  ['login','signup','admin'].forEach(m=>{
-    const panel = document.getElementById('auth-panel-'+m);
-    if(panel) panel.style.display = (m===mode) ? 'block' : 'none';
-    const tab = document.getElementById('auth-tab-'+m);
-    if(tab) tab.classList.toggle('active', m===mode);
+// Smart bidirectional IGN/name lookup for the login field — type an IGN and see the name (and vice versa), click to select
+function liShowLookup(q){
+  const dd=document.getElementById('li-lookup-dd');if(!dd)return;
+  q=(q||'').trim().toLowerCase();
+  if(!q){dd.style.display='none';dd.innerHTML='';return;}
+  const matches=DB.get('players').filter(p=>[p.ign,p.name].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))).slice(0,7);
+  if(!matches.length){
+    dd.innerHTML=`<div class="xfer-lookup-row" style="cursor:default;color:var(--textD)">No matching player — try <a href="#" onmousedown="event.preventDefault();goToSignup();" style="color:var(--accentL);font-weight:700">signing up</a></div>`;
+    dd.style.display='block';return;
+  }
+  dd.innerHTML=matches.map(p=>`<div class="xfer-lookup-row" data-ign="${p.ign}"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div>
+    <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ign}</div>
+    <div style="font-size:.68rem;color:var(--textD);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||''}${p.team?' · '+p.team:''}</div></div></div>`).join('');
+  dd.style.display='block';
+  dd.querySelectorAll('.xfer-lookup-row[data-ign]').forEach(row=>row.onmousedown=()=>{
+    const u=document.getElementById('li-u');if(u)u.value=row.dataset.ign;
+    dd.style.display='none';
+    document.getElementById('li-pw')?.focus();
   });
-  const title = document.getElementById('login-title-txt');
-  const sub   = document.getElementById('login-sub-txt');
-  if(title && sub){
-    if(mode==='login'){ title.textContent='Welcome back'; sub.textContent='Sign in with your username & password'; }
-    else if(mode==='signup'){ title.textContent='Create your account'; sub.textContent='Just your in-game ID, a username & a password'; }
-    else { title.textContent='Admin Access'; sub.textContent='Master password for tournament hosts only'; }
-  }
 }
-
-function doSignup(){
-  const ign = v('su-ign'), un = v('su-user').toLowerCase(), pw = v('su-pw'), pw2 = v('su-pw2');
-  if(!ign || !un || !pw) return notify('Fill in all fields','In-game ID, username & password are required','n-bad');
-  if(un.length<3) return notify('Username too short','Use at least 3 characters','n-bad');
-  if(pw.length<4) return notify('Password too short','Use at least 4 characters','n-bad');
-  if(pw!==pw2) return notify('Passwords don\'t match','','n-bad');
-  const accounts = DB.get('accounts',[]);
-  if(accounts.some(a=>a.username===un)) return notify('Username taken','Try another one','n-bad');
-  if(accounts.some(a=>a.ign.toLowerCase()===ign.toLowerCase())) return notify('In-game ID already registered','Log in instead','n-bad');
-  const acc = { username:un, ign, pwHash:pwHash(pw), createdAt:new Date().toISOString() };
-  accounts.push(acc); DB.set('accounts',accounts);
-  // Seed a lightweight player stats row so the player shows up right away
-  const players = DB.get('players',[]);
-  if(!players.some(p=>p.ign===ign)){
-    players.push({id:'p_'+Date.now().toString(36),ign,realName:'',kills:0,deaths:0,wins:0,damage:0,xp:0,points:0,gamesPlayed:0,rank:'Bronze'});
-    DB.set('players',players);
-  }
-  CU = { name:un, ign, role:'player', avatar:un[0].toUpperCase(), username:un };
-  ADM = false;
-  notify('Account created!','Welcome to RAGEISM','n-ok');
-  finishLogin();
-}
-
-function doLogin(){
-  const un = v('li-user').toLowerCase(), pw = v('li-pw');
-  if(!un || !pw) return notify('Enter username & password','','n-bad');
-  const accounts = DB.get('accounts',[]);
-  const acc = accounts.find(a=>a.username===un);
-  if(!acc || acc.pwHash!==pwHash(pw)) return notify('Invalid login','Check your username & password','n-bad');
-  CU = { name:acc.username, ign:acc.ign, role:'player', avatar:acc.username[0].toUpperCase(), username:acc.username };
-  ADM = false;
-  finishLogin();
-}
-
-// ═══ ADMIN MASTER LOGIN — separate from player accounts, single master password ═══
-function doAdminMasterLogin(){
-  const pw = v('admin-master-pw');
-  const cfg = DB.get('cfg',{adminPw:'RAGEISM2025'});
-  const master = cfg.adminPw || 'RAGEISM2025';
-  if(!pw || pw!==master) return notify('Wrong master password','Access denied','n-bad');
-  CU = { name:'Host', ign:'HOST', role:'admin', avatar:'H' };
-  ADM = true;
-  finishLogin();
+// Sends a not-yet-registered visitor to the Sign Up page (which lives inside the app, so we enter as a guest first)
+function goToSignup(){
+  guestLogin();
+  showPage('signup');
 }
 function guestLogin(){CU={name:'Guest',ign:'GUEST',role:'viewer',avatar:'G'};ADM=false;finishLogin();}
+async function doLogin(){
+  const ign=v('li-u'),pw=v('li-pw');
+  if(!ign)return notify('IGN required','Enter your registered in-game name','n-bad');
+  if(!pw)return notify('Password required','','n-bad');
 
+  const players=DB.get('players');
+  const p=players.find(x=>x.ign&&x.ign.toLowerCase()===ign.toLowerCase());
+  if(!p)return notify('No account found',`No player is registered as "${ign}" — sign up first.`,'n-bad');
+
+  const hashed=await hashPw(pw);
+  if(p.password===undefined||p.password===''){
+    // Legacy roster entry (added by an admin, or pre-dating passwords) with no password yet — claim it
+    p.password=hashed;DB.set('players',players);
+  } else if(p.password!==hashed){
+    return notify('Wrong password','That IGN and password don\'t match','n-bad');
+  }
+
+  // A player can be elevated to admin/manager/moderator by the master admin (Admin → Manage Admin Roles)
+  const roles=DB.get('adminRoles',[]);
+  const myRole=roles.find(r=>r.ign.toLowerCase()===p.ign.toLowerCase());
+  ADM=!!(myRole&&myRole.role==='admin');
+  CU={name:p.name||p.ign,ign:p.ign,role:myRole?myRole.role:'player',avatar:(p.name||p.ign)[0].toUpperCase(),disc:p.discord};
+  finishLogin();
+}
+// Single fixed master-admin account — username is always "master", password lives in cfg.adminPw (default RAGEISM2025)
+function masterLogin(){
+  const pw=v('lm-pw');
+  if(!pw)return notify('Password required','','n-bad');
+  const cfg=DB.get('cfg',{});
+  const adminPw=cfg.adminPw||'RAGEISM2025';
+  if(pw!==adminPw)return notify('Wrong password','Access denied','n-bad');
+  ADM=true;
+  CU={name:'Master Admin',ign:'MASTER',role:'admin',avatar:'M',isMaster:true};
+  finishLogin();
+}
 function finishLogin(){
   DB.set('cu5',CU);DB.set('adm5',ADM);
   document.getElementById('ls').classList.add('out');setTimeout(()=>{document.getElementById('ls').style.display='none';},500);
   document.getElementById('app').classList.add('show');
   updateSidebar();refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();updateTdmBadge();
-  if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('alert-badge').style.display='block';}
+  if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('admin-badge').textContent=CU.isMaster?'MASTER':'HOST';document.getElementById('alert-badge').style.display='block';}
+  applyMasterGating();
   if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
-  notify(ADM?'Welcome back, Host!':'Welcome!',`Logged in as ${CU.name}`,ADM?'n-ok':'n-info',3500);
+  notify(ADM?(CU.isMaster?'Welcome back, Master!':'Welcome back!'):'Welcome!',`Logged in as ${CU.name}`,ADM?'n-ok':'n-info',3500);
   if(ADM)updatePendingBadges();
+}
+// Role management, the shared admin password, and the audit webhook are master-admin-only — a promoted "admin" role
+// gets the full dashboard but can't reassign roles or change the master password.
+function applyMasterGating(){
+  const isMaster=!!(CU&&CU.isMaster);
+  document.querySelectorAll('.master-only').forEach(e=>e.style.display=isMaster?'':'none');
 }
 function doLogout(){CU=null;ADM=false;DB.set('cu5',null);DB.set('adm5',false);location.reload();}
 function updateSidebar(){
@@ -2597,7 +2620,7 @@ function updateSidebar(){
   const urole=document.getElementById('sb-urole');
   const av=document.getElementById('sb-av');
   if(uname)uname.textContent=CU.name||'Player';
-  if(urole)urole.textContent=ADM?'Host / Admin':(CU.role||'Player');
+  if(urole)urole.textContent=ADM?(CU.isMaster?'Master Admin':'Host / Admin'):(CU.role||'Player');
   if(av){
     if(CU.discAvatar){
       av.innerHTML=`<img src="${CU.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:7px" onerror="this.parentElement.textContent='${(CU.name||'?')[0].toUpperCase()}'"/>`;
@@ -2637,7 +2660,7 @@ function showPage(n){
   if(n==='compare'){renderCmpSelects();doCompare();}if(n==='community'){renderPolls();renderSugs();}
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players')renderAPlayers();if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
-  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const wh=document.getElementById('cfg-wh');if(wh&&cfg.disc)wh.value=cfg.disc;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const tp=document.getElementById('cfg-theme-preset');if(tp)tp.value=cfg.themePreset||'dark';const tf=document.getElementById('cfg-theme-font');if(tf)tf.value=cfg.themeFont||'Syne';const td=document.getElementById('cfg-theme-density');if(td)td.value=cfg.themeDensity||'comfortable';const ol=document.getElementById('cfg-ov-layout');if(ol)ol.value=cfg.overlayLayout||'ticker';const ot=document.getElementById('cfg-ov-theme');if(ot)ot.value=cfg.overlayTheme||'glass';}
+  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const wh=document.getElementById('cfg-wh');if(wh&&cfg.disc)wh.value=cfg.disc;const pw=document.getElementById('cfg-pw');if(pw)pw.value=cfg.adminPw||'RAGEISM2025';const aw=document.getElementById('cfg-audit-wh');if(aw)aw.value=cfg.auditWebhook||'';const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';renderAdminAuditLog();}
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
   if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';}
@@ -2753,12 +2776,13 @@ function renderAdminOverview(){
 }
 
 // ═══ PLAYER REG ═══
-function regPlayer(){
-  const n=v('rn'),ig=v('ri'),uid=v('ru');if(!n||!ig||!uid)return notify('Missing fields','Name, IGN & UID required','n-bad');
+async function regPlayer(){
+  const n=v('rn'),ig=v('ri'),uid=v('ru'),pw=v('rpw');if(!n||!ig||!uid||!pw)return notify('Missing fields','Name, IGN, UID & Password required','n-bad');
   const pl=DB.get('players');if(pl.find(p=>p.ign===ig))return notify('IGN taken','','n-bad');if(pl.find(p=>p.uid===uid))return notify('UID exists','','n-bad');
-  pl.push({id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord:v('rd'),region:v('rr'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0});
-  DB.set('players',pl);['rn','ri','ru','rt','rd','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  renderReg();updateStats();buildTicker();refreshDLs();notify('Registered!',`${ig} joined the arena`,'n-ok');
+  const hashed=await hashPw(pw);
+  pl.push({id:'p'+Date.now(),name:n,ign:ig,uid,password:hashed,tag:v('rt'),discord:v('rd'),region:v('rr'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0});
+  DB.set('players',pl);['rn','ri','ru','rpw','rt','rd','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  renderReg();updateStats();buildTicker();refreshDLs();notify('Registered!',`${ig} joined the arena — sign in with your IGN & password`,'n-ok');
 }
 // ═══ TEAM REGISTRATION — PUBG UID LOOKUP ═══
 let TR_CAPTAIN=null; // resolved player {uid,ign,name}
@@ -2835,7 +2859,7 @@ function renderReg(){
     </td>
   </tr>`).join('');
 }
-function delPlayer(id){if(!ADM)return notify('Admins only','','n-bad');let pl=DB.get('players');pl=pl.filter(p=>p.id!==id);DB.set('players',pl);renderReg();renderAPlayers();updateStats();buildTicker();refreshDLs();notify('Player removed','','n-ok');}
+function delPlayer(id){if(!ADM)return notify('Admins only','','n-bad');let pl=DB.get('players');const target=pl.find(p=>p.id===id);pl=pl.filter(p=>p.id!==id);DB.set('players',pl);renderReg();renderAPlayers();updateStats();buildTicker();refreshDLs();if(target)logAdminAction('Player removed',`${target.ign} was removed from the roster`);notify('Player removed','','n-ok');}
 
 // ═══ TDM (TEAM DEATHMATCH — SEARCH PLAYERS, BUILD SQUADS, FIRST TO N) ═══
 function tdmGetLive(){return DB.get('tdmMatches',[]).find(m=>m.status==='live')||null;}
@@ -3047,8 +3071,7 @@ function renderTdmBanner(){
   const overallItem=tdmOverallBestItem();
   const items=[tdmScoreChipItem(m),...tdmLiveComparisonItems(m),...tdmBannerTickerItems(m,'a'),...tdmBannerTickerItems(m,'b'),...(overallItem?[overallItem]:[])];
   const sep=`<span style="opacity:.3;margin:0 .6rem">◆</span>`;const tickHtml=items.join(sep);
-  const ovCfg=DB.get('cfg',{});const ovLayout=ovCfg.overlayLayout||'ticker',ovTheme=ovCfg.overlayTheme||'glass';
-  bwrap.innerHTML=`<div class="tdm-banner ov-layout-${ovLayout} ov-theme-${ovTheme}" id="tdm-banner-el">
+  bwrap.innerHTML=`<div class="tdm-banner" id="tdm-banner-el">
     <div class="tdm-banner-bg"></div>
     <div class="tdm-banner-grid"></div>
     <div class="tdm-banner-scan"></div>
@@ -3058,6 +3081,7 @@ function renderTdmBanner(){
     <div class="tdm-banner-corner tdm-banner-corner-tr"></div>
     <div class="tdm-banner-corner tdm-banner-corner-bl"></div>
     <div class="tdm-banner-corner tdm-banner-corner-br"></div>
+    <div class="tdm-banner-live"><span class="dot"></span> LIVE</div>
     <div class="tdm-banner-target">FIRST TO ${m.target}</div>
     <div class="tdm-banner-brand">RAGEISM · TDM</div>
     <div class="tdm-banner-main">
@@ -3444,6 +3468,36 @@ function fireWebhook(url,log,match){
   try{fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',embeds:[{title:`Match Results — ${log.matchId}`,color:6304479,fields:[{name:'Match',value:log.matchName||log.matchId,inline:true},{name:'Map',value:log.map||'—',inline:true},{name:'Winner',value:log.winnerTeam||log.winnerIGN||'—',inline:true},{name:'Top Fragger',value:log.entries.length?`${[...log.entries].sort((a,b)=>b.kills-a.kills)[0].ign} (${[...log.entries].sort((a,b)=>b.kills-a.kills)[0].kills}K)`:'—',inline:true}]}]})});}catch(e){console.warn('Webhook error:',e);}
 }
 
+// ═══ ADMIN AUDIT LOG — every admin change is recorded and, if configured, posted to a Discord webhook ═══
+function logAdminAction(action,detail){
+  const log=DB.get('adminLog',[]);
+  const entry={id:'alog'+Date.now(),action,detail,by:CU?CU.name:'Admin',ts:new Date().toLocaleString()};
+  log.unshift(entry);if(log.length>200)log.pop();
+  DB.set('adminLog',log);
+  const cfg=DB.get('cfg',{});
+  if(cfg.auditWebhook&&cfg.auditWebhook.startsWith('https://discord.com/api/webhooks/')){
+    try{fetch(cfg.auditWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM Admin Log',embeds:[{title:action,description:detail,color:15105642,fields:[{name:'By',value:entry.by,inline:true},{name:'When',value:entry.ts,inline:true}]}]})});}
+    catch(e){console.warn('Audit webhook error:',e);}
+  }
+  const el=document.getElementById('admin-audit-list');if(el)renderAdminAuditLog();
+}
+function renderAdminAuditLog(){
+  const el=document.getElementById('admin-audit-list');if(!el)return;
+  const log=DB.get('adminLog',[]);
+  if(!log.length){el.innerHTML='<div class="text-dim" style="font-size:.82rem">No admin actions logged yet.</div>';return;}
+  el.innerHTML=log.slice(0,25).map(e=>`<div style="padding:.5rem 0;border-bottom:1px solid var(--hairline)">
+    <div style="font-size:.83rem"><strong>${e.action}</strong> — ${e.detail}</div>
+    <div style="font-size:.68rem;color:var(--textD)">${e.by} · ${e.ts}</div>
+  </div>`).join('');
+}
+function saveAuditWebhook(){
+  const wh=v('cfg-audit-wh');
+  const cfg=DB.get('cfg',{});
+  cfg.auditWebhook=wh;
+  DB.set('cfg',cfg);
+  notify('Audit webhook saved!','Admin changes will now be posted to Discord','n-ok');
+}
+
 function renderResultLogs(){
   const logs=DB.get('rlogs5',[]);
   const el=document.getElementById('result-logs');if(!el)return;
@@ -3617,7 +3671,9 @@ function profileMatchHistoryHTML(p){
   }).join('');
 }
 
-function buildProfileCardHTML(p,isOwn=false){
+// Read-only profile card for viewing OTHER players (openProfile always calls this with the viewer looking at someone else —
+// your own profile/settings/webhook/stat-transfer live in buildMyProfile() instead, so no isOwn branch is needed here).
+function buildProfileCardHTML(p){
   const rankColor=RC[p.rank]||'var(--textM)';
   const hasSocials=p.discord||p.youtube||p.tiktok||p.twitch||p.twitter||p.instagram;
   return `
@@ -3629,9 +3685,6 @@ function buildProfileCardHTML(p,isOwn=false){
         <div style="flex:1;padding-bottom:.3rem;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ign}</div>
           <div style="font-size:.8rem;color:var(--textM)">${p.name||''}</div>
-        </div>
-        <div style="display:flex;gap:.35rem;flex-shrink:0;padding-bottom:.3rem">
-          ${isOwn?`<button class="btn btn-ghost btn-sm" onclick="openModal('edit-player-modal');setupEditMe()"><i class="fa-solid fa-pen"></i> Edit</button><button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>`:''}
         </div>
       </div>
       <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
@@ -3652,7 +3705,6 @@ function buildProfileCardHTML(p,isOwn=false){
       <button class="prf-tab" onclick="prfTab(this,'prf-team')"><i class="fa-solid fa-shield-halved"></i> Team</button>
       <button class="prf-tab" onclick="prfTab(this,'prf-history')"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
       ${hasSocials?`<button class="prf-tab" onclick="prfTab(this,'prf-social')"><i class="fa-solid fa-link"></i> Links</button>`:''}
-      ${isOwn?`<button class="prf-tab" onclick="prfTab(this,'prf-settings')"><i class="fa-solid fa-gear"></i> Settings</button>`:''}
     </div>
 
     <div class="prf-panel active" id="prf-stats">
@@ -3661,13 +3713,6 @@ function buildProfileCardHTML(p,isOwn=false){
 
     <div class="prf-panel" id="prf-team">
       ${profileTeamHTML(p)}
-      ${isOwn&&!p.team?`<div style="margin-top:.8rem;padding:.7rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS)">
-        <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.5rem"><i class="fa-solid fa-paper-plane"></i> Request to Join a Team</div>
-        <div style="display:flex;gap:.4rem">
-          <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.8rem"><option value="">— Select Team —</option></select>
-          <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Send</button>
-        </div>
-      </div>`:''}
     </div>
 
     <div class="prf-panel" id="prf-history">
@@ -3681,29 +3726,6 @@ function buildProfileCardHTML(p,isOwn=false){
       ${socialRowHTML('fa-brands fa-twitch','#9147ff','Twitch',p.twitch,'tw')}
       ${socialRowHTML('fa-brands fa-x-twitter','#e2e8f0','X / Twitter',p.twitter,'xt')}
       ${socialRowHTML('fa-brands fa-instagram','#e1306c','Instagram',p.instagram,'ig')}
-    </div>`:''}
-
-    ${isOwn?`<div class="prf-panel" id="prf-settings">
-      <div style="padding:.7rem;background:var(--bg3);border:1px solid rgba(88,101,242,.2);border-radius:var(--rS);margin-bottom:.6rem">
-        <div style="font-size:.73rem;font-weight:700;color:#7289da;margin-bottom:.5rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
-        <div style="display:flex;gap:.4rem">
-          <input class="fi" id="profile-webhook" style="flex:1;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="${p.webhook||''}"/>
-          <button class="btn btn-ghost btn-sm" onclick="saveProfileWebhook()"><i class="fa-solid fa-floppy-disk"></i></button>
-        </div>
-        <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Receive personal match notifications via Discord</div>
-      </div>
-      <div style="padding:.7rem;background:var(--bg3);border:1px solid rgba(99,102,241,.2);border-radius:var(--rS);margin-bottom:.6rem;position:relative">
-        <div style="font-size:.73rem;font-weight:700;color:var(--accentL);margin-bottom:.3rem"><i class="fa-solid fa-right-left"></i> Transfer My Stats to Another ID</div>
-        <div style="font-size:.72rem;color:var(--textD);margin-bottom:.5rem">Switching PUBG accounts? Move your kills, wins, and history to a different registered ID. Requires admin approval.</div>
-        <input type="hidden" id="xfer-target-id"/>
-        <input class="fi" id="xfer-search" placeholder="Search target player by IGN or UID..." style="font-size:.82rem" autocomplete="off"
-          oninput="xferLookup(this.value,'${p.id}')" onfocus="xferLookup(this.value,'${p.id}')" onblur="setTimeout(()=>document.getElementById('xfer-lookup-dd').style.display='none',200)"/>
-        <div id="xfer-lookup-dd" class="xfer-lookup-results" style="display:none"></div>
-        <div id="xfer-selected-chip" style="margin-top:.5rem"></div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:.5rem;width:100%" onclick="requestStatTransfer('${p.id}')"><i class="fa-solid fa-paper-plane"></i> Request Transfer</button>
-        <div id="xfer-my-status" style="margin-top:.5rem">${myTransferStatusHTML(p.id)}</div>
-      </div>
-      <button class="btn btn-danger btn-fw" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
     </div>`:''}
   </div>`;
 }
@@ -3720,7 +3742,7 @@ function prfTab(btn,panelId){
 
 function openProfile(id){
   const p=DB.get('players').find(x=>x.id===id);if(!p)return;
-  document.getElementById('profile-modal-content').innerHTML=buildProfileCardHTML(p,false);
+  document.getElementById('profile-modal-content').innerHTML=buildProfileCardHTML(p);
   openModal('profile-modal');
   // Populate XP bar after render
   setTimeout(()=>document.querySelectorAll('.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,50);}),50);
@@ -3752,57 +3774,9 @@ function saveEditPlayer(){
   notify('Profile saved!','Your info has been updated','n-ok');
 }
 
-function buildProfileHTML(p,edit=false){
-  // Legacy wrapper used by older code paths
-  return buildProfileCardHTML(p,edit);
-}
-
-function buildMyProfile(){
-  if(!CU){
-    const el=document.getElementById('my-profile-content');
-    if(el)el.innerHTML=`<div style="text-align:center;padding:4rem;color:var(--textD)"><i class="fa-solid fa-lock" style="font-size:2rem;display:block;margin-bottom:.8rem;opacity:.4"></i><div style="font-weight:600;margin-bottom:.4rem">Not logged in</div><div style="font-size:.87rem">Login to view your profile</div></div>`;
-    return;
-  }
-  const el=document.getElementById('my-profile-content');if(!el)return;
-  const players=DB.get('players');
-  const p=players.find(x=>x.ign===CU.ign)
-    ||players.find(x=>x.ign===CU.name)
-    ||players.find(x=>x.discord&&x.discord.toLowerCase()===((CU.disc||CU.name||'').toLowerCase()))
-    ||players.find(x=>x.name&&x.name.toLowerCase()===(CU.name||'').toLowerCase());
-
-  if(!p){
-    el.innerHTML=`<div style="max-width:480px;margin:0 auto">
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:2rem;text-align:center;margin-bottom:1rem">
-        <div style="width:68px;height:68px;background:linear-gradient(135deg,var(--accentD),var(--accent));border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.8rem;font-weight:700;color:#fff">${(CU.name||'?')[0].toUpperCase()}</div>
-        <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:.25rem">${CU.name||'Guest'}</div>
-        <div style="font-size:.82rem;color:var(--textM);margin-bottom:1.2rem">${CU.disc||CU.role||'Not registered'}</div>
-        <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:var(--rS);padding:.75rem 1rem;margin-bottom:1rem;font-size:.84rem;color:var(--textM);text-align:left">
-          <i class="fa-solid fa-circle-info" style="color:var(--accentL);margin-right:.4rem"></i>
-          You're logged in but not yet registered as a tournament player.
-        </div>
-        <button class="btn btn-accent btn-fw" onclick="showPage('signup')"><i class="fa-solid fa-user-plus"></i> Register Now</button>
-      </div>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:.84rem;color:var(--textM)">Logged in as <strong style="color:var(--text)">${CU.name}</strong></div>
-        <button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
-      </div>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML=`<div style="max-width:680px;margin:0 auto">${buildProfileCardHTML(p,true)}</div>`;
-
-  // Populate team dropdown
-  setTimeout(()=>{
-    const sel=document.getElementById('profile-team-req');
-    if(sel){
-      const teams=DB.get('teams').filter(t=>t.approved&&!t.members?.includes(p.ign));
-      sel.innerHTML='<option value="">— Select Team —</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-    }
-    // Animate XP bars
-    document.querySelectorAll('.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});
-  },0);
-}
+// NOTE: buildProfileHTML() and an earlier buildMyProfile() were removed here — they were dead code,
+// silently shadowed by the buildMyProfile() defined further down (JS keeps only the last function
+// declaration with a given name), so they never actually ran. Removed to avoid confusion/duplicate IDs.
 
 // Also update openEditAdmin to populate new fields
 function openEditStats(id){
@@ -4037,14 +4011,14 @@ function buildMyProfile(){
       </div>
     </div>
 
-    <div style="background:var(--bg2);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);padding:1rem;margin-bottom:1rem">
-      <div style="font-size:.75rem;font-weight:700;color:#7289da;margin-bottom:.6rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
+    ${ADM?`<div style="background:var(--bg2);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);padding:1rem;margin-bottom:1rem">
+      <div style="font-size:.75rem;font-weight:700;color:#7289da;margin-bottom:.6rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook <span style="color:var(--textD);font-weight:400">(admin only)</span></div>
       <div style="display:flex;gap:.5rem">
         <input class="fi" id="profile-webhook" style="flex:1;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="${p.webhook||''}"/>
         <button class="btn btn-ghost btn-sm" onclick="saveProfileWebhook()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
       </div>
       <div style="font-size:.7rem;color:var(--textD);margin-top:.35rem">Paste a Discord webhook to receive personal match notifications.</div>
-    </div>
+    </div>`:''}
 
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem">
       <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.6rem"><i class="fa-solid fa-people-group"></i> Request to Join a Team</div>
@@ -4205,30 +4179,7 @@ function renderMatches(filter='all'){
   }).join('');
 }
 function filterMatches(f,btn){document.querySelectorAll('#page-matches .topbar-pills,.btn-filter,.btn-accent.btn-sm,.btn-ghost.btn-sm').forEach(b=>{if(b.getAttribute('onclick')?.includes('filterMatches'))b.className='btn btn-ghost btn-sm';});if(btn){btn.className='btn btn-accent btn-sm';}renderMatches(f);}
-function cycleMatchStatus(id){
-  const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;
-  const s=['upcoming','live','done'];const wasNotDone=m.status!=='done';
-  m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);
-  renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();
-  notify(`#${id} → ${m.status}!`,'','n-ok');
-  if(wasNotDone && m.status==='done') sendMatchToDiscord(id);
-}
-
-// ═══ Send match results to Discord (manual button OR auto-fired on match finish) ═══
-function sendMatchToDiscord(matchId){
-  const cfg=DB.get('cfg',{});
-  if(!cfg.disc || !cfg.disc.startsWith('https://discord.com/api/webhooks/')){
-    if(ADM) notify('No Discord webhook set','Add one in Admin → Settings','n-bad');
-    return;
-  }
-  const ms=DB.get('matches');const match=ms.find(x=>x.id===matchId);if(!match)return;
-  const logs=DB.get('rlogs5',[]);
-  const log=[...logs].reverse().find(l=>l.matchId===matchId) || {
-    id:'auto'+Date.now(), matchId, matchName:match.name, map:match.map, winnerIGN:'', winnerTeam:'', entries:[]
-  };
-  fireWebhook(cfg.disc, log, match);
-  notify('Sent to Discord!',`Results for ${match.name||matchId} posted`,'n-ok');
-}
+function cycleMatchStatus(id){const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;const s=['upcoming','live','done'];m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();notify(`#${id} → ${m.status}!`,'','n-ok');}
 function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,mode:v('mm-md'),notes:''});DB.set('matches',ms);closeModal('match-modal');renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,'','n-ok');}
 
 // ═══ COMPARE ═══
@@ -4240,7 +4191,7 @@ function doCompare(){
   const pl=DB.get('players');const p1=pl.find(p=>p.id===p1id),p2=pl.find(p=>p.id===p2id);if(!p1||!p2)return;
   const kd1=(p1.kills/(p1.deaths||1)).toFixed(2),kd2=(p2.kills/(p2.deaths||1)).toFixed(2);
   const row=(lbl,v1,v2,hi=true)=>{const n1=parseFloat(v1),n2=parseFloat(v2),w=hi?n1>n2:n1<n2;
-    return `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+    return `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--hairline)">
       <div style="text-align:right"><span class="chip font-mono" style="${w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v1}</span></div>
       <div style="font-size:.65rem;font-weight:700;color:var(--textD);text-align:center;letter-spacing:.8px;text-transform:uppercase;min-width:60px">${lbl}</div>
       <div><span class="chip font-mono" style="${!w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v2}</span></div>
@@ -4310,7 +4261,7 @@ function renderATeams(){
 
 function approveTeam(id){
   const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
-  t.approved=true;DB.set('teams',teams);renderATeams();renderTeams();notify(`${t.name} approved!`,'','n-ok');
+  t.approved=true;DB.set('teams',teams);renderATeams();renderTeams();logAdminAction('Team approved',`${t.name} was approved`);notify(`${t.name} approved!`,'','n-ok');
 }
 
 function openManageTeam(id){
@@ -4415,24 +4366,51 @@ function renderTeamRequests(){
 }
 
 // ═══ ADMIN ROLE MANAGEMENT ═══
+// Master-only searchable player picker — search by IGN or name, click a result to select them
+function gaShowLookup(q){
+  const dd=document.getElementById('ga-lookup-dd');if(!dd)return;
+  q=(q||'').trim().toLowerCase();
+  if(!q){dd.style.display='none';dd.innerHTML='';return;}
+  const matches=DB.get('players').filter(p=>[p.ign,p.name].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))).slice(0,8);
+  if(!matches.length){dd.innerHTML='<div class="xfer-lookup-row" style="cursor:default;color:var(--textD)">No matching players found</div>';dd.style.display='block';return;}
+  dd.innerHTML=matches.map(playerLookupRowHTML).join('');
+  dd.style.display='block';
+  dd.querySelectorAll('.xfer-lookup-row[data-id]').forEach(row=>row.onmousedown=()=>{
+    const p=DB.get('players').find(x=>x.id===row.dataset.id);if(!p)return;
+    document.getElementById('ga-ign').value=p.ign;
+    document.getElementById('ga-ign-search').value=p.ign;
+    const roles=DB.get('adminRoles',[]);const existing=roles.find(r=>r.ign.toLowerCase()===p.ign.toLowerCase());
+    document.getElementById('ga-selected-chip').innerHTML=`<span class="chip chip-accent" style="font-size:.72rem">Selected: ${p.ign}${p.name?' ('+p.name+')':''}${existing?' · currently '+existing.role:''}</span>`;
+    dd.style.display='none';
+  });
+}
 function grantAdminRole(){
   if(!ADM)return;
-  const ign=v('ga-ign'),role=v('ga-role');if(!ign||!role)return notify('IGN & role required','','n-bad');
+  if(!CU||!CU.isMaster)return notify('Master only','Only the master admin can grant roles','n-bad');
+  const ign=v('ga-ign'),role=v('ga-role');if(!ign||!role)return notify('Select a player first','Search and click a player from the list above','n-bad');
   const roles=DB.get('adminRoles',[]);
   if(roles.find(r=>r.ign===ign&&r.role===role))return notify('Already assigned','','n-bad');
   roles.push({id:'ar'+Date.now(),ign,role,grantedBy:CU?.name||'Admin',ts:new Date().toLocaleString()});
   DB.set('adminRoles',roles);renderAdminRolesList();
+  logAdminAction('Role granted',`${role} role granted to ${ign}`);
   notify(`${role} role granted to ${ign}!`,'','n-ok');
+  const s=document.getElementById('ga-ign-search');if(s)s.value='';
+  const h=document.getElementById('ga-ign');if(h)h.value='';
+  const chip=document.getElementById('ga-selected-chip');if(chip)chip.innerHTML='';
 }
 
 function revokeAdminRole(id){
-  let roles=DB.get('adminRoles',[]);roles=roles.filter(r=>r.id!==id);DB.set('adminRoles',roles);renderAdminRolesList();notify('Role revoked','','n-ok');
+  if(!CU||!CU.isMaster)return notify('Master only','Only the master admin can revoke roles','n-bad');
+  const roles=DB.get('adminRoles',[]);const r=roles.find(x=>x.id===id);
+  const filtered=roles.filter(x=>x.id!==id);DB.set('adminRoles',filtered);renderAdminRolesList();
+  if(r)logAdminAction('Role revoked',`${r.role} role revoked from ${r.ign}`);
+  notify('Role revoked','','n-ok');
 }
 
 function renderAdminRolesList(){
   const roles=DB.get('adminRoles',[]);const el=document.getElementById('admin-roles-list');if(!el)return;
   if(!roles.length){el.innerHTML='<div class="text-dim" style="font-size:.83rem">No additional roles granted.</div>';return;}
-  el.innerHTML=roles.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+  el.innerHTML=roles.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--hairline)">
     <div><span style="font-weight:600">${r.ign}</span> <span class="chip chip-accent" style="font-size:.62rem">${r.role}</span></div>
     <button class="btn btn-danger btn-xs" onclick="revokeAdminRole('${r.id}')"><i class="fa-solid fa-ban"></i></button>
   </div>`).join('');
@@ -4450,14 +4428,15 @@ function isManagerOf(teamId){
 
 function saveProfileWebhook(){
   if(!CU)return;
+  if(!ADM)return notify('Admin only','Personal notification webhooks are an admin feature','n-bad');
   const wh=document.getElementById('profile-webhook')?.value?.trim()||'';
   const players=DB.get('players');const p=players.find(x=>x.ign===CU.ign);
   if(!p)return notify('Register first','','n-bad');
   p.webhook=wh;DB.set('players',players);notify('Webhook saved!','','n-ok');
 }
-function delTeam(id){if(!ADM)return;let t=DB.get('teams');t=t.filter(x=>x.id!==id);DB.set('teams',t);renderATeams();renderTeams();notify('Team removed','','n-ok');}
-function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Cycle status" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-ghost btn-xs" title="Send results to Discord" style="color:#7289da" onclick="sendMatchToDiscord('${m.id}')"><i class="fa-brands fa-discord"></i></button><button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
-function delMatch(id){if(!ADM)return;let ms=DB.get('matches');ms=ms.filter(x=>x.id!==id);DB.set('matches',ms);renderAMatches();renderMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify('Match removed','','n-ok');}
+function delTeam(id){if(!ADM)return;let t=DB.get('teams');const target=t.find(x=>x.id===id);t=t.filter(x=>x.id!==id);DB.set('teams',t);renderATeams();renderTeams();if(target)logAdminAction('Team removed',`${target.name} was removed/rejected`);notify('Team removed','','n-ok');}
+function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
+function delMatch(id){if(!ADM)return;let ms=DB.get('matches');const target=ms.find(x=>x.id===id);ms=ms.filter(x=>x.id!==id);DB.set('matches',ms);renderAMatches();renderMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();if(target)logAdminAction('Match removed',`${target.name||target.id} was removed`);notify('Match removed','','n-ok');}
 function renderAPolls(){const polls=DB.get('polls');const el=document.getElementById('apo-list');if(!el)return;el.innerHTML=polls.map(p=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><div><div style="font-weight:600;font-size:.87rem">${p.q}</div><div class="text-dim" style="font-size:.72rem">${p.votes.reduce((a,b)=>a+b,0)} votes · ${p.active?'Open':'Closed'}</div></div><div style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="closePoll('${p.id}')"><i class="fa-solid fa-lock"></i></button><button class="btn btn-danger btn-xs" onclick="delPoll('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')||'<div class="text-dim" style="font-size:.82rem">No polls.</div>';}
 function copyOverlayLink(){
   const el=document.getElementById('ov-link');if(!el)return;
@@ -4466,34 +4445,31 @@ function copyOverlayLink(){
   try{navigator.clipboard.writeText(el.value);notify('Overlay link copied!','Paste it as a Browser Source in OBS or TikTok Live Studio.','n-ok');}
   catch{document.execCommand('copy');notify('Link copied!','','n-ok');}
 }
+async function pullFromSheet(){
+  if(!SB_OK){notify('Not connected','Google Sheet is unreachable right now — check your connection','n-bad');return;}
+  notify('Syncing...','Pulling the latest data from your sheet','n-info');
+  const ok=await sbLoad();
+  if(ok){notify('Synced!','Reloading with the latest data','n-ok');setTimeout(()=>location.reload(),900);}
+  else{notify('Nothing pulled','Sheet reachable but no matching rows were found','n-bad');}
+}
+function saveWebhook(){
+  const wh=v('cfg-wh');
+  const cfg=DB.get('cfg',{});
+  cfg.disc=wh;
+  DB.set('cfg',cfg);
+  notify('Webhook saved!','Match results will now auto-post to Discord','n-ok');
+}
 function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),adminPw:v('cfg-pw'),disc:v('cfg-wh')||v('cfg-dc'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
-  const prev=DB.get('cfg',{});DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');if(ADM)renderAdminOverview();}
+  const prev=DB.get('cfg',{});
+  if(CU&&CU.isMaster&&cfg.adminPw&&cfg.adminPw!==prev.adminPw)logAdminAction('Master password changed','The master admin login password was updated');
+  DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');
+  logAdminAction('Settings updated',`Tournament settings saved by ${CU?CU.name:'Admin'}`);
+  if(ADM)renderAdminOverview();}
 
-// ── THEME CUSTOMIZER — colors, fonts, layout density, background — all as CSS custom properties ──
+// ── Theme color customization (Team A / Team B) — applied as CSS custom properties everywhere ──
 function ovHexToRgb(hex){hex=(hex||'').replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const n=parseInt(hex,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
 function ovShade(hex,percent){const{r,g,b}=ovHexToRgb(hex);const t=percent<0?0:255;const p=Math.abs(percent)/100;
   const c=v=>Math.round((t-v)*p+v);return'#'+[c(r),c(g),c(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-
-const THEME_PRESETS={
-  dark:      {label:'Dark Indigo',  bg:'#0d1117',bg2:'#161b24',bg3:'#1c2333',bg4:'#212940',colorA:'#6366f1',colorB:'#ef4444',font:'Syne'},
-  midnight:  {label:'Midnight Blue',bg:'#060a14',bg2:'#0d1424',bg3:'#131c33',bg4:'#1a2540',colorA:'#3b82f6',colorB:'#f59e0b',font:'Space Grotesk'},
-  crimson:   {label:'Crimson Ops',  bg:'#120608',bg2:'#1c0c0f',bg3:'#251215',bg4:'#33181c',colorA:'#ef4444',colorB:'#f59e0b',font:'Syne'},
-  neon:      {label:'Neon Cyber',   bg:'#060812',bg2:'#0c1020',bg3:'#12172e',bg4:'#191f3d',colorA:'#a855f7',colorB:'#06b6d4',font:'Space Grotesk'},
-  forest:    {label:'Forest Ops',   bg:'#0a120d',bg2:'#101c14',bg3:'#16261b',bg4:'#1c3223',colorA:'#10b981',colorB:'#f59e0b',font:'Syne'},
-  light:     {label:'Light Mode',   bg:'#f4f5f8',bg2:'#ffffff',bg3:'#eef0f5',bg4:'#e3e6ee',colorA:'#4f46e5',colorB:'#dc2626',font:'Syne',light:true}
-};
-const THEME_FONTS={Syne:"'Syne',sans-serif",'Space Grotesk':"'Space Grotesk',sans-serif",Poppins:"'Poppins',sans-serif",'DM Sans':"'DM Sans',sans-serif"};
-const THEME_FONT_URLS={'Space Grotesk':'Space+Grotesk:wght@600;700;800',Poppins:'Poppins:wght@600;700;800'};
-
-function ensureFontLoaded(fontName){
-  if(!THEME_FONT_URLS[fontName])return; // Syne/DM Sans already loaded in <head>
-  const id='gf-'+fontName.replace(/\s+/g,'-');
-  if(document.getElementById(id))return;
-  const link=document.createElement('link');link.id=id;link.rel='stylesheet';
-  link.href='https://fonts.googleapis.com/css2?family='+THEME_FONT_URLS[fontName]+'&display=swap';
-  document.head.appendChild(link);
-}
-
 function applyThemeColors(colorA,colorB){
   const root=document.documentElement.style;
   const a=colorA||'#6366f1',b=colorB||'#ef4444';
@@ -4502,93 +4478,20 @@ function applyThemeColors(colorA,colorB){
   root.setProperty('--red',b);
   const rb=ovHexToRgb(b);root.setProperty('--redGlow',`rgba(${rb.r},${rb.g},${rb.b},.2)`);
 }
-
-// Applies the FULL theme (colors + background shades + font + density) from cfg
-function applyTheme(cfg){
-  cfg=cfg||{};
-  const presetKey=cfg.themePreset||'dark';
-  const preset=THEME_PRESETS[presetKey]||THEME_PRESETS.dark;
-  const colorA=cfg.themeColorA||preset.colorA;
-  const colorB=cfg.themeColorB||preset.colorB;
-  applyThemeColors(colorA,colorB);
-
-  const root=document.documentElement.style;
-  root.setProperty('--bg',preset.bg);root.setProperty('--bg2',preset.bg2);
-  root.setProperty('--bg3',preset.bg3);root.setProperty('--bg4',preset.bg4);
-  if(preset.light){
-    root.setProperty('--text','#161b24');root.setProperty('--textM','#4b5566');root.setProperty('--textD','#8a93a3');
-    root.setProperty('--border','rgba(15,20,30,.1)');root.setProperty('--borderH','rgba(15,20,30,.18)');
-    root.setProperty('--surface','rgba(15,20,30,.03)');root.setProperty('--surfaceH','rgba(15,20,30,.06)');
-  } else {
-    root.setProperty('--text','#e2e8f0');root.setProperty('--textM','#94a3b8');root.setProperty('--textD','#475569');
-    root.setProperty('--border','rgba(255,255,255,.07)');root.setProperty('--borderH','rgba(255,255,255,.14)');
-    root.setProperty('--surface','rgba(255,255,255,.035)');root.setProperty('--surfaceH','rgba(255,255,255,.055)');
-  }
-
-  const fontName=cfg.themeFont||preset.font||'Syne';
-  ensureFontLoaded(fontName);
-  root.setProperty('--font-display',THEME_FONTS[fontName]||THEME_FONTS.Syne);
-  document.querySelectorAll('.font-syne, .sb-logo-text, .login-title, .sh-title, .card-title, .kpi-value, .map-hero-name, .modal-title, .login-title, .tdm-banner-name, .tdm-banner-brand').forEach(()=>{}); // no-op, CSS var handles it
-  document.documentElement.style.setProperty('--font-display',THEME_FONTS[fontName]||THEME_FONTS.Syne);
-
-  document.body.classList.toggle('density-compact',cfg.themeDensity==='compact');
-  document.body.classList.toggle('theme-light',!!preset.light);
-}
-
-function saveTheme(){
-  const cfg=DB.get('cfg',{});
-  cfg.themePreset=v('cfg-theme-preset')||'dark';
-  cfg.themeColorA=v('cfg-color-a')||THEME_PRESETS[cfg.themePreset].colorA;
-  cfg.themeColorB=v('cfg-color-b')||THEME_PRESETS[cfg.themePreset].colorB;
-  cfg.themeFont=v('cfg-theme-font')||'Syne';
-  cfg.themeDensity=v('cfg-theme-density')||'comfortable';
-  DB.set('cfg',cfg);
-  applyTheme(cfg);
-  notify('Theme saved!','Applied across the dashboard, banner & overlay','n-ok');
-}
-function applyPresetPreview(){
-  const key=v('cfg-theme-preset')||'dark';const p=THEME_PRESETS[key]||THEME_PRESETS.dark;
-  const a=document.getElementById('cfg-color-a');if(a)a.value=p.colorA;
-  const b=document.getElementById('cfg-color-b');if(b)b.value=p.colorB;
-  const f=document.getElementById('cfg-theme-font');if(f)f.value=p.font;
+function saveThemeColors(){
+  const colorA=v('cfg-color-a')||'#6366f1',colorB=v('cfg-color-b')||'#ef4444';
+  const cfg=DB.get('cfg',{});cfg.themeColorA=colorA;cfg.themeColorB=colorB;DB.set('cfg',cfg);
+  applyThemeColors(colorA,colorB);notify('Theme colors saved!','Applied to the dashboard, banner & overlay','n-ok');
 }
 function resetThemeColors(){
-  const cfg=DB.get('cfg',{});
-  delete cfg.themeColorA;delete cfg.themeColorB;delete cfg.themePreset;delete cfg.themeFont;delete cfg.themeDensity;
-  DB.set('cfg',cfg);
-  applyTheme(cfg);
+  const cfg=DB.get('cfg',{});delete cfg.themeColorA;delete cfg.themeColorB;DB.set('cfg',cfg);
+  applyThemeColors('#6366f1','#ef4444');
   const a=document.getElementById('cfg-color-a');if(a)a.value='#6366f1';
   const b=document.getElementById('cfg-color-b');if(b)b.value='#ef4444';
-  const p=document.getElementById('cfg-theme-preset');if(p)p.value='dark';
-  const f=document.getElementById('cfg-theme-font');if(f)f.value='Syne';
-  const d=document.getElementById('cfg-theme-density');if(d)d.value='comfortable';
   notify('Theme reset to default','','n-ok');
 }
-
-// ── OVERLAY / BOTTOM BANNER — layout + theme options ──
-function applyOverlayStyle(cfg){
-  cfg=cfg||{};
-  const layout=cfg.overlayLayout||'ticker';   // 'ticker' | 'scorecard' | 'minimal'
-  const theme =cfg.overlayTheme ||'glass';    // 'glass' | 'team' | 'light'
-  const lower=document.getElementById('ov-lower');
-  const banner=document.getElementById('tdm-banner-el');
-  [lower,banner].forEach(el=>{
-    if(!el)return;
-    el.classList.remove('ov-layout-ticker','ov-layout-scorecard','ov-layout-minimal',
-                         'ov-theme-glass','ov-theme-team','ov-theme-light');
-    el.classList.add('ov-layout-'+layout,'ov-theme-'+theme);
-  });
-}
-function saveOverlayStyle(){
-  const cfg=DB.get('cfg',{});
-  cfg.overlayLayout=v('cfg-ov-layout')||'ticker';
-  cfg.overlayTheme=v('cfg-ov-theme')||'glass';
-  DB.set('cfg',cfg);
-  applyOverlayStyle(cfg);
-  notify('Banner style saved!','Applies to the bottom broadcast banner & TikTok/OBS overlay','n-ok');
-}
-function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, polls, brackets, logs, etc.)');['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
@@ -4604,18 +4507,17 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(sbR){await sbLoad();}
     sbHideOverlay();
     seed();
-    applyTheme(DB.get('cfg',{}));
+    applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
     document.getElementById('ls').style.display='none';
     document.body.style.background='transparent';
     document.getElementById('overlay-root').classList.add('show');
-    applyOverlayStyle(DB.get('cfg',{}));
     renderOverlay();
     setInterval(renderOverlay,2000);
     window.addEventListener('storage',renderOverlay);
     return; // don't boot the normal dashboard
   }
 
-  // ── 1. Init Google Sheet backend ──
+  // ── 1. Init SheetDB ──
   sbInitMsg('Connecting to Google Sheet...');
   const sbReady = await sbInit();
   if(sbReady){
@@ -4628,8 +4530,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   // ── 2. Hide overlay and boot app ──
   sbHideOverlay();
   seed(); startCountdown();
-  applyTheme(DB.get('cfg',{}));
-  applyOverlayStyle(DB.get('cfg',{}));
+  applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
   setTimeout(()=>{document.querySelectorAll('.progress-fill,.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});},400);
   document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -4640,7 +4541,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     document.getElementById('ls').style.display='none';
     document.getElementById('app').classList.add('show');
     updateSidebar();
-    if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('alert-badge').style.display='block';}
+    if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('admin-badge').textContent=CU.isMaster?'MASTER':'HOST';document.getElementById('alert-badge').style.display='block';}
+    applyMasterGating();
     if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
     refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();updateTdmBadge();
     if(ADM){updatePendingBadges();}
@@ -4648,5 +4550,10 @@ window.addEventListener('DOMContentLoaded',async()=>{
   renderBkt();
 });
 </script>
+<!-- Floating theme toggle — visible on login screen and inside the app -->
+<div id="theme-bubble" onclick="toggleTheme()" title="Switch theme">
+  <i class="fa-solid fa-moon" id="theme-bubble-icon"></i>
+</div>
+
 </body>
 </html>
