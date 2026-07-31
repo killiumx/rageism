@@ -3,42 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<script>(function(){try{var t=localStorage.getItem('rge5_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <title>RAGEISM · PUBG Esports</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-/* ── LIGHT THEME (default) ─────────────────────────── */
-:root, [data-theme="light"] {
-  --bg:        #f7f8fb;
-  --bg2:       #ffffff;
-  --bg3:       #f1f3f8;
-  --bg4:       #e7eaf2;
-  --surface:   rgba(15,23,42,.035);
-  --surfaceH:  rgba(15,23,42,.06);
-  --border:    rgba(15,23,42,.09);
-  --borderH:   rgba(15,23,42,.16);
-  --hairline:  rgba(15,23,42,.07);
-  --accent:    #6366f1;
-  --accentL:   #4f46e5;
-  --accentD:   #4338ca;
-  --accentGlow:rgba(99,102,241,.18);
-  --green:     #059669;
-  --greenGlow: rgba(5,150,105,.15);
-  --red:       #dc2626;
-  --redGlow:   rgba(220,38,38,.15);
-  --amber:     #d97706;
-  --amberGlow: rgba(217,119,6,.15);
-  --blue:      #2563eb;
-  --text:      #0f172a;
-  --textM:     #52607a;
-  --textD:     #94a0b8;
-  --shadow:    0 4px 24px rgba(15,23,42,.08);
-  --shadowL:   0 8px 40px rgba(15,23,42,.12);
-  --r:         10px;
-  --rS:        7px;
-}
-[data-theme="dark"] {
+:root {
   --bg:        #0d1117;
   --bg2:       #161b24;
   --bg3:       #1c2333;
@@ -47,7 +17,6 @@
   --surfaceH:  rgba(255,255,255,.055);
   --border:    rgba(255,255,255,.07);
   --borderH:   rgba(255,255,255,.14);
-  --hairline:  rgba(255,255,255,.045);
   --accent:    #6366f1;
   --accentL:   #818cf8;
   --accentD:   #4f46e5;
@@ -64,9 +33,9 @@
   --textD:     #475569;
   --shadow:    0 4px 24px rgba(0,0,0,.4);
   --shadowL:   0 8px 40px rgba(0,0,0,.5);
+  --r:         10px;
+  --rS:        7px;
 }
-/* Smooth cross-fade whenever the theme variable set changes */
-body,.card,.sidebar,.login-box,.modal,input,select,textarea,button{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5}
@@ -77,17 +46,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px}
-
-/* ── THEME TOGGLE BUBBLE ─────────────────────────── */
-#theme-bubble{position:fixed;bottom:1.3rem;right:1.3rem;z-index:99998;width:52px;height:52px;border-radius:50%;
-  background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadowL);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:var(--accentL);
-  transition:transform .18s ease,box-shadow .18s ease,background .25s ease,border-color .25s ease;user-select:none}
-#theme-bubble:hover{transform:scale(1.08);box-shadow:0 10px 34px rgba(99,102,241,.3)}
-#theme-bubble:active{transform:scale(.94)}
-#theme-bubble i{transition:transform .35s ease}
-#theme-bubble.spin i{transform:rotate(360deg)}
-@media (max-width:640px){#theme-bubble{bottom:1rem;right:1rem;width:46px;height:46px;font-size:1rem}}
 
 /* ── LOGIN ─────────────────────────── */
 #ls{position:fixed;inset:0;z-index:9000;display:flex;background:var(--bg)}
@@ -149,7 +107,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .li-lookup-wrap{position:relative}
 .li-lookup-wrap .xfer-lookup-results{position:absolute;top:100%;left:0;right:0;z-index:60;margin-top:.3rem;box-shadow:var(--shadowL)}
 
-@media(max-width:720px){.ls-left{display:none}.ls-right{width:100%}}
+@media(max-width:720px){.ls-left{display:none}.ls-right{width:100%;padding:1.5rem}}
 
 /* ── APP SHELL ─────────────────────── */
 #app{display:none;height:100vh;overflow:hidden}
@@ -159,6 +117,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .sidebar{width:232px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
   display:flex;flex-direction:column;height:100vh;overflow-y:auto;position:relative;z-index:10}
 .sidebar::-webkit-scrollbar{display:none}
+.sidebar-close-btn{display:none}
+.mobile-menu-btn{display:none;background:var(--surface);border:1px solid var(--border);color:var(--text);
+  width:36px;height:36px;border-radius:var(--rS);align-items:center;justify-content:center;font-size:1rem;cursor:pointer;flex-shrink:0}
+#mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19;opacity:0;pointer-events:none;transition:opacity .25s}
+#mobile-backdrop.show{opacity:1;pointer-events:all}
 .sb-logo{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
 .sb-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accentD),var(--accent));
   border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
@@ -229,7 +192,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .tdm-search-results:empty{display:none;border:none}
 .tdm-search-row{display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;cursor:pointer;font-size:.83rem;transition:background .12s}
 .tdm-search-row:hover{background:var(--surfaceH)}
-.tdm-search-row:not(:last-child){border-bottom:1px solid var(--hairline)}
+.tdm-search-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,.04)}
 .tdm-roster{display:flex;flex-direction:column;gap:.4rem;margin-top:.7rem;min-height:8px}
 .tdm-roster-row{display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px solid var(--border);
   border-radius:var(--rS);padding:.4rem .6rem;font-size:.83rem}
@@ -244,7 +207,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* single unified backdrop wash — one continuous gradient, no colliding blobs */
 .tdm-banner-bg{position:absolute;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 75% 90% at 50% 8%,var(--hairline) 0%,transparent 60%),
+    radial-gradient(ellipse 75% 90% at 50% 8%,rgba(255,255,255,.05) 0%,transparent 60%),
     radial-gradient(ellipse 55% 60% at 50% 46%,rgba(129,140,248,.10) 0%,transparent 70%),
     linear-gradient(90deg,rgba(99,102,241,.20) 0%,rgba(99,102,241,.05) 32%,transparent 46%,transparent 54%,rgba(239,68,68,.05) 68%,rgba(239,68,68,.20) 100%);}
 /* fine layered grid — primary + secondary for depth */
@@ -363,7 +326,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 table{width:100%;border-collapse:collapse}
 th{padding:.6rem 1rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--textD);
   text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:.7rem 1rem;border-bottom:1px solid var(--hairline);font-size:.88rem;transition:background .15s}
+td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.88rem;transition:background .15s}
 tr:hover td{background:var(--surface)}
 tr:last-child td{border-bottom:none}
 .rank-1 td:first-child{border-left:2px solid #f59e0b}
@@ -391,7 +354,7 @@ tr:last-child td{border-bottom:none}
 .progress-label{display:flex;justify-content:space-between;font-size:.77rem;margin-bottom:.3rem}
 .progress-label span:first-child{color:var(--textM);font-weight:500}
 .progress-label span:last-child{color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem}
-.progress-track{height:4px;background:var(--border);border-radius:99px;overflow:hidden}
+.progress-track{height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
 .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accentD),var(--accentL));transition:width 1.8s cubic-bezier(.4,0,.2,1)}
 
 /* ── MATCH ITEMS ───────────────────── */
@@ -436,7 +399,7 @@ tr:last-child td{border-bottom:none}
 .qa-arrow{margin-left:auto;color:var(--textD);font-size:.8rem;transition:transform .2s}
 .quick-action:hover .qa-arrow{transform:translateX(3px);color:var(--textM)}
 
-.activity-item{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--hairline)}
+.activity-item{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
 .activity-item:last-child{border-bottom:none}
 .act-av{width:28px;height:28px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--accentL);font-family:'DM Mono',monospace;flex-shrink:0}
 .act-text{font-size:.83rem;flex:1;color:var(--textM)}<br>.act-text strong{color:var(--text);font-weight:600}
@@ -450,7 +413,7 @@ tr:last-child td{border-bottom:none}
 .b-match{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rS);overflow:hidden;transition:border-color .2s}
 .b-match:hover{border-color:var(--borderH)}
 .b-team{display:flex;align-items:center;justify-content:space-between;padding:.5rem .8rem;font-size:.84rem;font-weight:500;gap:.5rem}
-.b-team:first-child{border-bottom:1px solid var(--hairline)}
+.b-team:first-child{border-bottom:1px solid rgba(255,255,255,.05)}
 .b-team.winner{background:rgba(99,102,241,.08);color:var(--accentL);font-weight:600}
 .b-team.loser{color:var(--textD)}
 .b-team.tbd{color:var(--textD);font-style:italic}
@@ -477,7 +440,7 @@ tr:last-child td{border-bottom:none}
 .team-name-text{font-weight:700;font-size:.92rem}
 .team-tag{font-size:.72rem;color:var(--textM)}
 .team-body{padding:.9rem 1.1rem}
-.team-member{display:flex;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid var(--hairline);font-size:.85rem;font-weight:500}
+.team-member{display:flex;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem;font-weight:500}
 .team-member:last-child{border-bottom:none}
 .member-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
@@ -529,7 +492,7 @@ tr:last-child td{border-bottom:none}
 .prf-team-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem 1rem;cursor:pointer;transition:border-color .15s}
 .prf-team-card:hover{border-color:var(--borderH)}
 /* xp track */
-.xp-track{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:.4rem}
+.xp-track{height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:.4rem}
 .xp-fill{height:100%;background:linear-gradient(90deg,var(--accentD),var(--accentL));border-radius:99px;transition:width 2s ease}
 .res-team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s}
 .res-team-card:focus-within{border-color:var(--accent)40}
@@ -628,10 +591,10 @@ tr:last-child td{border-bottom:none}
 .ma-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
 .ma-stat-val{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:500;line-height:1;margin-bottom:.2rem}
 .ma-stat-lbl{font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.7px}
-.kill-bar-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid var(--hairline)}
+.kill-bar-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
 .kill-bar-row:last-child{border:none}
 .kill-bar-name{font-size:.85rem;font-weight:600;width:130px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kill-bar-track{flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+.kill-bar-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
 .kill-bar-fill{height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 .kill-bar-num{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--textM);width:32px;text-align:right;flex-shrink:0}
 .disc-step{display:flex;gap:.9rem;align-items:flex-start;padding:.9rem 0;border-bottom:1px solid var(--border)}
@@ -649,7 +612,7 @@ tr:last-child td{border-bottom:none}
 .mab-card.green{background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border-color:rgba(16,185,129,.2)}
 .mab-card.red{background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.02));border-color:rgba(239,68,68,.2)}
 @media(max-width:700px){.kill-bar-name{width:90px}.map-hero-name{font-size:1.2rem}}
-/* ── SHEETDB STATUS ─────────────────── */
+/* ── SUPABASE STATUS ─────────────────── */
 #sb-status-bar{position:fixed;bottom:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(62,207,142,.15),rgba(62,207,142,.08));border-top:1px solid rgba(62,207,142,.25);padding:.45rem 1rem;display:none;align-items:center;gap:.7rem;font-size:.75rem;color:#3ecf8e;font-weight:600}
 #sb-status-bar.show{display:flex}
 #sb-status-bar.sb-err{background:linear-gradient(90deg,rgba(239,68,68,.12),rgba(239,68,68,.06));border-color:rgba(239,68,68,.25);color:var(--red)}
@@ -669,17 +632,76 @@ tr:last-child td{border-bottom:none}
 .divider-line{height:1px;background:var(--border);margin:1.2rem 0}
 
 @media(max-width:900px){.sidebar{width:200px}}
+
+/* ── PHONE FRIENDLY (≤760px): off-canvas sidebar drawer, stacked layout ── */
+@media(max-width:760px){
+  html{-webkit-text-size-adjust:100%}
+  #app{position:relative;overflow:hidden}
+  .mobile-menu-btn{display:flex}
+  #mobile-backdrop{display:block}
+
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;width:78vw;max-width:300px;
+    transform:translateX(-100%);transition:transform .25s ease;z-index:20;
+    box-shadow:0 0 40px rgba(0,0,0,.5);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-close-btn{display:flex;position:absolute;top:.8rem;right:.8rem;width:32px;height:32px;
+    align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--rS);color:var(--textM);z-index:2;cursor:pointer}
+  .sb-section{display:block}
+  .sb-section-label{display:block}
+  .sb-bottom{display:block}
+
+  .main-content{width:100%;height:100vh}
+  .topbar{padding:.65rem .9rem;gap:.6rem;flex-wrap:wrap}
+  .topbar-title{font-size:1rem}
+  .topbar-pills{gap:.4rem;width:100%;order:3;flex-wrap:wrap}
+  #global-search{width:100% !important}
+  .topbar-pills>div:first-child{width:100%;order:1}
+  .pill-season{display:none}
+
+  .page-content{padding:.9rem}
+  .card{padding:.9rem}
+  .card-title{font-size:.75rem}
+
+  .g2,.g3,.g4,.frow,.frow3{grid-template-columns:1fr !important}
+  .stat-grid{grid-template-columns:1fr 1fr}
+
+  table{font-size:.78rem}
+  .tbl-wrap{-webkit-overflow-scrolling:touch}
+
+  .modal-box{width:94vw !important;max-width:none;padding:1.1rem;max-height:88vh}
+  .modal-overlay{padding:0}
+
+  .kill-bar-name{width:80px}
+  .login-box{padding:1.4rem 1.2rem}
+  .ls-tabs{margin-bottom:1rem}
+  #notifs{left:.6rem;right:.6rem;top:.6rem;max-width:none}
+  .notif{width:100%}
+
+  .btn{font-size:.85rem}
+  input,select,textarea{font-size:16px} /* prevents iOS auto-zoom on focus */
+}
+
 @media(max-width:700px){
   #app{flex-direction:column}
-  .sidebar{width:100%;height:auto;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border)}
-  .sb-section{display:flex;flex-direction:row;padding:.3rem .4rem}
-  .sb-section-label{display:none}
-  .sb-bottom{display:none}
-  .main-content{height:calc(100vh - 120px)}
+  .kill-bar-name{width:90px}
+  .map-hero-name{font-size:1.2rem}
   .frow,.frow3{grid-template-columns:1fr}
   .g4{grid-template-columns:1fr 1fr}
   .stat-grid{grid-template-columns:1fr 1fr}
   .ls-left{display:none}
+}
+
+@media(max-width:480px){
+  .g4,.stat-grid{grid-template-columns:1fr}
+  .card{padding:.8rem}
+  .modal-box{padding:.9rem}
+  .login-box{padding:1.1rem .9rem}
+  .ls-brand{font-size:1.3rem}
+  .sb-logo-text{font-size:1rem}
+  #discord-link-step #dls-avatar{width:36px;height:36px}
 }
 </style>
 </head>
@@ -694,17 +716,17 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- SheetDB init overlay -->
+<!-- Supabase init overlay -->
 <div id="sb-init-overlay">
   <div class="sb-spinner"></div>
   <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text)">RAGEISM</div>
   <div style="font-size:.8rem;color:var(--textM)" id="sb-init-msg">Connecting to server...</div>
 </div>
 
-<!-- SheetDB live status bar -->
+<!-- Supabase live status bar -->
 <div id="sb-status-bar">
   <div class="sb-dot"></div>
-  <span id="sb-status-txt">Google Sheet connected</span>
+  <span id="sb-status-txt">Supabase connected</span>
   <span style="margin-left:auto;opacity:.5;font-weight:400" id="sb-last-sync"></span>
 </div>
 
@@ -726,6 +748,33 @@ tr:last-child td{border-bottom:none}
     <div class="login-box">
       <div class="login-title">Welcome back</div>
       <div class="login-sub">Sign in to access the tournament hub</div>
+
+      <!-- DISCORD LOGIN — primary player sign-in via Supabase Auth -->
+      <button class="btn btn-fw" onclick="discordLogin()" style="background:#5865F2;color:#fff;border:none;margin-bottom:.9rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
+        <i class="fa-brands fa-discord"></i> Continue with Discord
+      </button>
+      <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.9rem;opacity:.5">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:.7rem;color:var(--textD)">or use IGN &amp; password</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- DISCORD LINK STEP — shown once, right after a first-time Discord sign-in, to attach an IGN -->
+      <div id="discord-link-step" style="display:none">
+        <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:1rem">
+          <div id="dls-avatar" style="width:44px;height:44px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden;flex-shrink:0"><i class="fa-brands fa-discord"></i></div>
+          <div>
+            <div style="font-size:.8rem;color:var(--textD)">Signed in as</div>
+            <div style="font-weight:700" id="dls-name">Discord User</div>
+          </div>
+        </div>
+        <label class="lf-label">Choose your IGN</label>
+        <input class="lf-input" id="dls-ign" placeholder="Your in-game name" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();completeDiscordLink();}"/>
+        <div style="font-size:.72rem;color:var(--textD);margin:.6rem 0 .8rem">If this matches an IGN already on the roster, it'll be claimed. Otherwise a new player profile is created for you.</div>
+        <button class="btn btn-accent btn-fw" onclick="completeDiscordLink()">
+          <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
+        </button>
+      </div>
 
       <div class="ls-tabs">
         <button class="ls-tab-btn active" id="ls-tab-player" onclick="lsSwitchTab('player')" type="button"><i class="fa-solid fa-user"></i> Player</button>
@@ -775,8 +824,10 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <!-- ═══════ APP ═══════ -->
+<div id="mobile-backdrop" onclick="closeSidebar()"></div>
 <div id="app">
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-close-btn" id="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
     <div class="sb-logo">
       <div class="sb-logo-icon"><i class="fa-solid fa-crosshairs"></i></div>
       <div><div class="sb-logo-text">RAGEISM</div><div class="sb-logo-sub">PUBG Esports</div></div>
@@ -833,6 +884,7 @@ tr:last-child td{border-bottom:none}
     <div class="ticker-wrap"><div class="ticker-track" id="ticker"></div></div>
 
     <div class="topbar">
+      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="openSidebar()" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div class="topbar-pills">
         <div style="position:relative">
@@ -1138,7 +1190,7 @@ tr:last-child td{border-bottom:none}
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="renderTeamRequests();openModal('team-request-modal')"><i class="fa-solid fa-clock"></i> Pending <span id="pending-teams-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
             <button class="btn btn-ghost btn-sm" onclick="renderJoinRequests();openModal('join-request-modal')"><i class="fa-solid fa-person-walking-arrow-right"></i> Join Requests <span id="join-req-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
-            <button class="btn btn-accent btn-sm master-only" onclick="openModal('grant-admin-modal');renderAdminRolesList()"><i class="fa-solid fa-user-shield"></i> Manage Roles</button>
+            <button class="btn btn-accent btn-sm" onclick="openModal('grant-admin-modal');renderAdminRolesList()"><i class="fa-solid fa-user-shield"></i> Manage Roles</button>
           </div>
         </div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Team</th><th>Tag</th><th>Captain</th><th>Members</th><th>Wins</th><th>Status</th><th></th></tr></thead><tbody id="at-body"></tbody></table></div></div>
@@ -1205,10 +1257,10 @@ tr:last-child td{border-bottom:none}
           </div>
           <div>
             <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-table" style="color:#22a565"></i> Google Sheet Data</div>
-              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Every collection (players, teams, matches, config, etc.) lives in your Google Sheet as <span class="disc-code">key</span> / <span class="disc-code">value</span> rows. Open it to bulk-edit or fix data directly — spreadsheet-style — then pull it back into the app.</div>
-              <button class="btn btn-ghost btn-fw" onclick="window.open('https://docs.google.com/spreadsheets/d/1EIIMEcpzqnOchSd08gy8_coSWT8Y63qflWBWNr1QIY0/edit','_blank')"><i class="fa-solid fa-up-right-from-square"></i> Open Google Sheet</button>
-              <button class="btn btn-accent btn-fw" style="margin-top:.5rem" onclick="pullFromSheet()"><i class="fa-solid fa-arrows-rotate"></i> Pull Latest from Sheet</button>
+              <div class="card-title"><i class="fa-solid fa-database" style="color:#22a565"></i> Supabase Data</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Every collection (players, teams, matches, config, etc.) lives in your Supabase <span class="disc-code">kv_store</span> table as <span class="disc-code">key</span> / <span class="disc-code">value</span> rows. Open the Table Editor to bulk-edit or fix data directly, then pull it back into the app.</div>
+              <button class="btn btn-ghost btn-fw" onclick="window.open('https://supabase.com/dashboard/project/jwieuzdjoegxyqgkzynd/editor','_blank')"><i class="fa-solid fa-up-right-from-square"></i> Open Supabase Table Editor</button>
+              <button class="btn btn-accent btn-fw" style="margin-top:.5rem" onclick="pullFromSheet()"><i class="fa-solid fa-arrows-rotate"></i> Pull Latest from Supabase</button>
               <div style="font-size:.72rem;color:var(--textD);margin-top:.6rem">Editing a <span class="disc-code">value</span> cell by hand? It must stay valid JSON (e.g. <span class="disc-code">[]</span> for an empty list, <span class="disc-code">{}</span> for empty settings) or that row will be skipped on the next pull.</div>
             </div>
             <div class="card mb2">
@@ -1559,24 +1611,24 @@ tr:last-child td{border-bottom:none}
         </div>
 
         <div class="card" style="margin-top:1.2rem">
-          <div class="card-title"><i class="fa-solid fa-table" style="color:#22a565"></i> Google Sheets Integration (via SheetDB) — Quick Start</div>
+          <div class="card-title"><i class="fa-solid fa-database" style="color:#22a565"></i> Supabase Integration — Quick Start</div>
           <div class="g3" style="margin-top:.5rem">
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">① Sheet layout</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">Row 1 of the sheet is just two headers: <span class="disc-code">key</span> and <span class="disc-code">value</span>. Every collection (<span class="disc-code">players</span>, <span class="disc-code">teams</span>, <span class="disc-code">matches</span>, <span class="disc-code">cfg</span>, etc.) is stored as one row, with its data as a JSON string in <span class="disc-code">value</span>.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">① Table layout</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">The <span class="disc-code">kv_store</span> table has two columns: <span class="disc-code">key</span> (text, primary key) and <span class="disc-code">value</span> (jsonb). Every collection (<span class="disc-code">players</span>, <span class="disc-code">teams</span>, <span class="disc-code">matches</span>, <span class="disc-code">cfg</span>, etc.) is one row. Run <span class="disc-code">supabase_setup.sql</span> once in the SQL Editor to create it.</div>
             </div>
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
-              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">② Connect at sheetdb.io</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">At <span class="disc-code">sheetdb.io</span>, create a new API from this sheet. Copy the generated endpoint — it looks like <span class="disc-code">https://sheetdb.io/api/v1/xxxxxxxxxxxxx</span>.</div>
+              <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">② Get your API keys</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">In your Supabase project: Settings → API. Copy the <span class="disc-code">Project URL</span> and the <span class="disc-code">anon public</span> key. Never use the <span class="disc-code">secret</span>/<span class="disc-code">service_role</span> key here — it belongs on a server only.</div>
             </div>
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.9rem">
               <div style="font-weight:700;font-size:.87rem;margin-bottom:.35rem;color:#22a565">③ Already wired up</div>
-              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">This file already points <span class="disc-code">SDB_URL</span> at that endpoint. <span class="disc-code">DB.get()</span>/<span class="disc-code">DB.set()</span> automatically mirror every read/write to the sheet — no further code changes needed.</div>
+              <div style="font-size:.8rem;color:var(--textM);line-height:1.6">This file already points <span class="disc-code">SUPABASE_URL</span>/<span class="disc-code">SUPABASE_ANON_KEY</span> at your project. <span class="disc-code">DB.get()</span>/<span class="disc-code">DB.set()</span> automatically mirror every read/write to the table — no further code changes needed.</div>
             </div>
           </div>
           <div style="margin-top:.8rem;background:rgba(34,165,101,.06);border:1px solid rgba(34,165,101,.15);border-radius:var(--rS);padding:.8rem 1rem">
-            <div style="font-size:.78rem;font-weight:700;color:#22a565;margin-bottom:.35rem"><i class="fa-solid fa-code"></i> Current SheetDB endpoint (set near the top of the script)</div>
-            <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7">const SDB_URL = 'https://sheetdb.io/api/v1/nmdnjqgkd5xfu';</div>
+            <div style="font-size:.78rem;font-weight:700;color:#22a565;margin-bottom:.35rem"><i class="fa-solid fa-code"></i> Current Supabase project (set near the top of the script)</div>
+            <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7">const SUPABASE_URL = 'https://jwieuzdjoegxyqgkzynd.supabase.co';</div>
           </div>
         </div>
       </div>
@@ -1746,32 +1798,133 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <script>
-// ═══ THEME ═══ light is the default; dark is opt-in and remembered per-browser
-function currentTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';}
-function syncThemeIcon(){
-  const icon=document.getElementById('theme-bubble-icon');if(!icon)return;
-  icon.className=currentTheme()==='dark'?'fa-solid fa-sun':'fa-solid fa-moon';
-}
-function toggleTheme(){
-  const next=currentTheme()==='dark'?'light':'dark';
-  if(next==='dark')document.documentElement.setAttribute('data-theme','dark');
-  else document.documentElement.removeAttribute('data-theme');
-  try{localStorage.setItem('rge5_theme',next);}catch(e){}
-  const bubble=document.getElementById('theme-bubble');
-  if(bubble){bubble.classList.add('spin');setTimeout(()=>bubble.classList.remove('spin'),350);}
-  syncThemeIcon();
-}
-document.addEventListener('DOMContentLoaded',syncThemeIcon);
-</script>
-
-<script>
 // ═══ DB ═══
-// ═══ SHEETDB — Google Sheet as the data store ═══
-// Sheet: https://docs.google.com/spreadsheets/d/1EIIMEcpzqnOchSd08gy8_coSWT8Y63qflWBWNr1QIY0/edit
-// Row 1 of the sheet must be exactly two headers: key | value
-const SDB_URL = 'https://sheetdb.io/api/v1/nmdnjqgkd5xfu';
+// ═══ SUPABASE — Postgres table as the data store ═══
+// Project: https://jwieuzdjoegxyqgkzynd.supabase.co
+// Table `kv_store` (key text primary key, value jsonb) — see supabase_setup.sql
+// IMPORTANT: only ever put the ANON/PUBLIC key here, never the secret/service_role key.
+const SUPABASE_URL = 'https://jwieuzdjoegxyqgkzynd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3aWV1emRqb2VneHlxZ2t6eW5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NjU3NjAsImV4cCI6MjEwMDQ0MTc2MH0.mTqliTxSHnWUtDny7NA_F7nb7BmyQnqWU354etLZXYI';
+const SB_REST = SUPABASE_URL + '/rest/v1/kv_store';
+const SB_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+};
 const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests'];
 let SB_OK = false, SB_WRITES = 0;
+
+// ═══ SUPABASE AUTH — Discord OAuth login ═══
+// window.supabase is the UMD library global; our client instance is named sbAuth to avoid clashing with it.
+const sbAuth = (typeof supabase !== 'undefined' && supabase.createClient)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
+  : null;
+
+// Kick off the Discord OAuth redirect. Supabase sends the user to Discord, then back here with a session.
+function discordLogin(){
+  if(!sbAuth) return notify('Auth unavailable','The Supabase auth library failed to load — check your connection','n-bad');
+  sbAuth.auth.signInWithOAuth({
+    provider: 'discord',
+    options: { redirectTo: location.origin + location.pathname }
+  });
+}
+
+// Called once on boot: if a Discord session exists, either auto-login (profile already linked to a
+// roster IGN) or surface the "link your IGN" step for first-time sign-ins.
+async function checkDiscordSession(){
+  if(!sbAuth) return false;
+  try{
+    const { data: { session } } = await sbAuth.auth.getSession();
+    if(!session) return false;
+
+    // Fetch (or wait for the trigger to create) this user's profile row
+    const res = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + session.user.id + '&select=*', {
+      headers: { apikey: SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + session.access_token }
+    });
+    const rows = res.ok ? await res.json() : [];
+    const profile = rows[0] || null;
+    const discordName = (profile && profile.discord_username) || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Discord User';
+    const discordAvatar = (profile && profile.discord_avatar) || session.user.user_metadata?.avatar_url || '';
+
+    if(profile && profile.ign){
+      // Already linked to a roster IGN — find that player and log straight in
+      const players = DB.get('players');
+      let p = players.find(x => x.ign && x.ign.toLowerCase() === profile.ign.toLowerCase());
+      if(!p){
+        // Linked IGN was removed from the roster since — recreate a minimal entry
+        p = { id: 'p' + Date.now(), ign: profile.ign, name: discordName, discord: discordName, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
+        players.push(p); DB.set('players', players);
+      } else if(!p.authId){
+        p.authId = session.user.id; DB.set('players', players);
+      }
+      const roles = DB.get('adminRoles', []);
+      const myRole = roles.find(r => r.ign.toLowerCase() === p.ign.toLowerCase());
+      ADM = !!(myRole && myRole.role === 'admin');
+      CU = { name: p.name || p.ign, ign: p.ign, role: myRole ? myRole.role : 'player', avatar: (p.name || p.ign)[0].toUpperCase(), disc: discordName, discAvatar: discordAvatar, authId: session.user.id };
+      finishLogin();
+      return true;
+    }
+
+    // No IGN linked yet — show the "link your account" step instead of the login form
+    showDiscordLinkStep(session, discordName, discordAvatar);
+    return true;
+  } catch(e){
+    console.warn('[RAGEISM] checkDiscordSession failed:', e.message);
+    return false;
+  }
+}
+
+function showDiscordLinkStep(session, discordName, discordAvatar){
+  document.getElementById('login-fields').style.display = 'none';
+  document.getElementById('login-fields-master').style.display = 'none';
+  document.querySelector('.ls-tabs').style.display = 'none';
+  const step = document.getElementById('discord-link-step');
+  if(step) step.style.display = 'block';
+  const nameEl = document.getElementById('dls-name');
+  if(nameEl) nameEl.textContent = discordName;
+  const avEl = document.getElementById('dls-avatar');
+  if(avEl && discordAvatar) avEl.innerHTML = `<img src="${discordAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+  window._dlsSession = session; window._dlsName = discordName; window._dlsAvatar = discordAvatar;
+}
+
+// Finishes linking: either claims an existing roster IGN (if it matches, checked by admin-set entries)
+// or registers a brand-new player using the IGN they choose, tied to their Discord identity.
+async function completeDiscordLink(){
+  const ign = v('dls-ign');
+  if(!ign) return notify('IGN required', 'Enter the in-game name you want to compete under', 'n-bad');
+  const session = window._dlsSession;
+  if(!session) return notify('Session expired', 'Please sign in with Discord again', 'n-bad');
+
+  const players = DB.get('players');
+  let p = players.find(x => x.ign && x.ign.toLowerCase() === ign.toLowerCase());
+  if(p && p.authId && p.authId !== session.user.id){
+    return notify('IGN already linked', 'That IGN is already linked to a different Discord account', 'n-bad');
+  }
+  if(p){
+    p.authId = session.user.id;
+    if(!p.discord) p.discord = window._dlsName;
+  } else {
+    p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
+    players.push(p);
+  }
+  DB.set('players', players);
+
+  // Save the link on the profile row too, so next login skips this step
+  try{
+    await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + session.user.id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + session.access_token, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ ign, discord_username: window._dlsName, discord_avatar: window._dlsAvatar })
+    });
+  } catch(e){ console.warn('[RAGEISM] profile link save failed:', e.message); }
+
+  const roles = DB.get('adminRoles', []);
+  const myRole = roles.find(r => r.ign.toLowerCase() === ign.toLowerCase());
+  ADM = !!(myRole && myRole.role === 'admin');
+  CU = { name: p.name || p.ign, ign: p.ign, role: myRole ? myRole.role : 'player', avatar: (p.name || p.ign)[0].toUpperCase(), disc: window._dlsName, discAvatar: window._dlsAvatar, authId: session.user.id };
+  finishLogin();
+}
+
 
 function sbStatus(type, msg){
   const bar = document.getElementById('sb-status-bar');
@@ -1787,41 +1940,41 @@ function sbHideOverlay(){
   if(o){ o.classList.add('hide'); setTimeout(() => o.remove(), 450); }
 }
 
-// Init: simple GET to confirm the sheet/API is reachable
+// Init: simple GET to confirm the table/API is reachable
 async function sbInit(){
   try{
-    const res = await fetch(SDB_URL + '?limit=1', { method: 'GET' });
+    const res = await fetch(SB_REST + '?select=key&limit=1', { method: 'GET', headers: SB_HEADERS });
 
     if(res.status === 401 || res.status === 403){
-      sbStatus('err', 'SheetDB: access denied — check API settings'); return false;
+      sbStatus('err', 'Supabase: access denied — check your anon key / RLS policies'); return false;
     }
     if(!res.ok){
       if(res.status === 404){
-        sbStatus('err', 'Sheet not found — check the SheetDB API URL');
+        sbStatus('err', 'Table not found — run supabase_setup.sql first');
       } else {
-        sbStatus('err', 'SheetDB HTTP ' + res.status);
+        sbStatus('err', 'Supabase HTTP ' + res.status);
       }
       return false;
     }
 
     SB_OK = true;
-    sbStatus('ok', 'Google Sheet connected');
+    sbStatus('ok', 'Supabase connected');
     return true;
 
   } catch(e){
     // "Failed to fetch" = network/CORS issue — app still works offline
     sbStatus('err', 'Offline mode — data stored locally');
-    console.warn('[RAGEISM] SheetDB unreachable, using localStorage fallback. Reason:', e.message);
+    console.warn('[RAGEISM] Supabase unreachable, using localStorage fallback. Reason:', e.message);
     return false;
   }
 }
 
-// Load: GET all rows from the sheet (each row is {key, value} with value as a JSON string)
+// Load: GET all rows from the table (value column is jsonb, already parsed by PostgREST)
 async function sbLoad(){
   if(!SB_OK) return false;
   try{
     sbInitMsg('Loading cloud data...');
-    const res = await fetch(SDB_URL, { method: 'GET' });
+    const res = await fetch(SB_REST + '?select=key,value', { method: 'GET', headers: SB_HEADERS });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if(!rows || !rows.length) return false;
@@ -1830,9 +1983,7 @@ async function sbLoad(){
     let playersVal = null;
     rows.forEach(row => {
       if(SB_SYNC.includes(row.key)){
-        let parsed;
-        try{ parsed = JSON.parse(row.value); }
-        catch{ parsed = row.value; } // fall back to raw string if not valid JSON
+        const parsed = row.value; // jsonb comes back already parsed
         localStorage.setItem('rge5_' + row.key, JSON.stringify(parsed));
         if(row.key === 'players') playersVal = parsed;
         loaded++;
@@ -1850,36 +2001,19 @@ async function sbLoad(){
   }
 }
 
-// Write: upsert a row in the sheet — PATCH if the key already exists, else POST a new row.
+// Write: upsert a row via PostgREST (Prefer: resolution=merge-duplicates does an upsert on the primary key)
 async function sbWrite(key, val){
   if(!SB_OK || !SB_SYNC.includes(key)) return;
   try{
-    const payload = JSON.stringify(val);
-
-    // Try updating the existing row for this key first
-    const patchRes = await fetch(SDB_URL + '/key/' + encodeURIComponent(key), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: { value: payload } })
+    const res = await fetch(SB_REST, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify([{ key, value: val }])
     });
 
-    let updated = 0;
-    if(patchRes.ok){
-      const j = await patchRes.json().catch(() => ({}));
-      updated = j && j.updated ? j.updated : 0;
-    }
-
-    if(!updated){
-      // No existing row for this key — create one
-      const postRes = await fetch(SDB_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: { key, value: payload } })
-      });
-      if(!postRes.ok){
-        const txt = await postRes.text().catch(() => '');
-        throw new Error('HTTP ' + postRes.status + (txt ? ' — ' + txt.slice(0, 100) : ''));
-      }
+    if(!res.ok){
+      const txt = await res.text().catch(() => '');
+      throw new Error('HTTP ' + res.status + (txt ? ' — ' + txt.slice(0, 100) : ''));
     }
 
     SB_WRITES++;
@@ -1892,7 +2026,7 @@ async function sbWrite(key, val){
   }
 }
 
-// ═══ DB (localStorage + Google Sheet mirror via SheetDB) ═══
+// ═══ DB (localStorage + Supabase mirror) ═══
 const DB={
   get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem('rge5_'+k))??d}catch{return d}},
   set:(k,v)=>{
@@ -2108,7 +2242,7 @@ function anOverview(el){
       <div class="card-title"><i class="fa-solid fa-person-rifle" style="color:var(--accentL)"></i> Role Distribution</div>
       ${Object.entries(roles).sort((a,b)=>b[1]-a[1]).map(([role,cnt],i)=>anBar(role,cnt,roleMax,BAR_COLS[i],i+1)).join('')}
       <div style="margin-top:1rem"><div class="card-title" style="margin-bottom:.6rem"><i class="fa-solid fa-ranking-star"></i> Rank Distribution</div>
-      ${Object.entries(ranks).map(([rank,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--hairline);font-size:.83rem"><span style="color:${RC[rank]||'var(--textM)'}">${rank}</span><span class="font-mono" style="color:${RC[rank]||'var(--textM)'};font-size:.78rem">${cnt} player${cnt!==1?'s':''}</span></div>`).join('')}
+      ${Object.entries(ranks).map(([rank,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem"><span style="color:${RC[rank]||'var(--textM)'}">${rank}</span><span class="font-mono" style="color:${RC[rank]||'var(--textM)'};font-size:.78rem">${cnt} player${cnt!==1?'s':''}</span></div>`).join('')}
       </div>
     </div>
   </div>`;
@@ -2310,10 +2444,10 @@ function anTeams(el){
           <div style="text-align:right"><div class="font-mono" style="font-size:1rem;color:var(--red)">${p.kills}</div><div style="font-size:.6rem;color:var(--textD)">KILLS</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem;text-align:center">
-          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--amber)">${kd}</div><div style="font-size:.58rem;color:var(--textD)">K/D</div></div>
-          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--green)">${p.wins}</div><div style="font-size:.58rem;color:var(--textD)">WINS</div></div>
-          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--textM)">${p.deaths}</div><div style="font-size:.58rem;color:var(--textD)">DEATHS</div></div>
-          <div style="background:var(--hairline);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--blue)">${(p.damage||0).toLocaleString()}</div><div style="font-size:.58rem;color:var(--textD)">DMG</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--amber)">${kd}</div><div style="font-size:.58rem;color:var(--textD)">K/D</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--green)">${p.wins}</div><div style="font-size:.58rem;color:var(--textD)">WINS</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--textM)">${p.deaths}</div><div style="font-size:.58rem;color:var(--textD)">DEATHS</div></div>
+          <div style="background:rgba(255,255,255,.03);border-radius:5px;padding:.3rem"><div class="font-mono" style="font-size:.82rem;color:var(--blue)">${(p.damage||0).toLocaleString()}</div><div style="font-size:.58rem;color:var(--textD)">DMG</div></div>
         </div>
       </div>`;}).join(''):'<div class="text-dim" style="font-size:.83rem">No registered players matched to this team.</div>'}
     </div>
@@ -2364,7 +2498,7 @@ function anPlayers(el){
   function playerRow(p,i,val,color){
     const kd=(p.kills/(p.deaths||1)).toFixed(1);
     const lvl=Math.floor((p.xp||0)/500)+1;
-    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--hairline)">
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
       <span style="color:var(--textD);font-size:.7rem;width:18px;text-align:right;flex-shrink:0">${i+1}.</span>
       <div style="width:28px;height:28px;border-radius:7px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${p.ign[0]}</div>
       <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openProfile('${p.id}')" style="cursor:pointer">${p.ign}</div><div style="font-size:.7rem;color:var(--textM)">${p.team||'No Team'}</div></div>
@@ -2469,14 +2603,14 @@ function anMatches(el){
           <div class="${sc}" style="flex-shrink:0">${sl}</div>
           <span class="font-mono" style="font-size:.72rem;color:var(--textD)">#${m.id}</span>
         </div>
-        ${m.entries.length?`<div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--hairline);display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
+        ${m.entries.length?`<div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.05);display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
           <div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-skull-crossbones" style="color:var(--red);margin-right:.3rem"></i>Total Kills: <strong class="text-red">${m.totalK}</strong></div>
           ${m.topK?`<div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-crosshairs" style="color:var(--amber);margin-right:.3rem"></i>Top Fragger: <strong style="color:var(--amber)">${m.topK.ign} (${m.topK.kills}K)</strong></div>`:''}
           ${m.winner?`<div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-trophy" style="color:var(--green);margin-right:.3rem"></i>Winner: <strong style="color:var(--green)">${m.winner.ign}</strong></div>`:''}
           <div style="font-size:.75rem;color:var(--textM)"><i class="fa-solid fa-users" style="color:var(--accent);margin-right:.3rem"></i>Entries: <strong>${m.entries.length} players</strong></div>
         </div>
         <div style="margin-top:.5rem">${m.entries.slice(0,5).map(e=>`<span class="chip" style="font-size:.65rem;margin:.15rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'var(--surface)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.ign} ${e.kills}K</span>`).join('')}${m.entries.length>5?`<span class="chip" style="font-size:.62rem;color:var(--textD)">+${m.entries.length-5} more</span>`:''}</div>`
-        :m.status==='done'?'<div style="font-size:.78rem;color:var(--textD);margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--hairline)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.3rem"></i>No results logged yet</div>':''}
+        :m.status==='done'?'<div style="font-size:.78rem;color:var(--textD);margin-top:.5rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.04)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.3rem"></i>No results logged yet</div>':''}
       </div>`;
     }).join(''):'<div class="text-dim" style="padding:1rem;font-size:.85rem">No matches found</div>'}
   </div>
@@ -2490,7 +2624,7 @@ function anMatches(el){
         </div>
         <span class="text-dim font-mono" style="font-size:.68rem">${log.ts}</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:.2rem">${log.entries.map(e=>`<span class="chip" style="font-size:.63rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'var(--hairline)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.placement===1?'<i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>':''}${e.ign} ${e.kills}K</span>`).join('')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.2rem">${log.entries.map(e=>`<span class="chip" style="font-size:.63rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'rgba(255,255,255,.03)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.placement===1?'<i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>':''}${e.ign} ${e.kills}K</span>`).join('')}</div>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -2505,9 +2639,9 @@ function doGlobalSearch(q){
   const matches=DB.get('matches').filter(m=>m.name.toLowerCase().includes(ql)||m.id.toLowerCase().includes(ql));
   if(!players.length&&!teams.length&&!matches.length){el.innerHTML='<div style="padding:.7rem 1rem;color:var(--textD);font-size:.83rem">No results found.</div>';return;}
   let html='';
-  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid var(--hairline)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
-  if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid var(--hairline)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||t.name[0]).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
-  if(matches.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Matches</div>`;html+=matches.slice(0,3).map(m=>`<div style="padding:.5rem 1rem;cursor:pointer;font-size:.84rem;border-bottom:1px solid var(--hairline)" onmousedown="showPage('matches')"><div style="font-weight:600">${m.name}</div><div style="font-size:.7rem;color:var(--textD)">${m.map} · ${m.status}</div></div>`).join('');}
+  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
+  if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||t.name[0]).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
+  if(matches.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Matches</div>`;html+=matches.slice(0,3).map(m=>`<div style="padding:.5rem 1rem;cursor:pointer;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('matches')"><div style="font-weight:600">${m.name}</div><div style="font-size:.7rem;color:var(--textD)">${m.map} · ${m.status}</div></div>`).join('');}
   el.innerHTML=html;
 }
 
@@ -2613,7 +2747,7 @@ function applyMasterGating(){
   const isMaster=!!(CU&&CU.isMaster);
   document.querySelectorAll('.master-only').forEach(e=>e.style.display=isMaster?'':'none');
 }
-function doLogout(){CU=null;ADM=false;DB.set('cu5',null);DB.set('adm5',false);location.reload();}
+function doLogout(){if(sbAuth)sbAuth.auth.signOut().catch(()=>{});CU=null;ADM=false;DB.set('cu5',null);DB.set('adm5',false);location.reload();}
 function updateSidebar(){
   if(!CU)return;
   const uname=document.getElementById('sb-uname');
@@ -2650,7 +2784,10 @@ function refreshDLs(){
 
 // ═══ PAGES ═══
 const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-bracket':'Bracket Editor','admin-settings':'Settings','signup':'Sign Up','leaderboard':'Leaderboard','bracket':'Tournament Bracket','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','discord-setup':'Discord Setup','tdm':'Team Deathmatch'};
+function openSidebar(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('mobile-backdrop')?.classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobile-backdrop')?.classList.remove('show');}
 function showPage(n){
+  closeSidebar();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
   const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('active');
@@ -3485,7 +3622,7 @@ function renderAdminAuditLog(){
   const el=document.getElementById('admin-audit-list');if(!el)return;
   const log=DB.get('adminLog',[]);
   if(!log.length){el.innerHTML='<div class="text-dim" style="font-size:.82rem">No admin actions logged yet.</div>';return;}
-  el.innerHTML=log.slice(0,25).map(e=>`<div style="padding:.5rem 0;border-bottom:1px solid var(--hairline)">
+  el.innerHTML=log.slice(0,25).map(e=>`<div style="padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
     <div style="font-size:.83rem"><strong>${e.action}</strong> — ${e.detail}</div>
     <div style="font-size:.68rem;color:var(--textD)">${e.by} · ${e.ts}</div>
   </div>`).join('');
@@ -3671,9 +3808,7 @@ function profileMatchHistoryHTML(p){
   }).join('');
 }
 
-// Read-only profile card for viewing OTHER players (openProfile always calls this with the viewer looking at someone else —
-// your own profile/settings/webhook/stat-transfer live in buildMyProfile() instead, so no isOwn branch is needed here).
-function buildProfileCardHTML(p){
+function buildProfileCardHTML(p,isOwn=false){
   const rankColor=RC[p.rank]||'var(--textM)';
   const hasSocials=p.discord||p.youtube||p.tiktok||p.twitch||p.twitter||p.instagram;
   return `
@@ -3685,6 +3820,9 @@ function buildProfileCardHTML(p){
         <div style="flex:1;padding-bottom:.3rem;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ign}</div>
           <div style="font-size:.8rem;color:var(--textM)">${p.name||''}</div>
+        </div>
+        <div style="display:flex;gap:.35rem;flex-shrink:0;padding-bottom:.3rem">
+          ${isOwn?`<button class="btn btn-ghost btn-sm" onclick="openModal('edit-player-modal');setupEditMe()"><i class="fa-solid fa-pen"></i> Edit</button><button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>`:''}
         </div>
       </div>
       <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
@@ -3705,6 +3843,7 @@ function buildProfileCardHTML(p){
       <button class="prf-tab" onclick="prfTab(this,'prf-team')"><i class="fa-solid fa-shield-halved"></i> Team</button>
       <button class="prf-tab" onclick="prfTab(this,'prf-history')"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
       ${hasSocials?`<button class="prf-tab" onclick="prfTab(this,'prf-social')"><i class="fa-solid fa-link"></i> Links</button>`:''}
+      ${isOwn?`<button class="prf-tab" onclick="prfTab(this,'prf-settings')"><i class="fa-solid fa-gear"></i> Settings</button>`:''}
     </div>
 
     <div class="prf-panel active" id="prf-stats">
@@ -3713,6 +3852,13 @@ function buildProfileCardHTML(p){
 
     <div class="prf-panel" id="prf-team">
       ${profileTeamHTML(p)}
+      ${isOwn&&!p.team?`<div style="margin-top:.8rem;padding:.7rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS)">
+        <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.5rem"><i class="fa-solid fa-paper-plane"></i> Request to Join a Team</div>
+        <div style="display:flex;gap:.4rem">
+          <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.8rem"><option value="">— Select Team —</option></select>
+          <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Send</button>
+        </div>
+      </div>`:''}
     </div>
 
     <div class="prf-panel" id="prf-history">
@@ -3726,6 +3872,29 @@ function buildProfileCardHTML(p){
       ${socialRowHTML('fa-brands fa-twitch','#9147ff','Twitch',p.twitch,'tw')}
       ${socialRowHTML('fa-brands fa-x-twitter','#e2e8f0','X / Twitter',p.twitter,'xt')}
       ${socialRowHTML('fa-brands fa-instagram','#e1306c','Instagram',p.instagram,'ig')}
+    </div>`:''}
+
+    ${isOwn?`<div class="prf-panel" id="prf-settings">
+      <div style="padding:.7rem;background:var(--bg3);border:1px solid rgba(88,101,242,.2);border-radius:var(--rS);margin-bottom:.6rem">
+        <div style="font-size:.73rem;font-weight:700;color:#7289da;margin-bottom:.5rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
+        <div style="display:flex;gap:.4rem">
+          <input class="fi" id="profile-webhook" style="flex:1;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="${p.webhook||''}"/>
+          <button class="btn btn-ghost btn-sm" onclick="saveProfileWebhook()"><i class="fa-solid fa-floppy-disk"></i></button>
+        </div>
+        <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Receive personal match notifications via Discord</div>
+      </div>
+      <div style="padding:.7rem;background:var(--bg3);border:1px solid rgba(99,102,241,.2);border-radius:var(--rS);margin-bottom:.6rem;position:relative">
+        <div style="font-size:.73rem;font-weight:700;color:var(--accentL);margin-bottom:.3rem"><i class="fa-solid fa-right-left"></i> Transfer My Stats to Another ID</div>
+        <div style="font-size:.72rem;color:var(--textD);margin-bottom:.5rem">Switching PUBG accounts? Move your kills, wins, and history to a different registered ID. Requires admin approval.</div>
+        <input type="hidden" id="xfer-target-id"/>
+        <input class="fi" id="xfer-search" placeholder="Search target player by IGN or UID..." style="font-size:.82rem" autocomplete="off"
+          oninput="xferLookup(this.value,'${p.id}')" onfocus="xferLookup(this.value,'${p.id}')" onblur="setTimeout(()=>document.getElementById('xfer-lookup-dd').style.display='none',200)"/>
+        <div id="xfer-lookup-dd" class="xfer-lookup-results" style="display:none"></div>
+        <div id="xfer-selected-chip" style="margin-top:.5rem"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:.5rem;width:100%" onclick="requestStatTransfer('${p.id}')"><i class="fa-solid fa-paper-plane"></i> Request Transfer</button>
+        <div id="xfer-my-status" style="margin-top:.5rem">${myTransferStatusHTML(p.id)}</div>
+      </div>
+      <button class="btn btn-danger btn-fw" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
     </div>`:''}
   </div>`;
 }
@@ -3742,7 +3911,7 @@ function prfTab(btn,panelId){
 
 function openProfile(id){
   const p=DB.get('players').find(x=>x.id===id);if(!p)return;
-  document.getElementById('profile-modal-content').innerHTML=buildProfileCardHTML(p);
+  document.getElementById('profile-modal-content').innerHTML=buildProfileCardHTML(p,false);
   openModal('profile-modal');
   // Populate XP bar after render
   setTimeout(()=>document.querySelectorAll('.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,50);}),50);
@@ -4011,14 +4180,14 @@ function buildMyProfile(){
       </div>
     </div>
 
-    ${ADM?`<div style="background:var(--bg2);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);padding:1rem;margin-bottom:1rem">
-      <div style="font-size:.75rem;font-weight:700;color:#7289da;margin-bottom:.6rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook <span style="color:var(--textD);font-weight:400">(admin only)</span></div>
+    <div style="background:var(--bg2);border:1px solid rgba(88,101,242,.25);border-radius:var(--r);padding:1rem;margin-bottom:1rem">
+      <div style="font-size:.75rem;font-weight:700;color:#7289da;margin-bottom:.6rem"><i class="fa-brands fa-discord"></i> Discord Notifications Webhook</div>
       <div style="display:flex;gap:.5rem">
         <input class="fi" id="profile-webhook" style="flex:1;font-size:.8rem" placeholder="https://discord.com/api/webhooks/..." value="${p.webhook||''}"/>
         <button class="btn btn-ghost btn-sm" onclick="saveProfileWebhook()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
       </div>
       <div style="font-size:.7rem;color:var(--textD);margin-top:.35rem">Paste a Discord webhook to receive personal match notifications.</div>
-    </div>`:''}
+    </div>
 
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem">
       <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.6rem"><i class="fa-solid fa-people-group"></i> Request to Join a Team</div>
@@ -4191,7 +4360,7 @@ function doCompare(){
   const pl=DB.get('players');const p1=pl.find(p=>p.id===p1id),p2=pl.find(p=>p.id===p2id);if(!p1||!p2)return;
   const kd1=(p1.kills/(p1.deaths||1)).toFixed(2),kd2=(p2.kills/(p2.deaths||1)).toFixed(2);
   const row=(lbl,v1,v2,hi=true)=>{const n1=parseFloat(v1),n2=parseFloat(v2),w=hi?n1>n2:n1<n2;
-    return `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--hairline)">
+    return `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
       <div style="text-align:right"><span class="chip font-mono" style="${w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v1}</span></div>
       <div style="font-size:.65rem;font-weight:700;color:var(--textD);text-align:center;letter-spacing:.8px;text-transform:uppercase;min-width:60px">${lbl}</div>
       <div><span class="chip font-mono" style="${!w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v2}</span></div>
@@ -4410,7 +4579,7 @@ function revokeAdminRole(id){
 function renderAdminRolesList(){
   const roles=DB.get('adminRoles',[]);const el=document.getElementById('admin-roles-list');if(!el)return;
   if(!roles.length){el.innerHTML='<div class="text-dim" style="font-size:.83rem">No additional roles granted.</div>';return;}
-  el.innerHTML=roles.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--hairline)">
+  el.innerHTML=roles.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
     <div><span style="font-weight:600">${r.ign}</span> <span class="chip chip-accent" style="font-size:.62rem">${r.role}</span></div>
     <button class="btn btn-danger btn-xs" onclick="revokeAdminRole('${r.id}')"><i class="fa-solid fa-ban"></i></button>
   </div>`).join('');
@@ -4428,7 +4597,6 @@ function isManagerOf(teamId){
 
 function saveProfileWebhook(){
   if(!CU)return;
-  if(!ADM)return notify('Admin only','Personal notification webhooks are an admin feature','n-bad');
   const wh=document.getElementById('profile-webhook')?.value?.trim()||'';
   const players=DB.get('players');const p=players.find(x=>x.ign===CU.ign);
   if(!p)return notify('Register first','','n-bad');
@@ -4446,8 +4614,8 @@ function copyOverlayLink(){
   catch{document.execCommand('copy');notify('Link copied!','','n-ok');}
 }
 async function pullFromSheet(){
-  if(!SB_OK){notify('Not connected','Google Sheet is unreachable right now — check your connection','n-bad');return;}
-  notify('Syncing...','Pulling the latest data from your sheet','n-info');
+  if(!SB_OK){notify('Not connected','Supabase is unreachable right now — check your connection','n-bad');return;}
+  notify('Syncing...','Pulling the latest data from Supabase','n-info');
   const ok=await sbLoad();
   if(ok){notify('Synced!','Reloading with the latest data','n-ok');setTimeout(()=>location.reload(),900);}
   else{notify('Nothing pulled','Sheet reachable but no matching rows were found','n-bad');}
@@ -4502,7 +4670,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   // ── -1. Stream overlay mode (?overlay=1) — bypass login/app entirely ──
   const isOverlayMode = new URLSearchParams(window.location.search).has('overlay');
   if(isOverlayMode){
-    sbInitMsg('Connecting to Google Sheet...');
+    sbInitMsg('Connecting to Supabase...');
     const sbR = await sbInit();
     if(sbR){await sbLoad();}
     sbHideOverlay();
@@ -4517,8 +4685,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     return; // don't boot the normal dashboard
   }
 
-  // ── 1. Init SheetDB ──
-  sbInitMsg('Connecting to Google Sheet...');
+  // ── 1. Init Supabase ──
+  sbInitMsg('Connecting to Supabase...');
   const sbReady = await sbInit();
   if(sbReady){
     await sbLoad();
@@ -4534,26 +4702,26 @@ window.addEventListener('DOMContentLoaded',async()=>{
   setTimeout(()=>{document.querySelectorAll('.progress-fill,.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});},400);
   document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-  // ── 3. Restore existing session ──
-  const cu = DB.get('cu5', null);
-  if(cu && cu.name){
-    CU=cu; ADM=DB.get('adm5',false);
-    document.getElementById('ls').style.display='none';
-    document.getElementById('app').classList.add('show');
-    updateSidebar();
-    if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('admin-badge').textContent=CU.isMaster?'MASTER':'HOST';document.getElementById('alert-badge').style.display='block';}
-    applyMasterGating();
-    if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
-    refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();updateTdmBadge();
-    if(ADM){updatePendingBadges();}
+  // ── 3. Check for a Discord OAuth session (fresh redirect or persisted) ──
+  const hadDiscordSession = await checkDiscordSession();
+
+  // ── 4. Restore existing local session (if no Discord session took over) ──
+  if(!hadDiscordSession){
+    const cu = DB.get('cu5', null);
+    if(cu && cu.name){
+      CU=cu; ADM=DB.get('adm5',false);
+      document.getElementById('ls').style.display='none';
+      document.getElementById('app').classList.add('show');
+      updateSidebar();
+      if(ADM){document.querySelectorAll('.admin-only').forEach(e=>e.style.display='');document.querySelector('.sb-section.admin-only').style.display='block';document.getElementById('admin-badge').style.display='block';document.getElementById('admin-badge').textContent=CU.isMaster?'MASTER':'HOST';document.getElementById('alert-badge').style.display='block';}
+      applyMasterGating();
+      if(ADM){showPage('admin-overview');renderAdminOverview();}else{showPage('dashboard');}
+      refreshDLs();buildTicker();updateStats();renderDashboardData();buildMyProfile();renderReg();updateTdmBadge();
+      if(ADM){updatePendingBadges();}
+    }
   }
   renderBkt();
 });
 </script>
-<!-- Floating theme toggle — visible on login screen and inside the app -->
-<div id="theme-bubble" onclick="toggleTheme()" title="Switch theme">
-  <i class="fa-solid fa-moon" id="theme-bubble-icon"></i>
-</div>
-
 </body>
 </html>
