@@ -931,7 +931,6 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('admin-polls')"><i class="fa-solid fa-chart-bar"></i> Polls</button>
       <button class="sb-item" onclick="showPage('admin-bracket')"><i class="fa-solid fa-sitemap"></i> Bracket</button>
       <button class="sb-item" onclick="showPage('admin-settings')"><i class="fa-solid fa-gear"></i> Settings</button>
-      <button class="sb-item" onclick="showPage('discord-setup')"><i class="fa-brands fa-discord"></i> Discord Setup</button>
       <button class="sb-item" onclick="showPage('debug')"><i class="fa-solid fa-bug"></i> Debug</button>
     </div>
 
@@ -1325,24 +1324,21 @@ tr:last-child td{border-bottom:none}
             <div class="frow"><div class="fg"><label class="fl">Prize Pool ($)</label><input class="fi" id="cfg-pr" type="number" value="5000"/></div>
             </div>
             <div class="fg"><label class="fl">Discord Invite Link</label><input class="fi" id="cfg-dc" placeholder="https://discord.gg/..."/></div>
-            <div class="fg"><label class="fl">Match Results Webhook <span style="color:var(--textD);font-weight:400">(auto-posts final results)</span></label>
-              <div style="display:flex;gap:.5rem">
-                <input class="fi" id="cfg-wh" placeholder="https://discord.com/api/webhooks/..." style="flex:1"/>
-                <button class="btn btn-accent btn-sm" onclick="saveWebhook()" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-              </div>
-            </div>
-            <div class="fg master-only">
-              <label class="fl"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Webhook <span style="color:var(--textD);font-weight:400">(master only)</span></label>
-              <div style="display:flex;gap:.5rem">
-                <input class="fi" id="cfg-audit-wh" placeholder="https://discord.com/api/webhooks/..." style="flex:1"/>
-                <button class="btn btn-accent btn-sm" onclick="saveAuditWebhook()" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-              </div>
-              <div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Every admin change — role grants/revokes, settings edits, resets, and deletions — is posted here so the master admin can audit what happened.</div>
-            </div>
             <div class="fg"><label class="fl">Announcement Banner</label><textarea class="fta" id="cfg-ann" placeholder="Broadcast a message to all players..."></textarea></div>
             <button class="btn btn-accent btn-fw" onclick="saveCfg()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
           </div>
           <div>
+            <div class="card mb2" id="cfg-webhooks-card">
+              <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Discord Webhooks</div>
+              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Auto-post announcements to Discord. Add as many webhooks as you like — e.g. a #match-results channel, a separate #tdm channel, and a private admin-activity channel — each fires only for the event type it's set to. Whoever earned the highlight (like a match's top fragger) gets automatically @mentioned if they've signed in with Discord.</div>
+              <div id="cfg-webhooks-list" style="margin-bottom:1rem"></div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Name</label><input class="fi" id="cfg-wh-name" placeholder="e.g. #match-results"/></div>
+                <div class="fg"><label class="fl">Announces</label><select class="fi fsel" id="cfg-wh-event"></select></div>
+              </div>
+              <div class="fg"><label class="fl">Webhook URL</label><input class="fi" id="cfg-wh-url" placeholder="https://discord.com/api/webhooks/..."/></div>
+              <button class="btn btn-accent btn-fw" onclick="addWebhook()"><i class="fa-solid fa-plus"></i> Add Webhook</button>
+            </div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-swatchbook"></i> Site Appearance</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Sets the default font and color theme every new visitor sees. Anyone can still pick their own color theme with the bubble in the corner — this just controls the default.</div>
@@ -1388,7 +1384,7 @@ tr:last-child td{border-bottom:none}
             </div>
             <div class="card mb2 master-only">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Log <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
-              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Role grants/revokes, settings changes, resets, and deletions performed by any admin — mirrored to your Admin Activity Webhook above if set.</div>
+              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Role grants/revokes, settings changes, resets, and deletions performed by any admin — mirrored to any "Admin Activity Log" webhook configured in Discord Webhooks above.</div>
               <div id="admin-audit-list" style="max-height:260px;overflow-y:auto"></div>
             </div>
             <div class="card mb2">
@@ -1484,6 +1480,10 @@ tr:last-child td{border-bottom:none}
             </div>
           </div>
           <div class="fg" style="margin-top:.5rem"><label class="fl">First to</label><input class="fi" id="tdm-target" type="number" value="10" min="1"/></div>
+          <div class="fg" style="display:flex;align-items:center;gap:.55rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem">
+            <input type="checkbox" id="tdm-bo3" style="width:16px;height:16px;flex-shrink:0"/>
+            <label for="tdm-bo3" style="font-size:.82rem;cursor:pointer;margin:0"><strong>Best of 3</strong> <span style="color:var(--textD)">— optional. Play up to 3 matches back to back; whichever squad wins 2 takes the series. Team wins are only recorded once, for the series winner.</span></label>
+          </div>
           <button class="btn btn-accent btn-fw" onclick="startTdm()"><i class="fa-solid fa-play"></i> Start Match</button>
         </div>
 
@@ -1636,88 +1636,6 @@ tr:last-child td{border-bottom:none}
         <div id="an-content"></div>
       </div>
 
-      <!-- ░ DISCORD SETUP ░ -->
-      <div class="page" id="page-discord-setup">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Discord <span style="color:#7289da">Setup Guide</span></div><div class="sh-sub">Connect RAGEISM to your Discord server in minutes</div></div></div>
-        <div class="g2">
-          <div class="card">
-            <div class="card-title"><i class="fa-solid fa-link" style="color:#7289da"></i> Method 1 — Webhook (Easiest, No Coding)</div>
-            <div class="disc-step">
-              <div class="disc-step-num">1</div>
-              <div><div class="disc-step-title">Open Your Discord Server</div><div class="disc-step-body">Go to the channel where you want RAGEISM to post — e.g. <span class="disc-code">#match-results</span> or <span class="disc-code">#announcements</span>.</div></div>
-            </div>
-            <div class="disc-step">
-              <div class="disc-step-num">2</div>
-              <div><div class="disc-step-title">Edit Channel → Integrations → Webhooks</div><div class="disc-step-body">Click the <i class="fa-solid fa-gear"></i> gear next to the channel name → <strong>Integrations</strong> → <strong>Webhooks</strong> → <strong>New Webhook</strong>. Name it "RAGEISM Bot" and press <strong>Copy Webhook URL</strong>.</div></div>
-            </div>
-            <div class="disc-step">
-              <div class="disc-step-num">3</div>
-              <div><div class="disc-step-title">Paste URL in Admin Settings</div><div class="disc-step-body">Go to <strong>Admin → Settings</strong>, paste the URL in the Discord field and save. The app will automatically POST to Discord when match results are saved.</div></div>
-            </div>
-            <div class="disc-step">
-              <div class="disc-step-num">4</div>
-              <div><div class="disc-step-title">Done! Test It</div><div class="disc-step-body">Log a test result. Your Discord channel should receive a message like: <span class="disc-code">Match #ID — Map | Winner: [Team] | Top Fragger: [Player] ([Kills]K)</span></div></div>
-            </div>
-            <div style="margin-top:.8rem;background:rgba(88,101,242,.07);border:1px solid rgba(88,101,242,.2);border-radius:var(--rS);padding:.75rem 1rem">
-              <div style="font-size:.78rem;font-weight:700;color:#7289da;margin-bottom:.4rem"><i class="fa-solid fa-box"></i> Webhook payload (auto-sent on result save)</div>
-              <div class="disc-code" style="display:block;white-space:pre-wrap;line-height:1.7">POST {webhook_url}
-{
-  "username": "RAGEISM",
-  "avatar_url": "https://...",
-  "embeds": [{
-    "title": "Match Results — M012",
-    "color": 6304479,
-    "fields": [
-      {"name":"Map","value":"Erangel","inline":true},
-      {"name":"Winner","value":"[Winner Team]","inline":true},
-      {"name":"Top Fragger","value":"[TopFragger] ([Kills]K)","inline":true}
-    ]
-  }]
-}</div>
-            </div>
-          </div>
-
-          <div>
-            <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-robot" style="color:#7289da"></i> Method 2 — Discord Bot (Advanced)</div>
-              <div class="disc-step">
-                <div class="disc-step-num">1</div>
-                <div><div class="disc-step-title">Create App in Developer Portal</div><div class="disc-step-body">Go to <span class="disc-code">discord.com/developers/applications</span> → <strong>New Application</strong>. Name it "RAGEISM Bot".</div></div>
-              </div>
-              <div class="disc-step">
-                <div class="disc-step-num">2</div>
-                <div><div class="disc-step-title">Add a Bot + Copy Token</div><div class="disc-step-body"><strong>Bot</strong> tab → <strong>Add Bot</strong>. Enable <strong>Message Content Intent</strong>. Press <strong>Reset Token</strong> and copy it. Store this securely — never expose it in client-side code.</div></div>
-              </div>
-              <div class="disc-step">
-                <div class="disc-step-num">3</div>
-                <div><div class="disc-step-title">Invite Bot to Your Server</div><div class="disc-step-body"><strong>OAuth2 → URL Generator</strong>. Scopes: <span class="disc-code">bot</span> + <span class="disc-code">applications.commands</span>. Permissions: <span class="disc-code">Send Messages</span>, <span class="disc-code">Embed Links</span>. Open the URL and add to server.</div></div>
-              </div>
-              <div class="disc-step">
-                <div class="disc-step-num">4</div>
-                <div><div class="disc-step-title">Call Discord API from Supabase Edge Function</div><div class="disc-step-body">In your Supabase Edge Function, send messages via <span class="disc-code">POST /channels/{id}/messages</span> with header <span class="disc-code">Authorization: Bot TOKEN</span>.</div></div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-title"><i class="fa-solid fa-terminal" style="color:#f59e0b"></i> Slash Commands to Build</div>
-              <div style="display:flex;flex-direction:column;gap:.4rem;font-size:.84rem">
-                <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span class="disc-code">/leaderboard</span><span class="text-muted" style="font-size:.78rem">Post top 5 fraggers</span></div>
-                <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span class="disc-code">/stats [IGN]</span><span class="text-muted" style="font-size:.78rem">Show player stat card</span></div>
-                <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span class="disc-code">/results [matchID]</span><span class="text-muted" style="font-size:.78rem">Post match results</span></div>
-                <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span class="disc-code">/register [IGN]</span><span class="text-muted" style="font-size:.78rem">Register from Discord</span></div>
-                <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span class="disc-code">/golive [matchID]</span><span class="text-muted" style="font-size:.78rem">Announce match live</span></div>
-              </div>
-              <div style="margin-top:.7rem;font-size:.76rem;color:var(--textD)">Recommended: <span class="disc-code">discord.js</span> v14 (Node) or <span class="disc-code">discord.py</span> (Python)</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card master-only" style="margin-top:1.2rem">
-          <div class="card-title"><i class="fa-solid fa-database" style="color:#22a565"></i> Supabase Integration <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
-          <div style="font-size:.82rem;color:var(--textM)">Database connection details, the project link, and a live health check now live in <strong>Admin → Debug</strong> — kept out of general view since it's not something players or hosts need to see day-to-day.</div>
-          <button class="btn btn-ghost btn-fw" style="margin-top:.8rem" onclick="showPage('debug')"><i class="fa-solid fa-arrow-right"></i> Go to Debug Panel</button>
-        </div>
-      </div>
 
       <!-- ░ DEBUG PANEL (admin/master only) ░ -->
       <div class="page" id="page-debug">
@@ -1838,7 +1756,7 @@ tr:last-child td{border-bottom:none}
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('grant-admin-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-title">Manage Admin Roles</div>
-    <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Search for a registered player, pick them from the list, then choose the role to grant. Granting <strong>Admin</strong> gives them the full admin dashboard next time they log in with their own IGN &amp; password.</div>
+    <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Search for a registered player, pick them from the list, then choose the role to grant. Roles are tied to the player's <strong>Discord account</strong>, not their IGN — so if they rename their IGN later, the role stays intact. A player must have signed in with Discord at least once before you can grant them a role.</div>
     <div class="fg" style="position:relative">
       <label class="fl">Select Player</label>
       <input class="fi" id="ga-ign-search" placeholder="Search by IGN or name..." autocomplete="off"
@@ -1846,6 +1764,7 @@ tr:last-child td{border-bottom:none}
         onblur="setTimeout(()=>{const dd=document.getElementById('ga-lookup-dd');if(dd)dd.style.display='none';},200)"/>
       <div id="ga-lookup-dd" class="xfer-lookup-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60"></div>
       <input type="hidden" id="ga-ign"/>
+      <input type="hidden" id="ga-authid"/>
     </div>
     <div id="ga-selected-chip" style="margin:-.3rem 0 .6rem"></div>
     <div class="fg"><label class="fl">Role to Grant</label>
@@ -1947,14 +1866,18 @@ function discordLogin(){
 // Resolve a player's admin role. Since there's no password anymore to gate a fixed master account,
 // the very first person ever to sign in with Discord (before any role has been assigned to anyone)
 // is automatically bootstrapped as Master. Every sign-in after that just looks up their existing role.
-function resolveRole(ign){
+function resolveRole(authId, ign){
   const roles = DB.get('adminRoles', []);
   if(!roles.length){
-    roles.push({ id:'r'+Date.now(), ign, role:'master' });
+    roles.push({ id:'r'+Date.now(), authId, ign, role:'master' });
     DB.set('adminRoles', roles);
     return { role:'master', isMaster:true, isAdmin:true };
   }
-  const myRole = roles.find(r => r.ign.toLowerCase() === ign.toLowerCase());
+  // Durable Discord identity is the real key. Older role rows (saved before this) only have an ign —
+  // match those once by ign, then backfill authId onto them so a future IGN change won't lose the role.
+  let myRole = authId ? roles.find(r => r.authId === authId) : null;
+  if(!myRole && ign) myRole = roles.find(r => !r.authId && r.ign && r.ign.toLowerCase() === ign.toLowerCase());
+  if(myRole && authId && !myRole.authId){ myRole.authId = authId; DB.set('adminRoles', roles); }
   const role = myRole ? myRole.role : 'player';
   return { role, isMaster: role==='master', isAdmin: role==='admin'||role==='master' };
 }
@@ -1972,6 +1895,7 @@ async function checkDiscordSession(){
     const profile = rows[0] || null;
     const discordName = (profile && profile.discord_username) || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Discord User';
     const discordAvatar = (profile && profile.discord_avatar) || session.user.user_metadata?.avatar_url || '';
+    const discordId = session.user.user_metadata?.provider_id || session.user.identities?.find(i => i.provider === 'discord')?.id || '';
 
     if(profile && profile.ign){
       // Already linked to a roster IGN — find that player and log straight in.
@@ -1980,12 +1904,15 @@ async function checkDiscordSession(){
       let p = players.find(x => x.authId === session.user.id) || players.find(x => x.ign && x.ign.toLowerCase() === profile.ign.toLowerCase());
       if(!p){
         // Linked IGN was removed from the roster since — recreate a minimal entry
-        p = { id: 'p' + Date.now(), ign: profile.ign, name: discordName, discord: discordName, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
+        p = { id: 'p' + Date.now(), ign: profile.ign, name: discordName, discord: discordName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
         players.push(p); DB.set('players', players);
-      } else if(!p.authId){
-        p.authId = session.user.id; DB.set('players', players);
+      } else {
+        let dirty=false;
+        if(!p.authId){ p.authId = session.user.id; dirty=true; }
+        if(!p.discordId && discordId){ p.discordId = discordId; dirty=true; }
+        if(dirty) DB.set('players', players);
       }
-      const rr = resolveRole(p.ign);
+      const rr = resolveRole(session.user.id, p.ign);
       ADM = rr.isAdmin;
       CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: discordName, discAvatar: discordAvatar, authId: session.user.id, isMaster: rr.isMaster };
       finishLogin();
@@ -2020,6 +1947,7 @@ async function completeDiscordLink(){
   if(!session) return notify('Session expired', 'Please sign in with Discord again', 'n-bad');
 
   const players = DB.get('players');
+  const discordId = session.user.user_metadata?.provider_id || session.user.identities?.find(i => i.provider === 'discord')?.id || '';
   // One player per Discord account: if this Discord identity already has a roster row (from an earlier
   // link, possibly under a different IGN), reuse it instead of creating a duplicate.
   let mine = players.find(x => x.authId === session.user.id);
@@ -2033,13 +1961,15 @@ async function completeDiscordLink(){
     if(existing && existing.id !== mine.id) return notify('IGN taken', 'That IGN belongs to another player', 'n-bad');
     mine.ign = ign;
     if(!mine.discord) mine.discord = window._dlsName;
+    if(!mine.discordId && discordId) mine.discordId = discordId;
     p = mine;
   } else if(existing){
     existing.authId = session.user.id;
     if(!existing.discord) existing.discord = window._dlsName;
+    if(!existing.discordId && discordId) existing.discordId = discordId;
     p = existing;
   } else {
-    p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
+    p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
     players.push(p);
   }
   DB.set('players', players);
@@ -2053,7 +1983,7 @@ async function completeDiscordLink(){
     });
   } catch(e){ console.warn('[RAGEISM] profile link save failed:', e.message); }
 
-  const rr = resolveRole(ign);
+  const rr = resolveRole(session.user.id, ign);
   ADM = rr.isAdmin;
   CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: window._dlsName, discAvatar: window._dlsAvatar, authId: session.user.id, isMaster: rr.isMaster };
   finishLogin();
@@ -2909,12 +2839,12 @@ function refreshDLs(){
 }
 
 // ═══ PAGES ═══
-const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-bracket':'Bracket Editor','admin-settings':'Settings','signup':'Sign Up','leaderboard':'Leaderboard','bracket':'Tournament Bracket','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','discord-setup':'Discord Setup','tdm':'Team Deathmatch','debug':'Debug Panel'};
+const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-bracket':'Bracket Editor','admin-settings':'Settings','signup':'Sign Up','leaderboard':'Leaderboard','bracket':'Tournament Bracket','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
 function openSidebar(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('mobile-backdrop')?.classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobile-backdrop')?.classList.remove('show');}
 function showPage(n){
   // Admin/master-only pages redirect a non-admin straight to the dashboard, even if reached by a direct hash/URL.
-  if(!ADM && (n.startsWith('admin')||n==='debug'||n==='discord-setup')) n='dashboard';
+  if(!ADM && (n.startsWith('admin')||n==='debug')) n='dashboard';
   closeSidebar();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
@@ -2925,7 +2855,7 @@ function showPage(n){
   if(n==='compare'){renderCmpSelects();doCompare();}if(n==='community'){renderPolls();renderSugs();}
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players')renderAPlayers();if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
-  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const wh=document.getElementById('cfg-wh');if(wh&&cfg.disc)wh.value=cfg.disc;const aw=document.getElementById('cfg-audit-wh');if(aw)aw.value=cfg.auditWebhook||'';const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';renderAdminAuditLog();}
+  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();}
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
@@ -2950,7 +2880,23 @@ function buildTicker(){
   }
   else if(ms.length){items=items.concat(ms.slice(0,4).map(m=>`<span class="ticker-item">${MI[m.map]||''} ${m.name} <span style="opacity:.5">·</span> ${m.status}</span>`));}
   else{items=items.concat(['<span class="ticker-item">RAGEISM PUBG Esports Tournament Hub</span>','<span class="ticker-item">Register your player and team to compete</span>','<span class="ticker-item">Admins: log in and set up your first match</span>']);}
-  const sep=`<span style="opacity:.3;margin:0 .8rem">◆</span>`;const html=items.join(sep);el.innerHTML=html+sep+html;
+  const sep=`<span style="opacity:.3;margin:0 .8rem">◆</span>`;const html=items.join(sep);
+  // Only duplicate the content (the trick that makes the scroll loop seamless) when it's actually
+  // wider than the bar. With just a couple of short items the duplicate copy was visible immediately
+  // — looking like everything printed twice — so short content now shows once, centered, and static.
+  el.style.animation='none';el.innerHTML=html;
+  requestAnimationFrame(()=>{
+    const wrap=el.parentElement;
+    const overflowing=wrap&&el.scrollWidth>wrap.clientWidth;
+    if(overflowing){
+      el.innerHTML=html+sep+html;
+      const dur=Math.max(18,Math.round(el.scrollWidth/45));
+      el.style.justifyContent='';el.style.width='';
+      el.style.animation=`ticker ${dur}s linear infinite`;
+    } else {
+      el.style.justifyContent='center';el.style.width='100%';el.style.animation='none';
+    }
+  });
 }
 
 // ═══ COUNTDOWN ═══
@@ -3209,14 +3155,58 @@ function startTdm(){
   if(!TDM_A.length||!TDM_B.length)return notify('Add players to both squads','Search and add at least one player per squad.','n-bad');
   if(aName===bName)return notify('Squad names must be different','','n-bad');
   const target=parseInt(v('tdm-target'))||10;
+  const bo3=!!document.getElementById('tdm-bo3')?.checked;
   const ms=DB.get('tdmMatches',[]);
-  ms.push({id:'tdm'+Date.now(),aName,bName,aRoster:TDM_A.slice(),bRoster:TDM_B.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString()});
+  ms.push({id:'tdm'+Date.now(),aName,bName,aRoster:TDM_A.slice(),bRoster:TDM_B.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3,seriesId:bo3?('series'+Date.now()):null,gameNum:1});
   DB.set('tdmMatches',ms);
   TDM_A=[];TDM_B=[];
   ['tdm-a-name','tdm-b-name','tdm-a-search','tdm-b-search'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const bo3cb=document.getElementById('tdm-bo3');if(bo3cb)bo3cb.checked=false;
   tdmRenderRoster('a');tdmRenderRoster('b');
   renderTdmLive();renderTdmHistory();updateTdmBadge();
-  notify('TDM match started!',`${aName} vs ${bName} · First to ${target}`,'n-ok');
+  notify('TDM match started!',`${aName} vs ${bName} · First to ${target}${bo3?' · Best of 3 (Game 1)':''}`,'n-ok');
+}
+
+// Tally completed games in a Best-of-3 series by squad name (squads are assumed to keep the same
+// names/sides across all games in a series).
+function tdmSeriesRecord(seriesId,aName,bName){
+  const done=DB.get('tdmMatches',[]).filter(m=>m.seriesId===seriesId&&m.status==='done');
+  return {winsA:done.filter(m=>m.winner===aName).length,winsB:done.filter(m=>m.winner===bName).length,gamesPlayed:done.length};
+}
+
+// Called right after a TDM game is marked 'done'. For a normal (non-bo3) match this just records the
+// team win and fires the TDM webhook. For a Best-of-3 series it checks whether the series is decided
+// yet (someone at 2 wins, or 3 games played) — if so it closes out the series and records ONE team win
+// for the series winner; otherwise it auto-starts the next game with the same rosters.
+function tdmFinishMatch(m,ms){
+  const teams=DB.get('teams');
+  const mvpSide=m.scoreA>=m.scoreB?m.aRoster:m.bRoster;
+  let mvp=null;(mvpSide||[]).forEach(r=>{const kc=tdmPlayerKillCount(m,r.ign);if(!mvp||kc>mvp.kc)mvp={ign:r.ign,kc};});
+  if(!m.bo3){
+    const wt=teams.find(t=>t.name===m.winner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    fireWebhookEvent('tdmResults',{title:`TDM Result — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
+      {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
+      {name:'Winner',value:m.winner,inline:true},
+      {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
+    ]},mvp?mvp.ign:null);
+    return;
+  }
+  const rec=tdmSeriesRecord(m.seriesId,m.aName,m.bName);
+  if(rec.winsA>=2||rec.winsB>=2||m.gameNum>=3){
+    const seriesWinner=rec.winsA>rec.winsB?m.aName:(rec.winsB>rec.winsA?m.bName:m.winner);
+    m.seriesDone=true;m.seriesWinner=seriesWinner;
+    const wt=teams.find(t=>t.name===seriesWinner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
+      {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
+      {name:'Final Game',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
+      {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
+    ]},mvp?mvp.ign:null);
+    notify('Series complete!',`${seriesWinner} wins the Best of 3 (${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)})`,'n-ok');
+  } else {
+    const next={id:'tdm'+Date.now(),aName:m.aName,bName:m.bName,aRoster:m.aRoster.slice(),bRoster:m.bRoster.slice(),scoreA:0,scoreB:0,target:m.target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3:true,seriesId:m.seriesId,gameNum:m.gameNum+1};
+    ms.push(next);
+    notify(`Game ${m.gameNum} complete`,`${m.winner} takes it. Series ${rec.winsA}-${rec.winsB} — starting Game ${next.gameNum}`,'n-ok');
+  }
 }
 
 function tdmPlayerKillCount(m,ign){
@@ -3244,7 +3234,7 @@ function tdmSetPlayerKills(side,playerId){
   if(gp){gp.kills=Math.max(0,(gp.kills||0)+diff);DB.set('players',players);}
   if(m.status==='live'&&(m.scoreA>=m.target||m.scoreB>=m.target)){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
-    const teams=DB.get('teams');const wt=teams.find(t=>t.name===m.winner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    tdmFinishMatch(m,ms);
   }
   DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
   notify('Kills updated',`${p.ign}: ${oldVal} → ${newVal}`,'n-ok');
@@ -3264,7 +3254,7 @@ function addTdmKill(side,playerId){
   if(gp){gp.kills=(gp.kills||0)+1;DB.set('players',players);}
   if(m.scoreA>=m.target||m.scoreB>=m.target){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
-    const teams=DB.get('teams');const wt=teams.find(t=>t.name===m.winner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    tdmFinishMatch(m,ms);
     notify('Match complete!',`${m.winner} wins ${Math.max(m.scoreA,m.scoreB)}-${Math.min(m.scoreA,m.scoreB)}!`,'n-ok');
   }
   DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
@@ -3419,6 +3409,7 @@ function renderTdmLive(){
   const m=tdmGetLive();
   if(!m){wrap.innerHTML=`<div class="card" style="text-align:center;padding:2.5rem;color:var(--textD)"><i class="fa-solid fa-skull-crossbones" style="font-size:1.6rem;margin-bottom:.6rem;display:block"></i>No TDM match is live right now.</div>`;return;}
   const pctA=Math.min(100,(m.scoreA/m.target)*100),pctB=Math.min(100,(m.scoreB/m.target)*100);
+  const seriesRec=m.bo3?tdmSeriesRecord(m.seriesId,m.aName,m.bName):null;
   const rosterBtns=(side,roster)=>roster.map(p=>{
     const kc=tdmPlayerKillCount(m,p.ign);
     return `<div class="tdm-roster-row" style="justify-content:space-between;flex-wrap:wrap">
@@ -3431,7 +3422,7 @@ function renderTdmLive(){
     </div>`;
   }).join('');
   wrap.innerHTML=`<div class="card">
-    <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1rem"><span class="status-live"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.4s infinite"></span> LIVE</span><span class="text-dim" style="font-size:.8rem">First to ${m.target}</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap"><span class="status-live"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.4s infinite"></span> LIVE</span><span class="text-dim" style="font-size:.8rem">First to ${m.target}</span>${m.bo3?`<span class="chip chip-accent" style="font-size:.7rem"><i class="fa-solid fa-list-ol"></i> Best of 3 · Game ${m.gameNum}/3 · Series ${seriesRec.winsA}-${seriesRec.winsB}</span>`:''}</div>
     <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1.2rem;align-items:start;text-align:center;margin-bottom:1rem">
       <div>
         <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;margin-bottom:.4rem">${m.aName}</div>
@@ -3460,7 +3451,7 @@ function renderTdmHistory(){
     <td style="font-weight:${m.winner===m.aName?700:400};color:${m.winner===m.aName?'var(--accentL)':'var(--text)'}">${m.aName}</td>
     <td class="font-mono">${m.scoreA} – ${m.scoreB}</td>
     <td style="font-weight:${m.winner===m.bName?700:400};color:${m.winner===m.bName?'var(--red)':'var(--text)'}">${m.bName}</td>
-    <td><span class="chip chip-accent">${m.winner||'—'}</span></td>
+    <td><span class="chip chip-accent">${m.winner||'—'}</span>${m.bo3?`<div class="text-dim" style="font-size:.65rem;margin-top:.2rem">Game ${m.gameNum}/3${m.seriesDone?` · Series won by ${m.seriesWinner}`:' · series in progress'}</div>`:''}</td>
     <td class="text-dim" style="font-size:.75rem">${tdmFmtDate(m.doneTs||m.ts)}</td>
     <td class="admin-only" style="display:${ADM?'table-cell':'none'}"><button class="btn btn-danger btn-xs" onclick="delTdmMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td>
   </tr>`).join('');
@@ -3799,7 +3790,15 @@ function submitResults(){
   logs.unshift(logEntry);if(logs.length>100)logs.pop();DB.set('rlogs5',logs);
   if(matchObj){matchObj.status='done';DB.set('matches',ms);}
   renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();buildTicker();renderAdminOverview();renderTeams();
-  if(matchObj){const cfg=DB.get('cfg',{});if(cfg.disc&&cfg.disc.startsWith('https://discord.com/api/webhooks/')){fireWebhook(cfg.disc,logEntry,matchObj);}}
+  if(matchObj){
+    const topFragger=logEntry.entries.length?[...logEntry.entries].sort((a,b)=>b.kills-a.kills)[0]:null;
+    fireWebhookEvent('matchResults',{title:`Match Results — ${logEntry.matchName||logEntry.matchId}`,color:6304479,fields:[
+      {name:'Match',value:logEntry.matchName||logEntry.matchId,inline:true},
+      {name:'Map',value:logEntry.map||'—',inline:true},
+      {name:'Winner',value:logEntry.winnerTeam||logEntry.winnerIGN||'—',inline:true},
+      {name:'Top Fragger',value:topFragger?`${topFragger.ign} (${topFragger.kills}K)`:'—',inline:true}
+    ]},topFragger?topFragger.ign:null);
+  }
   const topTeam=matchSummary.sort((a,b)=>b.totalPts-a.totalPts)[0];
   notify('Results saved!',`Winner: ${winnerTeam||winnerIGN||'—'} · ${topTeam?topTeam.totalPts+'pts':''}`,'n-ok');
   // Reset
@@ -3810,21 +3809,13 @@ function submitResults(){
   const saveRow=document.getElementById('res-save-row');if(saveRow)saveRow.style.display='none';
 }
 
-function fireWebhook(url,log,match){
-  try{fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',embeds:[{title:`Match Results — ${log.matchId}`,color:6304479,fields:[{name:'Match',value:log.matchName||log.matchId,inline:true},{name:'Map',value:log.map||'—',inline:true},{name:'Winner',value:log.winnerTeam||log.winnerIGN||'—',inline:true},{name:'Top Fragger',value:log.entries.length?`${[...log.entries].sort((a,b)=>b.kills-a.kills)[0].ign} (${[...log.entries].sort((a,b)=>b.kills-a.kills)[0].kills}K)`:'—',inline:true}]}]})});}catch(e){console.warn('Webhook error:',e);}
-}
-
 // ═══ ADMIN AUDIT LOG — every admin change is recorded and, if configured, posted to a Discord webhook ═══
 function logAdminAction(action,detail){
   const log=DB.get('adminLog',[]);
   const entry={id:'alog'+Date.now(),action,detail,by:CU?CU.name:'Admin',ts:new Date().toLocaleString()};
   log.unshift(entry);if(log.length>200)log.pop();
   DB.set('adminLog',log);
-  const cfg=DB.get('cfg',{});
-  if(cfg.auditWebhook&&cfg.auditWebhook.startsWith('https://discord.com/api/webhooks/')){
-    try{fetch(cfg.auditWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM Admin Log',embeds:[{title:action,description:detail,color:15105642,fields:[{name:'By',value:entry.by,inline:true},{name:'When',value:entry.ts,inline:true}]}]})});}
-    catch(e){console.warn('Audit webhook error:',e);}
-  }
+  fireWebhookEvent('auditLog',{title:action,description:detail,color:15105642,fields:[{name:'By',value:entry.by,inline:true},{name:'When',value:entry.ts,inline:true}]});
   const el=document.getElementById('admin-audit-list');if(el)renderAdminAuditLog();
 }
 function renderAdminAuditLog(){
@@ -3836,14 +3827,6 @@ function renderAdminAuditLog(){
     <div style="font-size:.68rem;color:var(--textD)">${e.by} · ${e.ts}</div>
   </div>`).join('');
 }
-function saveAuditWebhook(){
-  const wh=v('cfg-audit-wh');
-  const cfg=DB.get('cfg',{});
-  cfg.auditWebhook=wh;
-  DB.set('cfg',cfg);
-  notify('Audit webhook saved!','Admin changes will now be posted to Discord','n-ok');
-}
-
 function renderResultLogs(){
   const logs=DB.get('rlogs5',[]);
   const el=document.getElementById('result-logs');if(!el)return;
@@ -4786,23 +4769,31 @@ function gaShowLookup(q){
     const p=DB.get('players').find(x=>x.id===row.dataset.id);if(!p)return;
     document.getElementById('ga-ign').value=p.ign;
     document.getElementById('ga-ign-search').value=p.ign;
-    const roles=DB.get('adminRoles',[]);const existing=roles.find(r=>r.ign.toLowerCase()===p.ign.toLowerCase());
-    document.getElementById('ga-selected-chip').innerHTML=`<span class="chip chip-accent" style="font-size:.72rem">Selected: ${p.ign}${p.name?' ('+p.name+')':''}${existing?' · currently '+existing.role:''}</span>`;
+    document.getElementById('ga-authid').value=p.authId||'';
+    if(!p.authId){
+      document.getElementById('ga-selected-chip').innerHTML=`<span class="chip chip-red" style="font-size:.72rem">${p.ign} hasn't signed in with Discord yet — ask them to log in once first</span>`;
+    } else {
+      const roles=DB.get('adminRoles',[]);const existing=roles.find(r=>r.authId===p.authId);
+      document.getElementById('ga-selected-chip').innerHTML=`<span class="chip chip-accent" style="font-size:.72rem">Selected: ${p.ign}${p.discord?' · <i class="fa-brands fa-discord"></i> '+p.discord:''}${existing?' · currently '+existing.role:''}</span>`;
+    }
     dd.style.display='none';
   });
 }
 function grantAdminRole(){
   if(!ADM)return;
   if(!CU||!CU.isMaster)return notify('Master only','Only the master admin can grant roles','n-bad');
-  const ign=v('ga-ign'),role=v('ga-role');if(!ign||!role)return notify('Select a player first','Search and click a player from the list above','n-bad');
+  const authId=v('ga-authid'),ign=v('ga-ign'),role=v('ga-role');
+  if(!authId)return notify('Select a player first','Search and click a player who has signed in with Discord at least once','n-bad');
   const roles=DB.get('adminRoles',[]);
-  if(roles.find(r=>r.ign===ign&&r.role===role))return notify('Already assigned','','n-bad');
-  roles.push({id:'ar'+Date.now(),ign,role,grantedBy:CU?.name||'Admin',ts:new Date().toLocaleString()});
+  if(roles.find(r=>r.authId===authId&&r.role===role))return notify('Already assigned','','n-bad');
+  const p=DB.get('players').find(x=>x.authId===authId);
+  roles.push({id:'ar'+Date.now(),authId,ign,discord:p?.discord||'',role,grantedBy:CU?.name||'Admin',ts:new Date().toLocaleString()});
   DB.set('adminRoles',roles);renderAdminRolesList();
-  logAdminAction('Role granted',`${role} role granted to ${ign}`);
+  logAdminAction('Role granted',`${role} role granted to ${p?.discord||ign} — linked to their Discord account, survives IGN changes`);
   notify(`${role} role granted to ${ign}!`,'','n-ok');
   const s=document.getElementById('ga-ign-search');if(s)s.value='';
   const h=document.getElementById('ga-ign');if(h)h.value='';
+  const ha=document.getElementById('ga-authid');if(ha)ha.value='';
   const chip=document.getElementById('ga-selected-chip');if(chip)chip.innerHTML='';
 }
 
@@ -4810,17 +4801,24 @@ function revokeAdminRole(id){
   if(!CU||!CU.isMaster)return notify('Master only','Only the master admin can revoke roles','n-bad');
   const roles=DB.get('adminRoles',[]);const r=roles.find(x=>x.id===id);
   const filtered=roles.filter(x=>x.id!==id);DB.set('adminRoles',filtered);renderAdminRolesList();
-  if(r)logAdminAction('Role revoked',`${r.role} role revoked from ${r.ign}`);
+  if(r)logAdminAction('Role revoked',`${r.role} role revoked from ${r.discord||r.ign}`);
   notify('Role revoked','','n-ok');
 }
 
 function renderAdminRolesList(){
   const roles=DB.get('adminRoles',[]);const el=document.getElementById('admin-roles-list');if(!el)return;
   if(!roles.length){el.innerHTML='<div class="text-dim" style="font-size:.83rem">No additional roles granted.</div>';return;}
-  el.innerHTML=roles.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
-    <div><span style="font-weight:600">${r.ign}</span> <span class="chip chip-accent" style="font-size:.62rem">${r.role}</span></div>
+  const players=DB.get('players');
+  el.innerHTML=roles.map(r=>{
+    // Look up the player fresh by their Discord id so this always shows their *current* IGN, even if renamed.
+    const p=r.authId?players.find(x=>x.authId===r.authId):null;
+    const label=p?p.ign:(r.ign||'Unknown player');
+    const discTag=p?.discord||r.discord||'';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+    <div><span style="font-weight:600">${label}</span>${discTag?` <span class="text-dim" style="font-size:.72rem"><i class="fa-brands fa-discord"></i> ${discTag}</span>`:''} <span class="chip chip-accent" style="font-size:.62rem">${r.role}</span></div>
     <button class="btn btn-danger btn-xs" onclick="revokeAdminRole('${r.id}')"><i class="fa-solid fa-ban"></i></button>
-  </div>`).join('');
+  </div>`;
+  }).join('');
 }
 
 function isManagerOf(teamId){
@@ -4830,7 +4828,7 @@ function isManagerOf(teamId){
   if(!t)return false;
   if(t.captain===CU.ign||t.manager===CU.ign)return true;
   const roles=DB.get('adminRoles',[]);
-  return roles.some(r=>r.ign===CU.ign&&(r.role==='admin'||r.role==='manager'));
+  return roles.some(r=>(r.authId&&CU.authId&&r.authId===CU.authId||(!r.authId&&r.ign===CU.ign))&&(r.role==='admin'||r.role==='manager'));
 }
 
 function saveProfileWebhook(){
@@ -4858,14 +4856,83 @@ async function pullFromSheet(){
   if(ok){notify('Synced!','Reloading with the latest data','n-ok');setTimeout(()=>location.reload(),900);}
   else{notify('Nothing pulled','Sheet reachable but no matching rows were found','n-bad');}
 }
-function saveWebhook(){
-  const wh=v('cfg-wh');
+// ═══ DISCORD WEBHOOKS — multiple named webhooks, each subscribed to one event type,
+//     so different Discord channels (match results / TDM results / admin activity) can
+//     each get their own feed. Posting a highlight (e.g. top fragger) auto-@mentions the
+//     Discord account linked to that player, if they've signed in with Discord at least once. ═══
+const WEBHOOK_EVENTS={
+  matchResults:{label:'Match Results',icon:'fa-trophy'},
+  tdmResults:{label:'TDM Results',icon:'fa-skull-crossbones'},
+  announcements:{label:'Announcements',icon:'fa-bullhorn'},
+  auditLog:{label:'Admin Activity Log',icon:'fa-shield-halved',masterOnly:true}
+};
+// One-time migration: fold the old single match-results / audit webhook fields into the new list.
+function migrateWebhooks(){
   const cfg=DB.get('cfg',{});
-  cfg.disc=wh;
-  DB.set('cfg',cfg);
-  notify('Webhook saved!','Match results will now auto-post to Discord','n-ok');
+  if(!cfg.webhooks){
+    cfg.webhooks=[];
+    if(cfg.disc&&cfg.disc.startsWith('https://discord.com/api/webhooks/'))cfg.webhooks.push({id:'wh'+Date.now()+'a',name:'Match Results',url:cfg.disc,event:'matchResults'});
+    if(cfg.auditWebhook&&cfg.auditWebhook.startsWith('https://discord.com/api/webhooks/'))cfg.webhooks.push({id:'wh'+Date.now()+'b',name:'Admin Activity',url:cfg.auditWebhook,event:'auditLog'});
+    DB.set('cfg',cfg);
+  }
+  return cfg.webhooks;
 }
-function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),disc:v('cfg-wh')||v('cfg-dc'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
+function populateWebhookEventSelect(){
+  const sel=document.getElementById('cfg-wh-event');if(!sel)return;
+  const isMaster=!!(CU&&CU.isMaster);
+  sel.innerHTML=Object.entries(WEBHOOK_EVENTS).filter(([k,m])=>!m.masterOnly||isMaster).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('');
+}
+function renderWebhookList(){
+  const el=document.getElementById('cfg-webhooks-list');if(!el)return;
+  const cfg=DB.get('cfg',{});const isMaster=!!(CU&&CU.isMaster);
+  const hooks=(cfg.webhooks||[]).filter(w=>!WEBHOOK_EVENTS[w.event]?.masterOnly||isMaster);
+  if(!hooks.length){el.innerHTML='<div class="text-dim" style="font-size:.82rem">No Discord webhooks yet — add one below.</div>';return;}
+  el.innerHTML=hooks.map(w=>{
+    const meta=WEBHOOK_EVENTS[w.event]||{label:w.event,icon:'fa-link'};
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div style="min-width:0">
+        <div style="font-weight:600;font-size:.85rem"><i class="fa-solid ${meta.icon}" style="color:#7289da;margin-right:.35rem"></i>${w.name||meta.label} <span class="chip chip-accent" style="font-size:.6rem">${meta.label}</span></div>
+        <div class="text-dim" style="font-size:.68rem;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url}</div>
+      </div>
+      <button class="btn btn-danger btn-xs" onclick="removeWebhook('${w.id}')"><i class="fa-solid fa-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+function addWebhook(){
+  const name=v('cfg-wh-name')||'',url=v('cfg-wh-url')||'',event=v('cfg-wh-event')||'matchResults';
+  if(!url.startsWith('https://discord.com/api/webhooks/'))return notify('Invalid webhook URL','Paste a real Discord webhook URL','n-bad');
+  const meta=WEBHOOK_EVENTS[event];if(!meta)return;
+  if(meta.masterOnly&&!(CU&&CU.isMaster))return notify('Master only','Only the master admin can add an Admin Activity Log webhook','n-bad');
+  const cfg=DB.get('cfg',{});cfg.webhooks=cfg.webhooks||[];
+  cfg.webhooks.push({id:'wh'+Date.now(),name:name||meta.label,url,event});
+  DB.set('cfg',cfg);renderWebhookList();
+  ['cfg-wh-name','cfg-wh-url'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  logAdminAction('Webhook added',`${meta.label} webhook "${name||meta.label}" added by ${CU?CU.name:'Admin'}`);
+  notify('Webhook added!','This channel will now receive those announcements','n-ok');
+}
+function removeWebhook(id){
+  const cfg=DB.get('cfg',{});const w=(cfg.webhooks||[]).find(x=>x.id===id);if(!w)return;
+  if(WEBHOOK_EVENTS[w.event]?.masterOnly&&!(CU&&CU.isMaster))return notify('Master only','','n-bad');
+  cfg.webhooks=(cfg.webhooks||[]).filter(x=>x.id!==id);DB.set('cfg',cfg);renderWebhookList();
+  logAdminAction('Webhook removed',`"${w.name}" webhook removed by ${CU?CU.name:'Admin'}`);
+  notify('Webhook removed','','n-ok');
+}
+// Fan an event out to every webhook subscribed to it. mentionIgn (optional) auto-@mentions that
+// player's Discord account in the message content, if they've linked one.
+function fireWebhookEvent(event,embed,mentionIgn){
+  const cfg=DB.get('cfg',{});const hooks=(cfg.webhooks||[]).filter(w=>w.event===event);
+  if(!hooks.length)return;
+  let content='';
+  if(mentionIgn){
+    const p=DB.get('players').find(x=>x.ign===mentionIgn);
+    if(p&&p.discordId)content=`<@${p.discordId}>`;
+  }
+  hooks.forEach(w=>{
+    try{fetch(w.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',content,embeds:[embed]})});}
+    catch(e){console.warn('Webhook error:',e);}
+  });
+}
+function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
   const prev=DB.get('cfg',{});
   DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');
   logAdminAction('Settings updated',`Tournament settings saved by ${CU?CU.name:'Admin'}`);
