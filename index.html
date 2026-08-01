@@ -270,6 +270,32 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ov-card-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#ec4899,#22d3ee)}
 @media (max-width:480px){.ov-card-icon{width:44px;height:44px;font-size:1.15rem}.ov-card-content .tdm-banner-ticker-item{font-size:1rem}.ov-card-body{min-height:74px}}
 
+/* ── LEADERBOARD OVERLAY (TikTok / OBS) — standalone ranked list panel, separate Browser Source ── */
+#overlay-lb-root{display:none;position:fixed;inset:0;z-index:99999;background:transparent;
+  font-family:var(--font-main);flex-direction:column;justify-content:flex-end;
+  align-items:center;padding:3vh 3vw;box-sizing:border-box;overflow:hidden}
+#overlay-lb-root.show{display:flex}
+.ovlb-card{position:relative;z-index:1;width:100%;max-width:640px;
+  background:linear-gradient(135deg,rgba(10,13,22,.94),rgba(20,16,38,.94));
+  backdrop-filter:blur(18px);border-radius:24px;overflow:hidden;
+  box-shadow:0 20px 65px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08)}
+.ovlb-card::before{content:'';position:absolute;inset:0;border-radius:24px;padding:2px;pointer-events:none;
+  background:conic-gradient(from 0deg,#6366f1,#ec4899,#22d3ee,#6366f1);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;animation:ov-hue-cycle 10s linear infinite;opacity:.85}
+.ovlb-top{position:relative;display:flex;align-items:center;gap:.7rem;padding:1.1rem 1.4rem .7rem}
+.ovlb-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:.4px}
+.ovlb-list{position:relative;display:flex;flex-direction:column;padding:.2rem 1rem 1.2rem}
+.ovlb-row{display:flex;align-items:center;gap:.8rem;padding:.55rem .3rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.ovlb-row:last-child{border-bottom:none}
+.ovlb-rank{width:28px;text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:rgba(255,255,255,.5);flex-shrink:0}
+.ovlb-rank.r1{color:#f5b942}.ovlb-rank.r2{color:#c7cdd6}.ovlb-rank.r3{color:#cd7f32}
+.ovlb-av{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#818cf8);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:.92rem;flex-shrink:0}
+.ovlb-name{flex:1;min-width:0;font-weight:700;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+.ovlb-sub{font-size:.68rem;color:rgba(255,255,255,.4);margin-top:.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovlb-val{font-family:'DM Mono',monospace;font-weight:700;font-size:1.05rem;color:#a5b4fc;flex-shrink:0}
+@media (max-width:480px){.ovlb-title{font-size:.9rem}.ovlb-row{padding:.42rem .3rem}.ovlb-name{font-size:.88rem}.ovlb-val{font-size:.92rem}}
+
 /* ── TDM player search / roster ─────────────────────────── */
 .tdm-search-results{position:relative;margin-top:.3rem;max-height:180px;overflow-y:auto;border-radius:var(--rS);
   background:var(--bg3);border:1px solid var(--border)}
@@ -848,6 +874,23 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- ═══════ LEADERBOARD OVERLAY (TikTok / OBS browser source) — standalone ranked list, separate scene ═══════ -->
+<div id="overlay-lb-root">
+  <div class="ov-bg-fx" aria-hidden="true">
+    <div class="ov-blob ov-blob-a"></div>
+    <div class="ov-blob ov-blob-b"></div>
+    <div class="ov-blob ov-blob-c"></div>
+  </div>
+  <div class="ovlb-card">
+    <div class="ovlb-top">
+      <div class="ov-card-live"><span class="dot"></span> LIVE</div>
+      <div class="ovlb-title" id="ovlb-title">Leaderboard</div>
+      <div class="ov-card-brand">RAGEISM</div>
+    </div>
+    <div class="ovlb-list" id="ovlb-list"></div>
+  </div>
+</div>
+
 <!-- Supabase init overlay -->
 <div id="sb-init-overlay">
   <div class="sb-spinner"></div>
@@ -1381,6 +1424,16 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><input class="fi" id="ov-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ov-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
+              <div style="height:1px;background:var(--border);margin:1.1rem 0"></div>
+              <div class="card-title" style="font-size:.95rem"><i class="fa-solid fa-ranking-star"></i> Leaderboard Overlay <span style="color:var(--textD);font-weight:400;font-size:.7rem">(separate Browser Source)</span></div>
+              <div style="font-size:.82rem;color:var(--textM);margin:.4rem 0 .8rem">A standalone ranked list panel — add it as its own scene/source alongside the overlay above, for a corner leaderboard widget or a dedicated "Leaderboard" scene on TikTok. Updates live as results are logged.</div>
+              <div class="frow">
+                <div class="fg"><label class="fl">Ranked by</label><select class="fi fsel" id="ovlb-metric" onchange="updateLeaderboardOverlayLink()"><option value="points">Points</option><option value="kills">Kills</option><option value="kd">K/D Ratio</option><option value="wins">Wins</option></select></div>
+                <div class="fg"><label class="fl">Show top</label><input class="fi" id="ovlb-count" type="number" min="1" max="20" value="5" oninput="updateLeaderboardOverlayLink()"/></div>
+              </div>
+              <div class="fg"><input class="fi" id="ovlb-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
+              <button class="btn btn-ghost btn-fw" onclick="copyLeaderboardOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Leaderboard Overlay Link</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ovlb-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Leaderboard Overlay</button>
             </div>
             <div class="card mb2 master-only">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Log <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
@@ -2859,7 +2912,7 @@ function showPage(n){
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
-  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';}
+  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';updateLeaderboardOverlayLink();}
 }
 
 // ═══ TICKER ═══
@@ -3530,6 +3583,35 @@ function startOverlayRotation(){
     OV_IDX=(OV_IDX+1)%OV_ITEMS.length;
     showOverlayItem(OV_IDX);
   },OV_INTERVAL);
+}
+
+// ═══ LEADERBOARD OVERLAY (TikTok / OBS) — standalone ranked list, its own Browser Source ═══
+// URL params: ?overlay=leaderboard&metric=points|kills|kd|wins&count=1-20 (defaults: points, top 5)
+function renderLeaderboardOverlay(){
+  const list=document.getElementById('ovlb-list');if(!list)return;
+  const params=new URLSearchParams(location.search);
+  const metric=params.get('metric')||'points';
+  const count=Math.max(1,Math.min(20,parseInt(params.get('count'))||5));
+  const pl=DB.get('players',[]);
+  const s=[...pl].sort((a,b)=>{
+    if(metric==='kills')return (b.kills||0)-(a.kills||0);
+    if(metric==='kd')return (b.kills/(b.deaths||1))-(a.kills/(a.deaths||1));
+    if(metric==='wins')return (b.wins||0)-(a.wins||0);
+    return (b.points||0)-(a.points||0);
+  }).slice(0,count);
+  const metricLabel={points:'PTS',kills:'KILLS',kd:'K/D',wins:'WINS'}[metric]||'PTS';
+  const title=document.getElementById('ovlb-title');if(title)title.textContent=`Top ${s.length} · ${metricLabel}`;
+  if(!s.length){list.innerHTML='<div style="padding:1.5rem;text-align:center;color:rgba(255,255,255,.4);font-size:.85rem">No players yet</div>';return;}
+  list.innerHTML=s.map((p,i)=>{
+    const rank=i+1;
+    const val=metric==='kd'?(p.kills/(p.deaths||1)).toFixed(2):metric==='kills'?(p.kills||0):metric==='wins'?(p.wins||0):(p.points||0);
+    return `<div class="ovlb-row">
+      <div class="ovlb-rank ${rank<=3?'r'+rank:''}">${rank}</div>
+      <div class="ovlb-av">${(p.ign||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div class="ovlb-name">${p.ign}</div>${p.team?`<div class="ovlb-sub">${p.team}</div>`:''}</div>
+      <div class="ovlb-val">${val}</div>
+    </div>`;
+  }).join('');
 }
 
 // ═══ GROUPS ═══
@@ -4849,6 +4931,19 @@ function copyOverlayLink(){
   try{navigator.clipboard.writeText(el.value);notify('Overlay link copied!','Paste it as a Browser Source in OBS or TikTok Live Studio.','n-ok');}
   catch{document.execCommand('copy');notify('Link copied!','','n-ok');}
 }
+function updateLeaderboardOverlayLink(){
+  const el=document.getElementById('ovlb-link');if(!el)return;
+  const metric=document.getElementById('ovlb-metric')?.value||'points';
+  const count=Math.max(1,Math.min(20,parseInt(document.getElementById('ovlb-count')?.value)||5));
+  el.value=`${location.origin}${location.pathname}?overlay=leaderboard&metric=${metric}&count=${count}`;
+}
+function copyLeaderboardOverlayLink(){
+  const el=document.getElementById('ovlb-link');if(!el)return;
+  updateLeaderboardOverlayLink();
+  el.select();el.setSelectionRange(0,9999);
+  try{navigator.clipboard.writeText(el.value);notify('Leaderboard overlay link copied!','Add it as its own Browser Source in OBS or TikTok Live Studio.','n-ok');}
+  catch{document.execCommand('copy');notify('Link copied!','','n-ok');}
+}
 async function pullFromSheet(){
   if(!SB_OK){notify('Not connected','Supabase is unreachable right now — check your connection','n-bad');return;}
   notify('Syncing...','Pulling the latest data from Supabase','n-info');
@@ -5018,7 +5113,8 @@ function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ═══ INIT ═══
 window.addEventListener('DOMContentLoaded',async()=>{
-  // ── -1. Stream overlay mode (?overlay=1) — bypass login/app entirely ──
+  // ── -1. Stream overlay mode (?overlay=1 or ?overlay=leaderboard) — bypass login/app entirely ──
+  const overlayParam = new URLSearchParams(window.location.search).get('overlay');
   const isOverlayMode = new URLSearchParams(window.location.search).has('overlay');
   if(isOverlayMode){
     sbInitMsg('Connecting to Supabase...');
@@ -5029,10 +5125,17 @@ window.addEventListener('DOMContentLoaded',async()=>{
     applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
     document.getElementById('ls').style.display='none';
     document.body.style.background='transparent';
-    document.getElementById('overlay-root').classList.add('show');
-    renderOverlay();
-    setInterval(renderOverlay,2000);
-    window.addEventListener('storage',renderOverlay);
+    if(overlayParam==='leaderboard'){
+      document.getElementById('overlay-lb-root').classList.add('show');
+      renderLeaderboardOverlay();
+      setInterval(renderLeaderboardOverlay,2000);
+      window.addEventListener('storage',renderLeaderboardOverlay);
+    } else {
+      document.getElementById('overlay-root').classList.add('show');
+      renderOverlay();
+      setInterval(renderOverlay,2000);
+      window.addEventListener('storage',renderOverlay);
+    }
     return; // don't boot the normal dashboard
   }
 
