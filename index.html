@@ -1343,7 +1343,10 @@ tr:last-child td{border-bottom:none}
       <div class="page" id="page-admin-matches">
         <div class="sh-row">
           <div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">Management</span></div></div>
-          <button class="btn btn-accent btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New Match</button>
+          <div style="display:flex;gap:.5rem">
+            <button class="btn btn-ghost btn-sm" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')"><i class="fa-solid fa-clipboard-list"></i> Signup Requests <span id="match-signup-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
+            <button class="btn btn-accent btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New Match</button>
+          </div>
         </div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Match</th><th>Map</th><th>Status</th><th>Date/Time</th><th></th></tr></thead><tbody id="am-body"></tbody></table></div></div>
       </div>
@@ -1386,13 +1389,15 @@ tr:last-child td{border-bottom:none}
           <div>
             <div class="card mb2" id="cfg-webhooks-card">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Discord Webhooks</div>
-              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Auto-post announcements to Discord. Add as many webhooks as you like — one per channel, e.g. a #match-results channel, a separate #tdm channel, a #registrations channel, and a private admin-activity channel. Each webhook only fires for the event type it's set to, so you can route match results, TDM results, team wins, player sign-ups, team registrations/approvals, and announcements to whichever channels you want. Whoever earned the highlight (like a match's top fragger) gets automatically @mentioned if they've signed in with Discord.</div>
+              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Auto-post announcements to Discord. Add as many webhooks as you like — one per channel, e.g. a #match-results channel, a separate #tdm channel, a #registrations channel, a #scrim-signups channel, and a private admin-activity channel. Each webhook only fires for the event type it's set to, so you can route match results, TDM results, team wins, player sign-ups, team registrations/approvals, scrim/tournament signup requests + acceptances, and announcements to whichever channels you want. Use "Who gets @mentioned" to control whether the whole roster (captain, manager & every member with Discord linked), just the captain, or nobody gets pinged for that channel — and optionally override the message text per webhook with tokens like {team}, {match}, {map}, {date}, {time}, {mode}, {mentions}.</div>
               <div id="cfg-webhooks-list" style="margin-bottom:1rem"></div>
               <div class="frow">
-                <div class="fg"><label class="fl">Name</label><input class="fi" id="cfg-wh-name" placeholder="e.g. #match-results"/></div>
-                <div class="fg"><label class="fl">Announces</label><select class="fi fsel" id="cfg-wh-event"></select></div>
+                <div class="fg"><label class="fl">Name</label><input class="fi" id="cfg-wh-name" placeholder="e.g. #scrim-signups"/></div>
+                <div class="fg"><label class="fl">Announces</label><select class="fi fsel" id="cfg-wh-event" onchange="onWhEventChange()"></select></div>
               </div>
               <div class="fg"><label class="fl">Webhook URL</label><input class="fi" id="cfg-wh-url" placeholder="https://discord.com/api/webhooks/..."/></div>
+              <div class="fg" id="cfg-wh-mention-wrap"><label class="fl">Who gets @mentioned</label><select class="fi fsel" id="cfg-wh-mention"><option value="all">Whole roster (captain, manager & members)</option><option value="captain">Captain only</option><option value="none">Nobody — embed only</option></select></div>
+              <div class="fg"><label class="fl">Custom Message <span style="font-weight:400;color:var(--textD)">(optional — overrides the default text)</span></label><textarea class="fta" id="cfg-wh-msg" placeholder="e.g. {mentions} you're locked into **{match}** on {map} — {date} at {time}. GLHF!" style="min-height:60px"></textarea><div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Available tokens depend on the event: {mentions} {team} {match} {map} {date} {time} {mode} {player}</div></div>
               <button class="btn btn-accent btn-fw" onclick="addWebhook()"><i class="fa-solid fa-plus"></i> Add Webhook</button>
             </div>
             <div class="card mb2">
@@ -1804,7 +1809,19 @@ tr:last-child td{border-bottom:none}
     <div class="frow"><div class="fg"><label class="fl">Map</label><select class="fi fsel" id="mm-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div></div>
     <div class="frow"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div></div>
     <div class="frow"><div class="fg"><label class="fl">Max Teams</label><input class="fi" id="mm-mt" type="number" value="20"/></div><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md"><option>Squad (4v4)</option><option>Duo</option><option>Solo</option></select></div></div>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this match</label>
     <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Match</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="match-signup-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('match-signup-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title">Request a Slot</div>
+    <div id="ms-modal-match-name" style="font-size:.85rem;color:var(--textM);margin-bottom:1rem"></div>
+    <div class="fg"><label class="fl">Team</label><select class="fi fsel" id="ms-modal-team"></select></div>
+    <div style="font-size:.72rem;color:var(--textD);margin-bottom:1rem">The host will review this and, once accepted, everyone on the roster gets pinged on Discord with the match time, map & mode.</div>
+    <button class="btn btn-accent btn-fw" onclick="submitMatchSignup()"><i class="fa-solid fa-paper-plane"></i> Send Request</button>
   </div>
 </div>
 
@@ -1828,6 +1845,15 @@ tr:last-child td{border-bottom:none}
     <button class="modal-close" onclick="closeModal('join-request-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-title">Pending Join Requests</div>
     <div id="join-request-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="match-signup-request-modal">
+  <div class="modal-box" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('match-signup-request-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title">Pending Scrim/Match Signup Requests</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Approving books the team's slot and pings the whole roster on Discord (if a matchSignupAccepted webhook is configured); denying just notifies them.</div>
+    <div id="match-signup-request-list"></div>
   </div>
 </div>
 
@@ -1939,7 +1965,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests'];
 let SB_OK = false, SB_WRITES = 0;
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
@@ -3173,7 +3199,7 @@ function regTeam(){
     {name:'Captain',value:newTeam.captain||'—',inline:true},
     {name:'Members',value:(newTeam.members||[]).join(', ')||'—',inline:false},
     {name:'Map',value:newTeam.map||'—',inline:true}
-  ]},newTeam.captain);
+  ]},teamMentionIgns(newTeam),{team:newTeam.name,captain:newTeam.captain||'',manager:newTeam.manager||''});
 }
 function renderReg(){
   const pl=DB.get('players');const body=document.getElementById('reg-body');if(!body)return;
@@ -4534,10 +4560,12 @@ function updatePendingBadges(){
   const pending=DB.get('teams').filter(t=>!t.approved).length;
   const joinPending=DB.get('joinRequests',[]).filter(r=>r.status==='pending').length;
   const xferPending=DB.get('transferRequests',[]).filter(r=>r.status==='pending').length;
+  const matchPending=DB.get('matchRequests',[]).filter(r=>r.status==='pending').length;
   const ptb=document.getElementById('pending-teams-badge');if(ptb)ptb.textContent=pending;
   const jrb=document.getElementById('join-req-badge');if(jrb)jrb.textContent=joinPending;
   const xrb=document.getElementById('transfer-req-badge');if(xrb)xrb.textContent=xferPending;
-  const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending+xferPending;
+  updateMatchSignupBadge();
+  const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending+xferPending+matchPending;
 }
 
 // ═══ PLAYER LOOKUP (autocomplete dropdown by IGN, name, or UID) ═══
@@ -4935,13 +4963,32 @@ function renderMatches(filter='all'){
   const ms=DB.get('matches');const list=document.getElementById('matches-list');if(!list)return;
   const fl=filter==='all'?ms:ms.filter(m=>m.status===filter);
   if(!fl.length){list.innerHTML='<div class="text-dim" style="padding:2rem;text-align:center;font-size:.87rem">No matches found.</div>';return;}
+  const myTeams=CU?myOwnedTeams():[];
+  const myRequests=DB.get('matchRequests',[]);
   list.innerHTML=fl.map(m=>{const sc=m.status==='live'?'status-live':m.status==='upcoming'?'status-up':'status-done';const sl=m.status==='live'?`<div class="live-dot"></div>Live`:m.status==='upcoming'?'Upcoming':'Ended';
-    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div>${ADM?`<button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div>`;
+    const slotsFilled=(m.teams||[]).length;
+    // Signup button: only for upcoming matches with openSignups enabled and slots remaining, only shown to captains/managers of a team not yet in/pending for this match.
+    let signupBtn='';
+    if(m.status==='upcoming'&&m.openSignups!==false&&myTeams.length){
+      const myPending=myTeams.filter(t=>{
+        const inMatch=(m.teams||[]).some(x=>x.teamId===t.id);
+        const hasReq=myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status!=='denied');
+        return inMatch||hasReq;
+      });
+      if(myPending.length<myTeams.length&&slotsFilled<(m.maxTeams||20)){
+        signupBtn=`<button class="btn btn-accent btn-xs" onclick="openMatchSignupModal('${m.id}')"><i class="fa-solid fa-hand"></i> Request Slot</button>`;
+      }else if(myTeams.some(t=>(m.teams||[]).some(x=>x.teamId===t.id))){
+        signupBtn=`<span class="chip chip-green" style="font-size:.66rem">You're in</span>`;
+      }else if(myTeams.some(t=>myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status==='pending'))){
+        signupBtn=`<span class="chip chip-accent" style="font-size:.66rem">Requested</span>`;
+      }
+    }
+    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
 }
 function filterMatches(f,btn){document.querySelectorAll('#page-matches .topbar-pills,.btn-filter,.btn-accent.btn-sm,.btn-ghost.btn-sm').forEach(b=>{if(b.getAttribute('onclick')?.includes('filterMatches'))b.className='btn btn-ghost btn-sm';});if(btn){btn.className='btn btn-accent btn-sm';}renderMatches(f);}
 function cycleMatchStatus(id){const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;const s=['upcoming','live','done'];m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();notify(`#${id} → ${m.status}!`,'','n-ok');}
-function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,mode:v('mm-md'),notes:''});DB.set('matches',ms);closeModal('match-modal');renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,'','n-ok');}
+function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,teams:[]});DB.set('matches',ms);closeModal('match-modal');renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,'','n-ok');}
 
 // ═══ COMPARE ═══
 function renderCmpSelects(){const pl=DB.get('players');['cmp1','cmp2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— Select Player —</option>'+pl.map(p=>`<option value="${p.id}">${p.ign} (${p.team||p.rank})</option>`).join('');if(cur)s.value=cur;});}
@@ -5046,7 +5093,7 @@ function approveTeam(id){
     {name:'Team',value:`${t.name}${t.tag?' ['+t.tag+']':''}`,inline:true},
     {name:'Captain',value:t.captain||'—',inline:true},
     {name:'Roster',value:(t.members||[]).join(', ')||'—',inline:false}
-  ]},t.captain);
+  ]},teamMentionIgns(t),{team:t.name});
 }
 
 function openManageTeam(id){
@@ -5226,6 +5273,98 @@ function isManagerOf(teamId){
   return roles.some(r=>(r.authId&&CU.authId&&r.authId===CU.authId||(!r.authId&&r.ign===CU.ign))&&(r.role==='admin'||r.role==='manager'));
 }
 
+// ═══ SCRIM / MATCH SLOT SIGNUP REQUESTS ═══
+// A team's captain or manager can request their team a slot in an upcoming match/scrim/tournament.
+// Admin approves/denies from the Match Management page; approving both books the slot AND fires the
+// matchSignupAccepted webhook, @mentioning the whole roster with the match's time, map & mode.
+// Only the signed-in captain/manager of the team itself can request for it — not the generic ADM/manager-role override in isManagerOf().
+function myOwnedTeams(){
+  if(!CU)return[];
+  return DB.get('teams').filter(t=>t.approved&&(t.captain===CU.ign||t.manager===CU.ign));
+}
+function openMatchSignupModal(matchId){
+  if(!CU)return notify('Login required','Sign in with Discord to request a slot','n-bad');
+  const teams=myOwnedTeams();
+  if(!teams.length)return notify('No team to sign up','You need to be the captain or manager of an approved team first','n-bad');
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  window._msModalMatchId=matchId;
+  document.getElementById('ms-modal-match-name').textContent=`${m.name} · ${m.map} · ${m.date} ${m.time}`;
+  const sel=document.getElementById('ms-modal-team');
+  const requests=DB.get('matchRequests',[]);
+  sel.innerHTML=teams.map(t=>{
+    const already=requests.find(r=>r.matchId===matchId&&r.teamId===t.id&&r.status!=='denied');
+    return `<option value="${t.id}"${already?' disabled':''}>${t.name}${already?` — already ${already.status}`:''}</option>`;
+  }).join('');
+  openModal('match-signup-modal');
+}
+function submitMatchSignup(){
+  const matchId=window._msModalMatchId;const teamId=v('ms-modal-team');
+  if(!matchId||!teamId)return notify('Pick a team','','n-bad');
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return;
+  if(!isManagerOf(teamId)&&t.captain!==CU.ign&&t.manager!==CU.ign)return notify('Not authorized','Only that team\'s captain or manager can request this','n-bad');
+  const requests=DB.get('matchRequests',[]);
+  if(requests.find(r=>r.matchId===matchId&&r.teamId===teamId&&r.status!=='denied'))return notify('Already requested','','n-bad');
+  if((m.teams||[]).some(x=>x.teamId===teamId))return notify('Already in this match','','n-bad');
+  if((m.teams||[]).length>=(m.maxTeams||20))return notify('Match is full','No open slots left for this match','n-bad');
+  requests.push({id:'mr'+Date.now(),matchId,matchName:m.name,teamId,teamName:t.name,requestedBy:CU.ign,status:'pending',ts:new Date().toLocaleString()});
+  DB.set('matchRequests',requests);closeModal('match-signup-modal');updateMatchSignupBadge();
+  fireWebhookEvent('matchSignupRequest',{title:'📋 New Scrim/Match Signup Request',color:3900151,fields:[
+    {name:'Team',value:t.name,inline:true},
+    {name:'Match',value:m.name,inline:true},
+    {name:'Map',value:m.map||'—',inline:true},
+    {name:'When',value:`${m.date} ${m.time}`,inline:true},
+    {name:'Requested by',value:CU.ign,inline:true}
+  ]},null,{team:t.name,match:m.name,map:m.map||'',date:m.date||'',time:m.time||'',mode:m.mode||''});
+  notify(`Request sent for ${t.name}!`,'Awaiting host approval','n-ok');
+}
+function renderMatchSignupRequests(){
+  const requests=DB.get('matchRequests',[]).filter(r=>r.status==='pending');
+  const el=document.getElementById('match-signup-request-list');if(!el)return;
+  if(!requests.length){el.innerHTML='<div class="text-dim" style="padding:1rem">No pending signup requests.</div>';return;}
+  el.innerHTML=requests.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .9rem;margin-bottom:.4rem;gap:.6rem">
+    <div style="min-width:0"><div style="font-weight:600">${r.teamName}</div><div style="font-size:.77rem;color:var(--textM)">→ ${r.matchName} · requested by ${r.requestedBy} · ${r.ts}</div></div>
+    <div style="display:flex;gap:.3rem;flex-shrink:0">
+      <button class="btn btn-success btn-xs" onclick="resolveMatchSignupRequest('${r.id}',true)"><i class="fa-solid fa-check"></i> Approve</button>
+      <button class="btn btn-danger btn-xs" onclick="resolveMatchSignupRequest('${r.id}',false)"><i class="fa-solid fa-xmark"></i> Deny</button>
+    </div>
+  </div>`).join('');
+}
+function resolveMatchSignupRequest(id,approve){
+  const requests=DB.get('matchRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===r.matchId);
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
+  if(approve&&m){
+    m.teams=m.teams||[];
+    if(m.teams.length>=(m.maxTeams||20))return notify('Match is full','Deny this or bump Max Teams first','n-bad');
+    if(!m.teams.some(x=>x.teamId===r.teamId))m.teams.push({teamId:r.teamId,teamName:r.teamName});
+    DB.set('matches',ms);
+  }
+  r.status=approve?'approved':'denied';
+  DB.set('matchRequests',requests);renderMatchSignupRequests();updateMatchSignupBadge();renderMatches();renderAMatches();
+  logAdminAction(approve?'Match signup approved':'Match signup denied',`${r.teamName} ${approve?'was accepted into':'was turned away from'} ${r.matchName} by ${CU?CU.name:'Admin'}`);
+  if(approve){
+    fireWebhookEvent('matchSignupAccepted',{title:'✅ Scrim/Match Slot Confirmed',color:3066993,fields:[
+      {name:'Team',value:r.teamName,inline:true},
+      {name:'Match',value:r.matchName,inline:true},
+      {name:'Map',value:m?.map||'—',inline:true},
+      {name:'Date',value:m?.date||'TBD',inline:true},
+      {name:'Time',value:m?.time||'TBD',inline:true},
+      {name:'Mode',value:m?.mode||'—',inline:true}
+    ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName,map:m?.map||'',date:m?.date||'',time:m?.time||'',mode:m?.mode||''});
+  }else{
+    fireWebhookEvent('matchSignupDenied',{title:'Scrim/Match Slot Request Denied',color:15158332,fields:[
+      {name:'Team',value:r.teamName,inline:true},
+      {name:'Match',value:r.matchName,inline:true}
+    ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName});
+  }
+  notify(approve?'Request approved!':'Request denied','','n-ok');
+}
+function updateMatchSignupBadge(){
+  const pending=DB.get('matchRequests',[]).filter(r=>r.status==='pending').length;
+  const b=document.getElementById('match-signup-badge');if(b)b.textContent=pending;
+}
+
 function saveProfileWebhook(){
   if(!CU)return;
   const wh=document.getElementById('profile-webhook')?.value?.trim()||'';
@@ -5260,11 +5399,19 @@ const WEBHOOK_EVENTS={
   tdmResults:{label:'TDM Results',icon:'fa-skull-crossbones'},
   teamWins:{label:'Team Wins',icon:'fa-crown'},
   playerRegistration:{label:'Player Registrations',icon:'fa-user-plus'},
-  teamRegistration:{label:'Team Registrations',icon:'fa-shield-halved'},
-  teamApproved:{label:'Team Approved',icon:'fa-circle-check'},
+  teamRegistration:{label:'Team Registrations',icon:'fa-shield-halved',defaultScope:'all',tokens:'{team} {captain} {manager} {mentions}'},
+  teamApproved:{label:'Team Approved',icon:'fa-circle-check',defaultScope:'all',tokens:'{team} {mentions}'},
+  matchSignupRequest:{label:'Scrim/Match Signup Requests',icon:'fa-clipboard-list',defaultScope:'none',tokens:'{team} {match} {map} {date} {time} {mode}'},
+  matchSignupAccepted:{label:'Scrim/Match Signup Accepted',icon:'fa-calendar-check',defaultScope:'all',tokens:'{team} {match} {map} {date} {time} {mode} {mentions}'},
+  matchSignupDenied:{label:'Scrim/Match Signup Denied',icon:'fa-calendar-xmark',defaultScope:'captain',tokens:'{team} {match} {mentions}'},
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
   auditLog:{label:'Admin Activity Log',icon:'fa-shield-halved',masterOnly:true}
 };
+function onWhEventChange(){
+  const event=v('cfg-wh-event');const meta=WEBHOOK_EVENTS[event];if(!meta)return;
+  const sel=document.getElementById('cfg-wh-mention');if(sel)sel.value=meta.defaultScope||'all';
+  const msg=document.getElementById('cfg-wh-msg');if(msg)msg.placeholder=meta.tokens?`Tokens for this event: ${meta.tokens}`:"e.g. {mentions} you're locked into **{match}**...";
+}
 // One-time migration: fold the old single match-results / audit webhook fields into the new list.
 function migrateWebhooks(){
   const cfg=DB.get('cfg',{});
@@ -5280,18 +5427,21 @@ function populateWebhookEventSelect(){
   const sel=document.getElementById('cfg-wh-event');if(!sel)return;
   const isMaster=!!(CU&&CU.isMaster);
   sel.innerHTML=Object.entries(WEBHOOK_EVENTS).filter(([k,m])=>!m.masterOnly||isMaster).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('');
+  onWhEventChange();
 }
 function renderWebhookList(){
   const el=document.getElementById('cfg-webhooks-list');if(!el)return;
   const cfg=DB.get('cfg',{});const isMaster=!!(CU&&CU.isMaster);
   const hooks=(cfg.webhooks||[]).filter(w=>!WEBHOOK_EVENTS[w.event]?.masterOnly||isMaster);
   if(!hooks.length){el.innerHTML='<div class="text-dim" style="font-size:.82rem">No Discord webhooks yet — add one below.</div>';return;}
+  const scopeLabel={all:'Whole roster',captain:'Captain only',none:'No mentions'};
   el.innerHTML=hooks.map(w=>{
     const meta=WEBHOOK_EVENTS[w.event]||{label:w.event,icon:'fa-link'};
     return `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.06)">
       <div style="min-width:0">
-        <div style="font-weight:600;font-size:.85rem"><i class="fa-solid ${meta.icon}" style="color:#7289da;margin-right:.35rem"></i>${w.name||meta.label} <span class="chip chip-accent" style="font-size:.6rem">${meta.label}</span></div>
+        <div style="font-weight:600;font-size:.85rem"><i class="fa-solid ${meta.icon}" style="color:#7289da;margin-right:.35rem"></i>${w.name||meta.label} <span class="chip chip-accent" style="font-size:.6rem">${meta.label}</span> <span class="chip" style="font-size:.58rem" title="Who gets @mentioned"><i class="fa-solid fa-at" style="margin-right:.2rem"></i>${scopeLabel[w.mentionScope||'all']}</span></div>
         <div class="text-dim" style="font-size:.68rem;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url}</div>
+        ${w.customMsg?`<div class="text-dim" style="font-size:.68rem;margin-top:.15rem;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✎ "${w.customMsg}"</div>`:''}
       </div>
       <button class="btn btn-ghost btn-xs" title="Send a test message" onclick="testWebhook('${w.id}')"><i class="fa-solid fa-paper-plane"></i></button>
       <button class="btn btn-danger btn-xs" onclick="removeWebhook('${w.id}')"><i class="fa-solid fa-trash"></i></button>
@@ -5307,13 +5457,14 @@ function testWebhook(id){
 }
 function addWebhook(){
   const name=v('cfg-wh-name')||'',url=v('cfg-wh-url')||'',event=v('cfg-wh-event')||'matchResults';
+  const mentionScope=v('cfg-wh-mention')||'all',customMsg=(v('cfg-wh-msg')||'').trim();
   if(!url.startsWith('https://discord.com/api/webhooks/'))return notify('Invalid webhook URL','Paste a real Discord webhook URL','n-bad');
   const meta=WEBHOOK_EVENTS[event];if(!meta)return;
   if(meta.masterOnly&&!(CU&&CU.isMaster))return notify('Master only','Only the master admin can add an Admin Activity Log webhook','n-bad');
   const cfg=DB.get('cfg',{});cfg.webhooks=cfg.webhooks||[];
-  cfg.webhooks.push({id:'wh'+Date.now(),name:name||meta.label,url,event});
+  cfg.webhooks.push({id:'wh'+Date.now(),name:name||meta.label,url,event,mentionScope,customMsg});
   DB.set('cfg',cfg);renderWebhookList();
-  ['cfg-wh-name','cfg-wh-url'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['cfg-wh-name','cfg-wh-url','cfg-wh-msg'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   logAdminAction('Webhook added',`${meta.label} webhook "${name||meta.label}" added by ${CU?CU.name:'Admin'}`);
   notify('Webhook added!','This channel will now receive those announcements','n-ok');
 }
@@ -5324,17 +5475,36 @@ function removeWebhook(id){
   logAdminAction('Webhook removed',`"${w.name}" webhook removed by ${CU?CU.name:'Admin'}`);
   notify('Webhook removed','','n-ok');
 }
-// Fan an event out to every webhook subscribed to it. mentionIgn (optional) auto-@mentions that
-// player's Discord account in the message content, if they've linked one.
-function fireWebhookEvent(event,embed,mentionIgn){
+// Look up every distinct Discord id tied to a team's captain, manager and roster members.
+// Used to @mention the whole squad at once (team registered, scrim slot accepted, etc.)
+function teamMentionIgns(team){
+  if(!team)return[];
+  const igns=new Set();
+  if(team.captain)igns.add(team.captain);
+  if(team.manager)igns.add(team.manager);
+  (team.members||[]).forEach(m=>igns.add(m));
+  return[...igns];
+}
+// Fan an event out to every webhook subscribed to it.
+// mentionIgns: a single IGN (string, legacy) or an array of IGNs to @mention — each webhook's own
+//   "Who gets @mentioned" setting (mentionScope: all/captain/none) further narrows this down per channel.
+// vars: token values ({team},{match},{map},{date},{time},{mode},{player}...) used to fill in a
+//   webhook's Custom Message, and also substituted into {mentions} inside that custom text.
+function fireWebhookEvent(event,embed,mentionIgns,vars){
   const cfg=DB.get('cfg',{});const hooks=(cfg.webhooks||[]).filter(w=>w.event===event);
   if(!hooks.length)return;
-  let content='';
-  if(mentionIgn){
-    const p=DB.get('players').find(x=>x.ign===mentionIgn);
-    if(p&&p.discordId)content=`<@${p.discordId}>`;
-  }
+  const igns=Array.isArray(mentionIgns)?mentionIgns:(mentionIgns?[mentionIgns]:[]);
+  const players=DB.get('players');
+  const mentionFor=ign=>{const p=players.find(x=>x.ign===ign);return p&&p.discordId?`<@${p.discordId}>`:null;};
   hooks.forEach(w=>{
+    const scope=w.mentionScope||'all';
+    let useIgns=scope==='none'?[]:scope==='captain'?igns.slice(0,1):igns;
+    const mentionStr=useIgns.map(mentionFor).filter(Boolean).join(' ');
+    let content=mentionStr;
+    if(w.customMsg){
+      const tv={...(vars||{}),mentions:mentionStr};
+      content=w.customMsg.replace(/\{(\w+)\}/g,(m,k)=>tv[k]!==undefined&&tv[k]!==''?tv[k]:'');
+    }
     try{fetch(w.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',content,embeds:[embed]})});}
     catch(e){console.warn('Webhook error:',e);}
   });
@@ -5420,7 +5590,7 @@ document.addEventListener('click',e=>{
 });
 
 function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, polls, brackets, logs, etc.)');['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, polls, brackets, logs, etc.)');['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
