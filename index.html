@@ -1386,7 +1386,7 @@ tr:last-child td{border-bottom:none}
           <div>
             <div class="card mb2" id="cfg-webhooks-card">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Discord Webhooks</div>
-              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Auto-post announcements to Discord. Add as many webhooks as you like — e.g. a #match-results channel, a separate #tdm channel, and a private admin-activity channel — each fires only for the event type it's set to. Whoever earned the highlight (like a match's top fragger) gets automatically @mentioned if they've signed in with Discord.</div>
+              <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Auto-post announcements to Discord. Add as many webhooks as you like — one per channel, e.g. a #match-results channel, a separate #tdm channel, a #registrations channel, and a private admin-activity channel. Each webhook only fires for the event type it's set to, so you can route match results, TDM results, team wins, player sign-ups, team registrations/approvals, and announcements to whichever channels you want. Whoever earned the highlight (like a match's top fragger) gets automatically @mentioned if they've signed in with Discord.</div>
               <div id="cfg-webhooks-list" style="margin-bottom:1rem"></div>
               <div class="frow">
                 <div class="fg"><label class="fl">Name</label><input class="fi" id="cfg-wh-name" placeholder="e.g. #match-results"/></div>
@@ -1874,6 +1874,14 @@ tr:last-child td{border-bottom:none}
     <div id="manage-team-content"></div>
   </div>
 </div>
+
+<!-- ═══ TEAM PROFILE / HISTORY — scrims + TDM match history, kept in separate sections ═══ -->
+<div class="modal-overlay" id="team-profile-modal">
+  <div class="modal-box" style="max-width:640px">
+    <button class="modal-close" onclick="closeModal('team-profile-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div id="team-profile-content"></div>
+  </div>
+</div>
   <div class="modal-box" style="max-width:580px">
     <button class="modal-close" onclick="closeModal('profile-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div id="profile-modal-content"></div>
@@ -2059,6 +2067,10 @@ async function completeDiscordLink(){
   } else {
     p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
     players.push(p);
+    fireWebhookEvent('playerRegistration',{title:'New Player Registered',color:5793266,fields:[
+      {name:'IGN',value:ign,inline:true},
+      {name:'Discord',value:window._dlsName||'—',inline:true}
+    ]},ign);
   }
   DB.set('players', players);
 
@@ -3091,6 +3103,13 @@ async function regPlayer(){
   pl.push(entry);
   DB.set('players',pl);['rn','ri','ru','rt','rd','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderReg();updateStats();buildTicker();refreshDLs();notify('Registered!',`${ig} joined the arena`,'n-ok');
+  fireWebhookEvent('playerRegistration',{title:'New Player Registered',color:5793266,fields:[
+    {name:'IGN',value:ig,inline:true},
+    {name:'Name',value:n,inline:true},
+    {name:'Team',value:entry.team||'Solo / Unassigned',inline:true},
+    {name:'Region',value:entry.region||'—',inline:true},
+    {name:'Platform',value:entry.platform||'—',inline:true}
+  ]},ig);
 }
 // ═══ TEAM REGISTRATION — PUBG UID LOOKUP ═══
 let TR_CAPTAIN=null; // resolved player {uid,ign,name}
@@ -3145,9 +3164,16 @@ function regTeam(){
   teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:TR_CAPTAIN.ign,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting:!!document.getElementById('t-recruit')?.checked,recruitNote:v('t-roles')||''});
   DB.set('teams',teams);['tn','tt','tr-cap-uid','tr-mem-uid','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
+  const newTeam=teams[teams.length-1];
   TR_CAPTAIN=null;TR_MEMBERS=[];trRenderCapChip();trRenderMemChips();
   updateStats();refreshDLs();updatePendingBadges();
   notify('Team submitted!','Awaiting admin approval before appearing publicly.','n-ok');
+  fireWebhookEvent('teamRegistration',{title:'New Team Registered — Pending Approval',color:15844367,fields:[
+    {name:'Team',value:`${newTeam.name}${newTeam.tag?' ['+newTeam.tag+']':''}`,inline:true},
+    {name:'Captain',value:newTeam.captain||'—',inline:true},
+    {name:'Members',value:(newTeam.members||[]).join(', ')||'—',inline:false},
+    {name:'Map',value:newTeam.map||'—',inline:true}
+  ]},newTeam.captain);
 }
 function renderReg(){
   const pl=DB.get('players');const body=document.getElementById('reg-body');if(!body)return;
@@ -3279,6 +3305,10 @@ function tdmFinishMatch(m,ms){
       {name:'Winner',value:m.winner,inline:true},
       {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
     ]},mvp?mvp.ign:null);
+    fireWebhookEvent('teamWins',{title:`🏆 ${m.winner} wins the TDM!`,color:16766720,fields:[
+      {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
+      {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
+    ]},mvp?mvp.ign:null);
     return;
   }
   const rec=tdmSeriesRecord(m.seriesId,m.aName,m.bName);
@@ -3290,6 +3320,10 @@ function tdmFinishMatch(m,ms){
     fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
       {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
       {name:'Final Game',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
+      {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
+    ]},mvp?mvp.ign:null);
+    fireWebhookEvent('teamWins',{title:`🏆 ${seriesWinner} wins the series!`,color:16766720,fields:[
+      {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
       {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
     ]},mvp?mvp.ign:null);
     notify('Series complete!',`${seriesWinner} wins the Best of 3 (${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)})`,'n-ok');
@@ -4103,6 +4137,14 @@ function submitResults(){
       {name:'Winner',value:logEntry.winnerTeam||logEntry.winnerIGN||'—',inline:true},
       {name:'Top Fragger',value:topFragger?`${topFragger.ign} (${topFragger.kills}K)`:'—',inline:true}
     ]},topFragger?topFragger.ign:null);
+    if(logEntry.winnerTeam){
+      const wSummary=logEntry.matchSummary.find(s=>s.teamName===logEntry.winnerTeam);
+      fireWebhookEvent('teamWins',{title:`🏆 ${logEntry.winnerTeam} takes the win!`,color:16766720,fields:[
+        {name:'Match',value:logEntry.matchName||logEntry.matchId,inline:true},
+        {name:'Map',value:logEntry.map||'—',inline:true},
+        {name:'Team Kills',value:String(wSummary?wSummary.kills:0),inline:true}
+      ]},logEntry.winnerIGN||null);
+    }
   }
   const topTeam=matchSummary.sort((a,b)=>b.totalPts-a.totalPts)[0];
   notify('Results saved!',`Winner: ${winnerTeam||winnerIGN||'—'} · ${topTeam?topTeam.totalPts+'pts':''}`,'n-ok');
@@ -4829,7 +4871,7 @@ function renderTeams(){
   if(!allTeams.filter(t=>t.approved).length){g.innerHTML='<div class="text-dim" style="padding:2rem;font-size:.85rem">No approved teams yet.</div>';return;}
   if(!teams.length){g.innerHTML=`<div class="text-dim" style="padding:2rem;font-size:.85rem">No teams match your filters.</div>`;return;}
   g.innerHTML=teams.map(t=>`<div class="team-card">
-    <div class="team-header">
+    <div class="team-header" style="cursor:pointer" onclick="openTeamProfile('${t.id}')">
       <div class="team-icon" style="background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'}"><i class="fa-solid fa-shield-halved"></i></div>
       <div style="flex:1"><div class="team-name-text" style="color:${t.color||'var(--accentL)'}">${t.name}</div><div class="team-tag">${t.tag||''} · ${t.map}</div></div>
       <span class="chip chip-green">${t.wins||0}W</span>
@@ -4843,6 +4885,49 @@ function renderTeams(){
       </div>
     </div>
   </div>`).join('');
+}
+
+// ═══ TEAM PROFILE / HISTORY ═══
+// Pulls scrims history from rlogs5 (per-match placement/kills/points) and TDM history from
+// tdmMatches (per-game score/winner) — the two are shown as separate sections, never merged,
+// matching the scrims/TDM split used everywhere else in the app.
+function openTeamProfile(id){
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
+  const roles=['IGL','Fragger','Sniper','Support','Sub','Sub'];
+  const scrimsLogs=DB.get('rlogs5',[]).filter(l=>(l.matchSummary||[]).some(s=>s.teamName===t.name)).slice(0,15);
+  const tdmMs=DB.get('tdmMatches',[]).filter(m=>m.status==='done'&&(m.aName===t.name||m.bName===t.name)).slice().reverse().slice(0,15);
+  const scrimsWins=scrimsLogs.filter(l=>l.winnerTeam===t.name).length;
+  const tdmWins=tdmMs.filter(m=>m.winner===t.name).length;
+  const el=document.getElementById('team-profile-content');if(!el)return;
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:1.2rem">
+      <div class="team-icon" style="width:52px;height:52px;font-size:1.3rem;background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'}"><i class="fa-solid fa-shield-halved"></i></div>
+      <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:${t.color||'var(--accentL)'}">${esc(t.name)}</div><div class="text-dim" style="font-size:.82rem">${esc(t.tag||'')}${t.map?' · '+esc(t.map):''}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1.2rem">
+      <div class="card" style="padding:.7rem;text-align:center"><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:1.15rem;color:var(--green)">${scrimsWins}</div><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase">Scrims Wins</div></div>
+      <div class="card" style="padding:.7rem;text-align:center"><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:1.15rem;color:var(--accentL)">${scrimsLogs.length}</div><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase">Scrims Played</div></div>
+      <div class="card" style="padding:.7rem;text-align:center"><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:1.15rem;color:var(--green)">${tdmWins}</div><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase">TDM Wins</div></div>
+      <div class="card" style="padding:.7rem;text-align:center"><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:1.15rem;color:var(--red)">${tdmMs.length}</div><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase">TDM Played</div></div>
+    </div>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem;color:var(--textM);text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-users" style="margin-right:.35rem"></i>Roster</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem">
+      ${(t.members||[]).map((m,i)=>`<span class="chip ${m===t.captain?'chip-accent':'chip-neutral'}" style="font-size:.75rem">${m===t.captain?'<i class="fa-solid fa-crown" style="margin-right:.3rem;color:var(--amber)"></i>':''}${esc(m)}<span style="opacity:.6;margin-left:.35rem;font-size:.65rem">${roles[i]||'Sub'}</span></span>`).join('')||'<span class="text-dim" style="font-size:.8rem">No roster listed</span>'}
+    </div>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem;color:var(--textM);text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-crosshairs" style="margin-right:.35rem"></i>Scrims History</div>
+    <div class="tbl-wrap" style="margin-bottom:1.2rem"><table><thead><tr><th>Match</th><th>Map</th><th>Place</th><th>Kills</th><th>Pts</th></tr></thead><tbody>
+      ${scrimsLogs.length?scrimsLogs.map(l=>{const s=(l.matchSummary||[]).find(x=>x.teamName===t.name);
+        return `<tr><td style="font-size:.8rem">${esc(l.matchName||l.matchId)}</td><td style="font-size:.8rem">${MI[l.map]||''} ${esc(l.map||'—')}</td><td>${s&&s.placement===1?'<span class="chip chip-green">1st</span>':`#${s?s.placement:'—'}`}</td><td class="chip chip-red" style="display:inline-block">${s?s.kills:0}</td><td class="font-mono text-accent">${s?s.totalPts:0}</td></tr>`;
+      }).join(''):'<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--textD)">No scrims matches logged yet.</td></tr>'}
+    </tbody></table></div>
+    <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem;color:var(--textM);text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-skull-crossbones" style="margin-right:.35rem"></i>TDM History</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Opponent</th><th>Score</th><th>Result</th><th>Date</th></tr></thead><tbody>
+      ${tdmMs.length?tdmMs.map(m=>{const isA=m.aName===t.name;const oppName=isA?m.bName:m.aName;const myScore=isA?m.scoreA:m.scoreB;const oppScore=isA?m.scoreB:m.scoreA;const won=m.winner===t.name;
+        return `<tr><td style="font-size:.8rem">${esc(oppName)}</td><td class="font-mono">${myScore} – ${oppScore}</td><td>${won?'<span class="chip chip-green">Win</span>':'<span class="chip chip-neutral">Loss</span>'}</td><td class="text-dim" style="font-size:.72rem">${tdmFmtDate(m.doneTs||m.ts)}</td></tr>`;
+      }).join(''):'<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--textD)">No TDM matches logged yet.</td></tr>'}
+    </tbody></table></div>
+  `;
+  openModal('team-profile-modal');
 }
 
 // ═══ MATCHES ═══
@@ -4957,6 +5042,11 @@ function renderATeams(){
 function approveTeam(id){
   const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
   t.approved=true;DB.set('teams',teams);renderATeams();renderTeams();logAdminAction('Team approved',`${t.name} was approved`);notify(`${t.name} approved!`,'','n-ok');
+  fireWebhookEvent('teamApproved',{title:'Team Approved ✅',color:3066993,fields:[
+    {name:'Team',value:`${t.name}${t.tag?' ['+t.tag+']':''}`,inline:true},
+    {name:'Captain',value:t.captain||'—',inline:true},
+    {name:'Roster',value:(t.members||[]).join(', ')||'—',inline:false}
+  ]},t.captain);
 }
 
 function openManageTeam(id){
@@ -5168,6 +5258,10 @@ async function pullFromSheet(){
 const WEBHOOK_EVENTS={
   matchResults:{label:'Match Results',icon:'fa-trophy'},
   tdmResults:{label:'TDM Results',icon:'fa-skull-crossbones'},
+  teamWins:{label:'Team Wins',icon:'fa-crown'},
+  playerRegistration:{label:'Player Registrations',icon:'fa-user-plus'},
+  teamRegistration:{label:'Team Registrations',icon:'fa-shield-halved'},
+  teamApproved:{label:'Team Approved',icon:'fa-circle-check'},
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
   auditLog:{label:'Admin Activity Log',icon:'fa-shield-halved',masterOnly:true}
 };
@@ -5199,9 +5293,17 @@ function renderWebhookList(){
         <div style="font-weight:600;font-size:.85rem"><i class="fa-solid ${meta.icon}" style="color:#7289da;margin-right:.35rem"></i>${w.name||meta.label} <span class="chip chip-accent" style="font-size:.6rem">${meta.label}</span></div>
         <div class="text-dim" style="font-size:.68rem;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url}</div>
       </div>
+      <button class="btn btn-ghost btn-xs" title="Send a test message" onclick="testWebhook('${w.id}')"><i class="fa-solid fa-paper-plane"></i></button>
       <button class="btn btn-danger btn-xs" onclick="removeWebhook('${w.id}')"><i class="fa-solid fa-trash"></i></button>
     </div>`;
   }).join('');
+}
+function testWebhook(id){
+  const cfg=DB.get('cfg',{});const w=(cfg.webhooks||[]).find(x=>x.id===id);if(!w)return;
+  const meta=WEBHOOK_EVENTS[w.event]||{label:w.event};
+  fetch(w.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'RAGEISM',embeds:[{title:'✅ Test message',description:`This webhook is wired up to **${meta.label}** and firing correctly.`,color:5793266}]})})
+    .then(()=>notify('Test sent!','Check the Discord channel','n-ok'))
+    .catch(()=>notify('Send failed','Double-check the webhook URL','n-bad'));
 }
 function addWebhook(){
   const name=v('cfg-wh-name')||'',url=v('cfg-wh-url')||'',event=v('cfg-wh-event')||'matchResults';
@@ -5241,6 +5343,9 @@ function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg
   const prev=DB.get('cfg',{});
   DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');
   logAdminAction('Settings updated',`Tournament settings saved by ${CU?CU.name:'Admin'}`);
+  if(cfg.ann&&cfg.ann.trim()&&cfg.ann.trim()!==(prev.ann||'').trim()){
+    fireWebhookEvent('announcements',{title:'📣 New Announcement',color:10181046,description:cfg.ann.trim()});
+  }
   if(ADM)renderAdminOverview();}
 
 // ── Theme color customization (Team A / Team B) — applied as CSS custom properties everywhere ──
