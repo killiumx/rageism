@@ -928,7 +928,7 @@ tr:last-child td{border-bottom:none}
   <div class="ov-card" id="ov-card">
     <div class="ov-card-top">
       <div class="ov-card-live"><span class="dot"></span> LIVE</div>
-      <div class="ov-card-brand">RAGEISM</div>
+      <div class="ov-card-brand">RAGEISM<span id="ov-card-synced" style="display:block;font-family:'DM Mono',monospace;font-weight:400;font-size:.55rem;letter-spacing:.5px;color:var(--ov-fg-dim3);text-align:right;margin-top:.1rem;opacity:.7"></span></div>
     </div>
     <div class="ov-card-body">
       <div class="ov-card-icon"><i class="fa-solid fa-bolt"></i></div>
@@ -2306,7 +2306,7 @@ function sbHideOverlay(){
 // Init: simple GET to confirm the table/API is reachable
 async function sbInit(){
   try{
-    const res = await fetch(SB_REST + '?select=key&limit=1', { method: 'GET', headers: SB_HEADERS });
+    const res = await fetch(SB_REST + '?select=key&limit=1&_=' + Date.now(), { method: 'GET', headers: SB_HEADERS, cache: 'no-store' });
 
     if(res.status === 401 || res.status === 403){
       sbStatus('err', 'Supabase: access denied — check your anon key / RLS policies'); return false;
@@ -2337,7 +2337,7 @@ async function sbLoad(){
   if(!SB_OK) return false;
   try{
     sbInitMsg('Loading cloud data...');
-    const res = await fetch(SB_REST + '?select=key,value', { method: 'GET', headers: SB_HEADERS });
+    const res = await fetch(SB_REST + '?select=key,value&_=' + Date.now(), { method: 'GET', headers: SB_HEADERS, cache: 'no-store' });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if(!rows || !rows.length) return false;
@@ -5913,17 +5913,27 @@ window.addEventListener('DOMContentLoaded',async()=>{
     // device/tab/browser (the normal OBS setup), this overlay would never see it and would
     // keep showing the previous match forever. Re-pulling from Supabase every few seconds
     // fixes that: as soon as a match status/score changes anywhere, it lands here too.
-    if(sbR){
-      setInterval(async()=>{
-        const changed = await sbLoad();
-        if(changed && overlayParams.get('overlay')==='lb'){
-          const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
-          renderOverlayLb(type, overlayParams.get('board')||'main');
-        } else if(changed){
-          renderOverlay();
-        }
-      }, 3000);
-    }
+    // This loop is self-healing: it doesn't just give up if the very first connection
+    // attempt failed (e.g. Supabase was slow to respond the instant OBS opened the source,
+    // or the network blipped) — it keeps retrying sbInit() until it actually connects,
+    // rather than leaving the overlay frozen for the rest of the stream.
+    setInterval(async()=>{
+      if(!SB_OK){ await sbInit(); }
+      const changed = await sbLoad();
+      const syncEl=document.getElementById('ov-card-synced');
+      if(syncEl)syncEl.textContent=(changed?'synced ':'sync failed ')+new Date().toLocaleTimeString();
+      if(changed && overlayParams.get('overlay')==='lb'){
+        const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
+        renderOverlayLb(type, overlayParams.get('board')||'main');
+      } else if(changed){
+        renderOverlay();
+      }
+    }, 3000);
+    // ── Safety-net full reload. Overlays sit open in OBS for hours at a time; this
+    //    guarantees the page (and its data) is fully fresh periodically no matter what —
+    //    even if something else got the tab into a stuck state the sync loop above can't
+    //    recover from. The reload is instant and OBS just shows the last frame briefly. ──
+    setTimeout(()=>location.reload(), 20*60*1000);
     if(overlayParams.get('overlay')==='lb'){
       // Widescreen standings graphic — separate from the TikTok ticker overlay.
       const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
