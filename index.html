@@ -4056,7 +4056,7 @@ function tdmBoardMove(boardId,playerId,dir){
 // ── Overlay rotation: crossfades between live stat cards every few seconds, with a
 //    countdown progress bar. Data is refreshed every 2s (from renderOverlay's caller)
 //    but the on-screen card only advances on its own rotation timer, so it never flickers. ──
-let OV_ITEMS=[], OV_IDX=0, OV_TIMER=null;
+let OV_ITEMS=[], OV_IDX=0, OV_TIMER=null, OV_LIVE_KEY=null;
 const OV_INTERVAL=4800;
 const OV_ICONS=['fa-bolt','fa-crosshairs','fa-chart-line','fa-trophy','fa-gamepad','fa-skull-crossbones'];
 function renderOverlay(){
@@ -4065,10 +4065,12 @@ function renderOverlay(){
 
   const tdm=tdmGetLive();
   let items=[];
+  let liveKey;
   if(tdm){
     const overallItem=tdmOverallBestItem();
     const miniLb=tdmMiniLbItem();
     items=[tdmScoreChipItem(tdm),...tdmLiveComparisonItems(tdm),...tdmBannerTickerItems(tdm,'a'),...tdmBannerTickerItems(tdm,'b'),...(overallItem?[overallItem]:[]),...(miniLb?[miniLb]:[])];
+    liveKey='tdm:'+tdm.id+':'+tdm.scoreA+'-'+tdm.scoreB;
   }else{
     const matches=DB.get('matches',[]);
     const live=matches.find(m=>m.status==='live');
@@ -4080,13 +4082,23 @@ function renderOverlay(){
     if(overallItem)items.push(overallItem);
     const miniLb=scrimsMiniLbItem();
     if(miniLb)items.push(miniLb);
+    liveKey=live?('m:'+live.id):(upcoming?('u:'+upcoming.id):'none');
   }
   OV_ITEMS = items.length?items:['<span class="tdm-banner-ticker-item">RAGEISM Tournament — stay tuned</span>'];
   if(OV_IDX>=OV_ITEMS.length)OV_IDX=0;
 
-  if(!content.dataset.inited){
+  // ── Whenever the underlying live match/TDM actually changes (a match ends, a new one
+  //    goes live, the score updates) — snap straight to the new content instead of waiting
+  //    up to OV_INTERVAL ms for the next scheduled rotation. This is what makes the switch
+  //    on match-end feel instant instead of leaving the previous match on screen. ──
+  const liveChanged = liveKey !== OV_LIVE_KEY;
+  OV_LIVE_KEY = liveKey;
+
+  if(!content.dataset.inited || liveChanged){
     content.dataset.inited='1';
+    OV_IDX=0;
     showOverlayItem(OV_IDX);
+    if(OV_TIMER){clearInterval(OV_TIMER);OV_TIMER=null;}
   }
   if(!OV_TIMER)startOverlayRotation();
 }
@@ -5895,6 +5907,23 @@ window.addEventListener('DOMContentLoaded',async()=>{
     applyOverlayDesign();
     document.getElementById('ls').style.display='none';
     document.body.style.background='transparent';
+    // ── Keep pulling fresh data from Supabase the whole time the overlay is open. ──
+    // A local setInterval alone only ever re-reads *this browser's* localStorage, which
+    // was populated once at boot — so if a match is ended from the admin panel on another
+    // device/tab/browser (the normal OBS setup), this overlay would never see it and would
+    // keep showing the previous match forever. Re-pulling from Supabase every few seconds
+    // fixes that: as soon as a match status/score changes anywhere, it lands here too.
+    if(sbR){
+      setInterval(async()=>{
+        const changed = await sbLoad();
+        if(changed && overlayParams.get('overlay')==='lb'){
+          const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
+          renderOverlayLb(type, overlayParams.get('board')||'main');
+        } else if(changed){
+          renderOverlay();
+        }
+      }, 3000);
+    }
     if(overlayParams.get('overlay')==='lb'){
       // Widescreen standings graphic — separate from the TikTok ticker overlay.
       const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
