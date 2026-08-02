@@ -1045,6 +1045,7 @@ tr:last-child td{border-bottom:none}
         <div class="sh-row mb3">
           <div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Overview</span></div><div class="sh-sub">Season 01 · Current standings & activity</div></div>
         </div>
+        <div id="dash-live-wrap"></div>
         <div class="g4 mb3">
           <div class="kpi" id="kpi-players">
             <div class="kpi-glow" style="background:var(--accent)"></div>
@@ -1150,6 +1151,7 @@ tr:last-child td{border-bottom:none}
         </div>
 
         <div id="announce-bar-wrap"></div>
+        <div id="dash-live-wrap-admin"></div>
 
         <!-- Quick Actions — one click to the most common admin tasks -->
         <div class="card mb3" style="padding:.9rem 1rem">
@@ -1573,13 +1575,21 @@ tr:last-child td{border-bottom:none}
              hand-picked subset of players in a custom order (e.g. a PMGC-style top-8 graphic). -->
         <div class="divider-line"></div>
         <div class="sh-row mb1">
-          <div class="sh"><div class="sh-title">TDM <span style="color:var(--accentL)">Leaderboard</span></div><div class="sh-sub">Separate from the scrims leaderboard — ranked by TDM kills only</div></div>
-          <button class="btn btn-ghost btn-sm admin-only" style="display:none" onclick="createTdmBoard()"><i class="fa-solid fa-plus"></i> New Board</button>
+          <div class="sh"><div class="sh-title">TDM <span style="color:var(--accentL)">Leaderboard</span></div><div class="sh-sub">Separate from the scrims leaderboard — sort however you like</div></div>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <select class="fi fsel" id="tdm-sort-sel" style="width:auto;font-size:.8rem;padding:.4rem .8rem" onchange="onTdmSortChange()">
+              <option value="tdmWins">Sort by Wins</option>
+              <option value="tdmKills">Sort by Kills</option>
+              <option value="tdmMatches">Sort by Matches Played</option>
+              <option value="winrate">Sort by Win Rate</option>
+            </select>
+            <button class="btn btn-ghost btn-sm admin-only" style="display:none" onclick="createTdmBoard()"><i class="fa-solid fa-plus"></i> New Board</button>
+          </div>
         </div>
         <div id="tdm-board-tabs" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem"></div>
         <div class="card">
           <div id="tdm-board-toolbar" class="admin-only" style="display:none;margin-bottom:.8rem"></div>
-          <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">TDM Kills</th><th>Wins</th><th>Matches</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="tdm-board-body"></tbody></table></div>
+          <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Wins</th><th>Kills</th><th>Matches</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="tdm-board-body"></tbody></table></div>
           <div id="tdm-board-empty" style="display:none;text-align:center;padding:2.5rem;color:var(--textD)">
             <i class="fa-solid fa-ranking-star" style="font-size:1.6rem;display:block;margin-bottom:.6rem;opacity:.3"></i>
             <div style="font-weight:600;margin-bottom:.3rem">No players on this board yet</div>
@@ -1965,7 +1975,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards'];
 let SB_OK = false, SB_WRITES = 0;
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
@@ -3049,7 +3059,55 @@ function updateStats(){
   if(ADM)updatePendingBadges();
 }
 
+// Whatever's currently running gets surfaced on the main Dashboard (and Admin Overview) so nobody
+// has to dig into the TDM tab to see who's playing — squads, live score, and full rosters.
+function renderDashLive(){
+  const targets=[document.getElementById('dash-live-wrap'),document.getElementById('dash-live-wrap-admin')].filter(Boolean);
+  if(!targets.length)return;
+  const tdm=tdmGetLive();
+  let html='';
+  if(tdm){
+    const rosterChips=(roster)=>(roster||[]).map(r=>{const kc=tdmPlayerKillCount(tdm,r.ign);return `<span class="chip chip-neutral" style="font-size:.68rem">${r.ign}${kc?` <span style="color:var(--red)">· ${kc}K</span>`:''}</span>`;}).join(' ');
+    html=`<div class="card mb3" style="border-color:rgba(239,68,68,.3);background:linear-gradient(135deg,rgba(239,68,68,.06),rgba(99,102,241,.04))">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem;flex-wrap:wrap">
+        <span class="status-live"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.4s infinite"></span> LIVE NOW</span>
+        <span style="font-weight:700;font-size:.9rem"><i class="fa-solid fa-skull-crossbones" style="color:var(--red);margin-right:.3rem"></i>Team Deathmatch</span>
+        ${tdm.bo3?`<span class="chip chip-accent" style="font-size:.68rem">Best of 3 · Game ${tdm.gameNum}/3</span>`:''}
+        <button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="showPage('tdm')">Watch <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:start;text-align:center">
+        <div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem">${tdm.aName}</div>
+          <div class="font-mono" style="font-size:2.1rem;font-weight:700;color:var(--accentL);line-height:1">${tdm.scoreA}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;margin-top:.5rem">${rosterChips(tdm.aRoster)}</div>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--textD);padding-top:.6rem">VS<div style="font-size:.68rem;font-weight:500;color:var(--textD);margin-top:.3rem">First to ${tdm.target}</div></div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem">${tdm.bName}</div>
+          <div class="font-mono" style="font-size:2.1rem;font-weight:700;color:var(--red);line-height:1">${tdm.scoreB}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;margin-top:.5rem">${rosterChips(tdm.bRoster)}</div>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    const liveMatch=DB.get('matches',[]).find(m=>m.status==='live');
+    if(liveMatch){
+      const teamNames=(liveMatch.teams||[]).map(t=>t.teamName).filter(Boolean);
+      html=`<div class="card mb3" style="border-color:rgba(239,68,68,.3);background:linear-gradient(135deg,rgba(239,68,68,.06),rgba(99,102,241,.04))">
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span class="status-live"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 1.4s infinite"></span> LIVE NOW</span>
+          <span style="font-weight:700;font-size:.9rem">${MI[liveMatch.map]||''} ${liveMatch.name}</span>
+          <button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="showPage('matches')">View <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+        ${teamNames.length?`<div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.7rem">${teamNames.map(tn=>`<span class="chip chip-neutral" style="font-size:.7rem">${tn}</span>`).join('')}</div>`:''}
+      </div>`;
+    }
+  }
+  targets.forEach(t=>t.innerHTML=html);
+}
+
 function renderDashboardData(){
+  renderDashLive();
   // Matches
   const ms=DB.get('matches');const el=document.getElementById('d-matches');if(el){
     if(!ms.length){el.innerHTML='<div class="text-dim" style="font-size:.84rem;padding:1rem;text-align:center">No matches scheduled yet.</div>';}
@@ -3320,6 +3378,7 @@ function tdmSeriesRecord(seriesId,aName,bName){
 // yet (someone at 2 wins, or 3 games played) — if so it closes out the series and records ONE team win
 // for the series winner; otherwise it auto-starts the next game with the same rosters.
 function tdmFinishMatch(m,ms){
+  recordH2H(m);
   const teams=DB.get('teams');
   const mvpSide=m.scoreA>=m.scoreB?m.aRoster:m.bRoster;
   let mvp=null;(mvpSide||[]).forEach(r=>{const kc=tdmPlayerKillCount(m,r.ign);if(!mvp||kc>mvp.kc)mvp={ign:r.ign,kc};});
@@ -3371,6 +3430,50 @@ function tdmRecordPlayerParticipation(allRoster,winRoster){
     if(winIgns.has(r.ign))gp.tdmWins=(gp.tdmWins||0)+1;
   });
   DB.set('players',players);
+}
+// ═══ PLAYER VS PLAYER HEAD-TO-HEAD — every pair of opposing players across TDM games ═══
+function h2hKey(id1,id2){return [id1,id2].sort().join('__');}
+function recordH2H(m){
+  if(!m.aRoster||!m.bRoster)return;
+  const winSide=m.winner===m.aName?'a':(m.winner===m.bName?'b':null);
+  const store=DB.get('h2hRecords',{});
+  m.aRoster.forEach(pa=>{
+    m.bRoster.forEach(pb=>{
+      const key=h2hKey(pa.id,pb.id);
+      const [id1]=[pa.id,pb.id].sort();
+      const p1=id1===pa.id?pa:pb, p2=id1===pa.id?pb:pa;
+      let rec=store[key];
+      if(!rec)rec={p1Id:p1.id,p1Ign:p1.ign,p2Id:p2.id,p2Ign:p2.ign,p1Wins:0,p2Wins:0,matches:0,log:[]};
+      rec.p1Ign=p1.ign;rec.p2Ign=p2.ign; // keep IGNs fresh in case of renames
+      rec.matches++;
+      if(winSide==='a'){if(rec.p1Id===pa.id)rec.p1Wins++;else rec.p2Wins++;}
+      else if(winSide==='b'){if(rec.p1Id===pb.id)rec.p1Wins++;else rec.p2Wins++;}
+      rec.log.unshift({matchId:m.id,ts:m.doneTs||m.ts,winnerIgn:winSide==='a'?pa.ign:(winSide==='b'?pb.ign:'Draw')});
+      if(rec.log.length>25)rec.log.length=25;
+      store[key]=rec;
+    });
+  });
+  DB.set('h2hRecords',store);
+}
+function getH2HRecord(id1,id2){
+  const store=DB.get('h2hRecords',{});
+  return store[h2hKey(id1,id2)]||null;
+}
+function h2hCardHTML(p1,p2){
+  const rec=getH2HRecord(p1.id,p2.id);
+  if(!rec||!rec.matches)return `<div class="card" style="margin-top:1rem;text-align:center;padding:1.5rem;color:var(--textD)"><i class="fa-solid fa-people-arrows" style="opacity:.3;display:block;margin-bottom:.4rem;font-size:1.3rem"></i>${p1.ign} and ${p2.ign} haven't faced each other in a TDM match yet.</div>`;
+  const p1Wins=rec.p1Id===p1.id?rec.p1Wins:rec.p2Wins;
+  const p2Wins=rec.p1Id===p1.id?rec.p2Wins:rec.p1Wins;
+  return `<div class="card" style="margin-top:1rem">
+    <div class="card-title"><i class="fa-solid fa-people-arrows"></i> Head-to-Head (TDM)</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;text-align:center;margin-bottom:.8rem">
+      <div><div class="font-mono" style="font-size:1.6rem;font-weight:700;color:var(--accentL)">${p1Wins}</div><div style="font-size:.7rem;color:var(--textD);text-transform:uppercase">${p1.ign} wins</div></div>
+      <div style="color:var(--textD);font-size:.8rem">of ${rec.matches} played</div>
+      <div><div class="font-mono" style="font-size:1.6rem;font-weight:700;color:var(--red)">${p2Wins}</div><div style="font-size:.7rem;color:var(--textD);text-transform:uppercase">${p2.ign} wins</div></div>
+    </div>
+    <div style="font-size:.7rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem">Recent Meetings</div>
+    ${rec.log.slice(0,8).map(l=>`<div style="display:flex;justify-content:space-between;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04)"><span class="text-dim font-mono" style="font-size:.68rem">${l.ts?tdmFmtDate(l.ts):''}</span><span>Winner: <strong class="text-accent">${l.winnerIgn}</strong></span></div>`).join('')}
+  </div>`;
 }
 function tdmPlayerKillCount(m,ign){
   return (m.killLog||[]).filter(k=>k.ign===ign).length;
@@ -3491,7 +3594,7 @@ function scrimsMiniLbItem(){
 function tdmMiniLbItem(){
   const rows=tdmMainBoardPlayers();
   if(!rows.length)return '';
-  return `<div class="ov-mini-lb"><div class="ov-mini-lb-title">TDM Leaderboard</div>${ovMiniLbRows(rows,'tdmKills')}</div>`;
+  return `<div class="ov-mini-lb"><div class="ov-mini-lb-title">TDM Leaderboard</div>${ovMiniLbRows(rows,'tdmWins')}</div>`;
 }
 function tdmOverallBestItem(){
   const pl=DB.get('players',[]);
@@ -3679,7 +3782,7 @@ function renderOverlayLb(type,boardId){
   let rows=[],statKey='pts',statLabel='PTS',title='Leaderboard';
   if(type==='tdm'){
     eyebrow.textContent='TDM LEADERBOARD';
-    statKey='tdmKills';statLabel='KILLS';
+    statKey='tdmWins';statLabel='WINS';
     if(boardId==='main'){
       rows=tdmMainBoardPlayers();title='Main';
     }else{
@@ -3709,6 +3812,7 @@ function updateTdmBadge(){
   const live=tdmGetLive();
   const b=document.getElementById('tdm-live-badge');if(b)b.style.display=live?'inline-block':'none';
   const b2=document.getElementById('tdm-live-badge2');if(b2)b2.style.display=live?'inline-block':'none';
+  renderDashLive();
 }
 
 // ═══ TDM LEADERBOARDS ═══
@@ -3717,12 +3821,23 @@ function updateTdmBadge(){
 // ordered subset of players — e.g. a curated "Top 8" graphic for a PMGC-style broadcast. These are
 // fully separate from the scrims Leaderboard page / player.kills stat.
 let TDM_ACTIVE_BOARD='main';
+let TDM_SORT_KEY='tdmWins'; // 'tdmWins' | 'tdmKills' | 'tdmMatches' | 'winrate' — configurable via the sort dropdown
+function onTdmSortChange(){TDM_SORT_KEY=v('tdm-sort-sel')||'tdmWins';renderTdmBoards();}
 function tdmMainBoardPlayers(){
-  return DB.get('players',[]).filter(p=>(p.tdmKills||0)>0||(p.tdmMatches||0)>0).sort((a,b)=>(b.tdmKills||0)-(a.tdmKills||0));
+  const rows=DB.get('players',[]).filter(p=>(p.tdmKills||0)>0||(p.tdmMatches||0)>0);
+  return rows.sort((a,b)=>{
+    if(TDM_SORT_KEY==='winrate'){
+      const wa=(a.tdmMatches||0)>0?(a.tdmWins||0)/a.tdmMatches:0;
+      const wb=(b.tdmMatches||0)>0?(b.tdmWins||0)/b.tdmMatches:0;
+      return wb-wa;
+    }
+    return (b[TDM_SORT_KEY]||0)-(a[TDM_SORT_KEY]||0);
+  });
 }
 function renderTdmBoards(){
   const tabs=document.getElementById('tdm-board-tabs');if(!tabs)return;
   const boards=DB.get('tdmBoards',[]);
+  const sortSel=document.getElementById('tdm-sort-sel');if(sortSel)sortSel.value=TDM_SORT_KEY;
   if(TDM_ACTIVE_BOARD!=='main'&&!boards.find(b=>b.id===TDM_ACTIVE_BOARD))TDM_ACTIVE_BOARD='main';
   const tabBtn=(id,label,onDel)=>`<button class="btn btn-sm ${TDM_ACTIVE_BOARD===id?'btn-accent':'btn-ghost'}" onclick="switchTdmBoard('${id}')">${label}</button>`;
   tabs.innerHTML=tabBtn('main','Main')+boards.map(b=>tabBtn(b.id,esc(b.name))).join('');
@@ -3759,8 +3874,8 @@ function renderTdmBoards(){
     <td class="font-mono text-dim">#${i+1}</td>
     <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.ign}</div><div class="cell-sub">${p.name||''}</div></div></div></td>
     <td class="text-dim">${p.team||'—'}</td>
-    <td><span class="chip chip-red">${p.tdmKills||0}</span></td>
-    <td class="text-green font-mono">${p.tdmWins||0}</td>
+    <td><span class="chip chip-accent" style="font-weight:700">${p.tdmWins||0}</span></td>
+    <td class="text-dim font-mono">${p.tdmKills||0}</td>
     <td class="text-dim font-mono">${p.tdmMatches||0}</td>
     <td class="admin-only" style="display:${ADM?'table-cell':'none'}">${isCustom?`<div style="display:flex;gap:.25rem">
         <button class="btn btn-ghost btn-xs" title="Move up" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',-1)"><i class="fa-solid fa-arrow-up"></i></button>
@@ -5008,7 +5123,7 @@ function doCompare(){
     <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem">${p1.ign[0]}</div><div style="font-weight:700;font-size:.9rem">${p1.ign}</div><div class="text-dim" style="font-size:.75rem">${p1.team||p1.rank}</div></div>
     <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
     <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,#a855f7,#ec4899)">${p2.ign[0]}</div><div style="font-weight:700;font-size:.9rem">${p2.ign}</div><div class="text-dim" style="font-size:.75rem">${p2.team||p2.rank}</div></div>
-  </div>${row('Kills',p1.kills,p2.kills)}${row('K / D',kd1,kd2)}${row('Wins',p1.wins,p2.wins)}${row('Damage',p1.damage||0,p2.damage||0)}${row('XP',p1.xp||0,p2.xp||0)}${row('Deaths',p1.deaths,p2.deaths,false)}</div>`;
+  </div>${row('Kills',p1.kills,p2.kills)}${row('K / D',kd1,kd2)}${row('Wins',p1.wins,p2.wins)}${row('Damage',p1.damage||0,p2.damage||0)}${row('XP',p1.xp||0,p2.xp||0)}${row('Deaths',p1.deaths,p2.deaths,false)}</div>${h2hCardHTML(p1,p2)}`;
 }
 
 // ═══ POLLS ═══
