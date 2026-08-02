@@ -265,6 +265,14 @@ html[data-ovbg="transparent"]{
   font-family:var(--font-main);flex-direction:column;justify-content:flex-end;
   align-items:center;padding:0 3vw 3vh;box-sizing:border-box;overflow:hidden}
 #overlay-root.show{display:flex}
+#ov-debug-hud{position:fixed;top:12px;left:12px;z-index:999999;background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;padding:.6rem .8rem;font-family:'DM Mono',monospace;font-size:.68rem;line-height:1.6;color:#e2e8f0;
+  max-width:340px;display:none;pointer-events:none}
+#ov-debug-hud.show{display:block}
+#ov-debug-hud .ovdh-title{font-weight:700;color:#fff;margin-bottom:.3rem;letter-spacing:.5px}
+#ov-debug-hud .ovdh-ok{color:#34d399}
+#ov-debug-hud .ovdh-bad{color:#fb7185}
+#ov-debug-hud .ovdh-warn{color:#fbbf24}
 .ov-bg-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 /* Breathing glow — grows/shrinks in place, never travels across the screen */
 .ov-blob{position:absolute;border-radius:50%;filter:blur(70px);mix-blend-mode:screen;transform-origin:center}
@@ -937,6 +945,7 @@ tr:last-child td{border-bottom:none}
     <div class="ov-card-progress"><div class="ov-card-progress-fill" id="ov-card-progress-fill"></div></div>
   </div>
 </div>
+<div id="ov-debug-hud"></div>
 
 <!-- ═══════ LEADERBOARD BROADCAST OVERLAY (OBS, widescreen standings graphic) ═══════ -->
 <div id="ovlb-root">
@@ -1545,6 +1554,8 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><input class="fi" id="ov-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ov-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.5rem;border-color:rgba(245,158,11,.3);color:var(--amber)" onclick="window.open(document.getElementById('ov-link').value+'&debug=1','_blank')"><i class="fa-solid fa-bug"></i> Preview with Debug HUD</button>
+              <div style="font-size:.7rem;color:var(--textD);margin-top:.4rem">The debug HUD shows live connection status, poll results, and hosting/caching warnings directly on the overlay — open this exact link on your phone or a laptop browser next to your streaming software when something looks stuck.</div>
             </div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Leaderboard Broadcast Overlay</div>
@@ -1860,6 +1871,26 @@ tr:last-child td{border-bottom:none}
             <div id="debug-session-info" style="font-size:.83rem;color:var(--textM);display:flex;flex-direction:column;gap:.4rem"></div>
           </div>
         </div>
+
+        <!-- ═══ ADVANCED DIAGNOSTICS — walks through table existence, RLS read/write/delete, a live
+             write→read round-trip (catches stale-cache issues), and flags risky hosting setups
+             (GitHub raw / jsdelivr) that silently serve old files to OBS/TikTok browser sources. ═══ -->
+        <div class="card mb2">
+          <div class="card-title"><i class="fa-solid fa-stethoscope"></i> Advanced Diagnostics</div>
+          <div style="font-size:.82rem;color:var(--textM);margin-bottom:.8rem">Runs a full health check: table exists, RLS read/write/delete permissions, a live write→read round-trip (to catch stale-cache issues), current row counts, and known hosting caveats (GitHub raw / jsdelivr caching). This is the fastest way to find out <em>exactly</em> why the overlay isn't updating.</div>
+          <button class="btn btn-accent btn-fw" onclick="runAdvancedDiagnostics()"><i class="fa-solid fa-play"></i> Run Full Diagnostics</button>
+          <div id="diag-log" style="margin-top:.8rem;display:flex;flex-direction:column;gap:.4rem;font-family:'DM Mono',monospace;font-size:.76rem"></div>
+          <div id="diag-sql-wrap" style="display:none;margin-top:.9rem">
+            <div style="font-size:.78rem;font-weight:700;color:var(--red);margin-bottom:.4rem"><i class="fa-solid fa-triangle-exclamation"></i> Missing/incomplete SQL setup detected — run this in Supabase → SQL Editor:</div>
+            <pre id="diag-sql-text" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem .9rem;font-size:.72rem;overflow-x:auto;white-space:pre;color:var(--accentL);margin-bottom:.5rem"></pre>
+            <button class="btn btn-ghost btn-fw" onclick="copySetupSql()"><i class="fa-solid fa-copy"></i> Copy SQL Setup Script</button>
+          </div>
+          <div id="diag-hosting-wrap" style="display:none;margin-top:.9rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:var(--rS);padding:.7rem .9rem">
+            <div style="font-size:.78rem;font-weight:700;color:var(--amber);margin-bottom:.3rem"><i class="fa-solid fa-triangle-exclamation"></i> Hosting caveat detected</div>
+            <div id="diag-hosting-text" style="font-size:.78rem;color:var(--textM);line-height:1.5"></div>
+          </div>
+        </div>
+
         <div class="card mb2">
           <div class="card-title"><i class="fa-solid fa-bug"></i> Recent Client Warnings</div>
           <div style="font-size:.78rem;color:var(--textM);margin-bottom:.6rem">Captured automatically from the browser console on this device — helpful when troubleshooting a report from a player.</div>
@@ -2282,6 +2313,7 @@ function renderDebugPage(){
       <div><strong>Role:</strong> ${CU&&CU.isMaster?'Master':(CU&&ADM?'Admin':'Player')}</div>
       <div><strong>Color theme:</strong> ${localStorage.getItem('rge5_userTheme')||'site default ('+((DB.get('cfg',{}).siteTheme)||'light')+')'}</div>
       <div><strong>Site font:</strong> ${(DB.get('cfg',{}).siteFont)||'dmsans'}</div>
+      <div><strong>Hosted at:</strong> <span style="font-family:'DM Mono',monospace;font-size:.72rem;word-break:break-all">${location.hostname||'(local file)'}</span></div>
       <div><strong>Browser:</strong> ${navigator.userAgent}</div>`;
   }
   renderDebugLog();
@@ -2297,7 +2329,213 @@ function copyDebugInfo(){
   const txt=JSON.stringify(info,null,2);
   if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>notify('Copied!','Debug info copied to clipboard','n-ok')).catch(()=>notify('Copy failed','Select and copy manually','n-bad'));
 }
-function sbInitMsg(msg){ const e = document.getElementById('sb-init-msg'); if(e) e.textContent = msg; }
+
+// ═══ ADVANCED DIAGNOSTICS ═══
+// Full health-check pipeline for the Supabase sync + overlay pipeline. Each step appends a
+// pass/warn/fail row to the on-screen log so a non-technical admin can see exactly which layer
+// is broken (missing table, missing RLS policy, stale-cache hosting, etc.) instead of just
+// getting a single generic "offline" message.
+const SETUP_SQL = `-- RAGEISM kv_store setup — run this whole block in Supabase → SQL Editor
+create table if not exists kv_store (
+  key text primary key,
+  value jsonb,
+  updated_at timestamptz default now()
+);
+
+alter table kv_store enable row level security;
+
+-- Anonymous (anon) key needs all four of these or writes/reads will silently fail
+drop policy if exists "anon can read kv_store" on kv_store;
+drop policy if exists "anon can insert kv_store" on kv_store;
+drop policy if exists "anon can update kv_store" on kv_store;
+drop policy if exists "anon can delete kv_store" on kv_store;
+
+create policy "anon can read kv_store" on kv_store for select using (true);
+create policy "anon can insert kv_store" on kv_store for insert with check (true);
+create policy "anon can update kv_store" on kv_store for update using (true);
+create policy "anon can delete kv_store" on kv_store for delete using (true);`;
+
+function copySetupSql(){
+  if(navigator.clipboard)navigator.clipboard.writeText(SETUP_SQL).then(()=>notify('SQL copied!','Paste into Supabase → SQL Editor and run it','n-ok')).catch(()=>notify('Copy failed','Select the text manually','n-bad'));
+}
+
+function diagLog(msg,level){
+  const el=document.getElementById('diag-log');if(!el)return;
+  const colors={ok:'var(--green)',warn:'var(--amber)',bad:'var(--red)',info:'var(--textM)'};
+  const icons={ok:'fa-circle-check',warn:'fa-triangle-exclamation',bad:'fa-circle-xmark',info:'fa-circle-info'};
+  const row=document.createElement('div');
+  row.style.cssText=`padding:.4rem .6rem;background:var(--bg3);border-radius:6px;border-left:2px solid ${colors[level]||colors.info};display:flex;align-items:flex-start;gap:.5rem`;
+  row.innerHTML=`<i class="fa-solid ${icons[level]||icons.info}" style="color:${colors[level]||colors.info};margin-top:.15rem;flex-shrink:0"></i><span>${msg}</span>`;
+  el.appendChild(row);
+}
+
+// Flags hosting setups known to silently serve stale files to OBS/TikTok Studio browser sources —
+// this is the #1 cause of "I fixed the code but the overlay still looks broken."
+function detectHostingCaveats(){
+  const href=location.href, host=location.hostname;
+  if(host.includes('raw.githubusercontent.com')){
+    return `You're loading the overlay directly from <strong>raw.githubusercontent.com</strong>. This is cached by GitHub's CDN for several minutes at minimum, and browser sources (OBS/TikTok Studio) cache it again on top of that. After every push: wait ~5 min, then fully remove and re-add the browser source (don't just toggle it).`;
+  }
+  if(host.includes('cdn.jsdelivr.net')){
+    const hasVersionTag=/@[0-9a-f]{7,40}\//.test(href) || /@\d+\.\d+\.\d+/.test(href);
+    if(!hasVersionTag){
+      return `You're loading from <strong>jsdelivr</strong> without a pinned commit hash — jsdelivr can cache files for up to <strong>7 days</strong> on a branch tag like @main. Fix: use a URL with the specific commit hash (e.g. .../gh/user/repo@&lt;commit-sha&gt;/index.html) so each push gets a fresh, unique URL, or purge manually at https://www.jsdelivr.com/tools/purge`;
+    }
+    return `Loading from jsdelivr with what looks like a pinned version/commit — good, this avoids the worst caching. Just remember to update the pin after every push.`;
+  }
+  if(host.endsWith('.github.io')){
+    return `You're on <strong>GitHub Pages</strong> — usually updates within 1-2 minutes of a push, but can occasionally lag. If the overlay still looks old after 5 min, fully remove and re-add the browser source in TikTok Studio/OBS rather than just refreshing.`;
+  }
+  if(location.protocol==='file:'){
+    return `You're opening this as a local file (file://). That's fine for testing but TikTok Studio / OBS on another machine won't be able to reach it — it needs to be hosted somewhere reachable by whatever device is running your streaming software.`;
+  }
+  return null;
+}
+
+async function runAdvancedDiagnostics(){
+  const log=document.getElementById('diag-log');if(log)log.innerHTML='';
+  const sqlWrap=document.getElementById('diag-sql-wrap');if(sqlWrap)sqlWrap.style.display='none';
+  const hostWrap=document.getElementById('diag-hosting-wrap');if(hostWrap)hostWrap.style.display='none';
+  diagLog('Starting diagnostics…','info');
+
+  // 1. Hosting caveats — check this first since it colors how to interpret everything else
+  const caveat=detectHostingCaveats();
+  if(caveat){
+    diagLog('Hosting environment has a known caching caveat (see below)','warn');
+    const hw=document.getElementById('diag-hosting-wrap'),ht=document.getElementById('diag-hosting-text');
+    if(hw&&ht){ht.innerHTML=caveat;hw.style.display='block';}
+  }else{
+    diagLog(`Hosting: ${location.hostname||'(local file)'} — no known caching caveats for this host`,'ok');
+  }
+
+  // 2. Basic reachability — can we hit the REST endpoint at all?
+  let selectOk=false, tableExists=false;
+  try{
+    const res=await fetch(SB_REST+'?select=key&limit=1&_='+Date.now(),{method:'GET',headers:SB_HEADERS,cache:'no-store'});
+    if(res.status===401||res.status===403){
+      diagLog('Supabase rejected the request (401/403) — anon key is wrong, or RLS has no SELECT policy at all','bad');
+    }else if(res.status===404){
+      diagLog(`Table "kv_store" not found (404) — the setup SQL hasn't been run on this project yet`,'bad');
+      const sw=document.getElementById('diag-sql-wrap'),st=document.getElementById('diag-sql-text');
+      if(sw&&st){st.textContent=SETUP_SQL;sw.style.display='block';}
+    }else if(!res.ok){
+      diagLog(`Unexpected HTTP ${res.status} from Supabase REST endpoint`,'bad');
+    }else{
+      selectOk=true;tableExists=true;
+      diagLog('Table exists and SELECT works (read policy is OK)','ok');
+    }
+  }catch(e){
+    diagLog(`Network error reaching Supabase: ${e.message} — check the project URL and your internet connection`,'bad');
+  }
+
+  if(!tableExists){
+    diagLog('Stopping here — fix the above before the rest of the checks can run','warn');
+    return;
+  }
+
+  // 3. Live write → read round-trip using a disposable diagnostic key. This is the check that
+  //    actually proves the whole pipeline works end-to-end, not just that the table exists.
+  const testKey='__diag_test__';
+  const testVal={ping:Date.now(),from:(CU&&CU.name)||'diagnostics'};
+  let writeOk=false;
+  try{
+    const res=await fetch(SB_REST,{method:'POST',headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{key:testKey,value:testVal}])});
+    if(res.ok){writeOk=true;diagLog('Write test succeeded (INSERT/UPDATE policy is OK)','ok');}
+    else{
+      const t=await res.text().catch(()=>'');
+      diagLog(`Write test failed (HTTP ${res.status}${t?' — '+t.slice(0,120):''}) — your anon role is missing an INSERT/UPDATE policy on kv_store. Run the SQL setup below.`,'bad');
+      const sw=document.getElementById('diag-sql-wrap'),st=document.getElementById('diag-sql-text');
+      if(sw&&st){st.textContent=SETUP_SQL;sw.style.display='block';}
+    }
+  }catch(e){
+    diagLog(`Write test errored: ${e.message}`,'bad');
+  }
+
+  if(writeOk){
+    // Read it straight back with cache-busting to confirm the value we just wrote is actually
+    // what comes back — this is exactly the round-trip a live TDM kill update depends on.
+    try{
+      const res=await fetch(SB_REST+'?select=value&key=eq.'+testKey+'&_='+Date.now(),{method:'GET',headers:SB_HEADERS,cache:'no-store'});
+      const rows=res.ok?await res.json():[];
+      const back=rows&&rows[0]&&rows[0].value;
+      if(back&&back.ping===testVal.ping){
+        diagLog('Round-trip confirmed — data written is immediately readable back (no stale-cache issue on the Supabase side)','ok');
+      }else if(back){
+        diagLog('Read-back returned a different/older value than what was just written — something between your browser and Supabase is caching the response','bad');
+      }else{
+        diagLog('Could not read the test value back — SELECT may be scoped more narrowly than expected','warn');
+      }
+    }catch(e){
+      diagLog(`Read-back check errored: ${e.message}`,'warn');
+    }
+    // Clean up the test row
+    try{
+      await fetch(SB_REST+'?key=eq.'+testKey,{method:'DELETE',headers:SB_HEADERS});
+      diagLog('Cleaned up test row (DELETE policy OK)','ok');
+    }catch(e){
+      diagLog('Could not delete the test row afterward — DELETE policy may be missing (not critical, but tidy up manually in the table editor)','warn');
+    }
+  }
+
+  // 4. Row counts for the collections that actually drive the overlay
+  try{
+    const res=await fetch(SB_REST+'?select=key,value&key=in.(tdmMatches,players,matches)&_='+Date.now(),{method:'GET',headers:SB_HEADERS,cache:'no-store'});
+    const rows=res.ok?await res.json():[];
+    const tdm=rows.find(r=>r.key==='tdmMatches');
+    const pl=rows.find(r=>r.key==='players');
+    const liveTdm=tdm&&Array.isArray(tdm.value)?tdm.value.find(m=>m.status==='live'):null;
+    diagLog(`Remote data: ${pl&&Array.isArray(pl.value)?pl.value.length:0} players, ${tdm&&Array.isArray(tdm.value)?tdm.value.length:0} TDM matches total`,'info');
+    if(liveTdm){
+      diagLog(`Live TDM match found in the database: ${liveTdm.aName} ${liveTdm.scoreA} – ${liveTdm.scoreB} ${liveTdm.bName} — if the overlay isn't showing this, the problem is 100% on the overlay/hosting side, not Supabase`,'ok');
+    }else{
+      diagLog('No TDM match is currently marked "live" in the database — start/verify a match on the TDM Control page first','warn');
+    }
+  }catch(e){
+    diagLog(`Could not fetch row counts: ${e.message}`,'warn');
+  }
+
+  diagLog('Diagnostics complete.','info');
+}
+
+// ═══ ON-OVERLAY DEBUG HUD ═══
+// TikTok LIVE Studio / OBS browser sources have no dev console, so when something looks broken
+// there's normally zero way to see what the overlay itself is actually fetching. This renders a
+// small on-screen readout directly on the overlay page when ?debug=1 is added to the URL — open
+// that exact URL in a normal browser tab (or even on your phone) side-by-side with your stream
+// software to see live: hosting/caching risk, last poll result, row counts, and whether a live
+// match was actually found in Supabase.
+let OV_DEBUG_ON=false;
+function ovDebugRow(label,val,cls){return `<div>${label}: <span class="${cls||''}">${val}</span></div>`;}
+async function renderOverlayDebugHud(lastPollOk,lastPollDetail){
+  const hud=document.getElementById('ov-debug-hud');if(!hud||!OV_DEBUG_ON)return;
+  const caveat=typeof detectHostingCaveats==='function'?detectHostingCaveats():null;
+  let rows='';
+  rows+=`<div class="ovdh-title"><i class="fa-solid fa-bug"></i> RAGEISM Overlay Debug</div>`;
+  rows+=ovDebugRow('Host',location.hostname||'(local file)');
+  rows+=ovDebugRow('URL params',location.search||'(none)');
+  rows+=ovDebugRow('Supabase',SB_OK?'connected':'NOT connected',SB_OK?'ovdh-ok':'ovdh-bad');
+  rows+=ovDebugRow('Last poll',lastPollOk?'OK · '+lastPollDetail:'FAILED · '+lastPollDetail,lastPollOk?'ovdh-ok':'ovdh-bad');
+  rows+=ovDebugRow('Polled at',new Date().toLocaleTimeString());
+  try{
+    const res=await fetch(SB_REST+'?select=key,value&key=in.(tdmMatches,matches)&_='+Date.now(),{method:'GET',headers:SB_HEADERS,cache:'no-store'});
+    const rowsData=res.ok?await res.json():[];
+    const tdm=rowsData.find(r=>r.key==='tdmMatches');
+    const liveTdm=tdm&&Array.isArray(tdm.value)?tdm.value.find(m=>m.status==='live'):null;
+    const msRow=rowsData.find(r=>r.key==='matches');
+    const liveM=msRow&&Array.isArray(msRow.value)?msRow.value.find(m=>m.status==='live'):null;
+    if(liveTdm){
+      rows+=ovDebugRow('Live TDM (remote)',`${liveTdm.aName} ${liveTdm.scoreA}–${liveTdm.scoreB} ${liveTdm.bName}`,'ovdh-ok');
+    }else if(liveM){
+      rows+=ovDebugRow('Live match (remote)',liveM.name,'ovdh-ok');
+    }else{
+      rows+=ovDebugRow('Live match (remote)','none marked live in DB','ovdh-warn');
+    }
+  }catch(e){
+    rows+=ovDebugRow('Remote check','failed — '+e.message,'ovdh-bad');
+  }
+  if(caveat)rows+=`<div style="margin-top:.35rem;padding-top:.35rem;border-top:1px solid rgba(255,255,255,.15);color:#fbbf24">${caveat.replace(/<[^>]+>/g,'')}</div>`;
+  hud.innerHTML=rows;
+}
 function sbHideOverlay(){
   const o = document.getElementById('sb-init-overlay');
   if(o){ o.classList.add('hide'); setTimeout(() => o.remove(), 450); }
@@ -5898,6 +6136,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const overlayParams = new URLSearchParams(window.location.search);
   const isOverlayMode = overlayParams.has('overlay');
   if(isOverlayMode){
+    OV_DEBUG_ON = overlayParams.get('debug')==='1';
+    if(OV_DEBUG_ON){document.getElementById('ov-debug-hud')?.classList.add('show');}
     sbInitMsg('Connecting to Supabase...');
     const sbR = await sbInit();
     if(sbR){await sbLoad();}
@@ -5907,6 +6147,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     applyOverlayDesign();
     document.getElementById('ls').style.display='none';
     document.body.style.background='transparent';
+    if(OV_DEBUG_ON)renderOverlayDebugHud(SB_OK,'initial connect');
     // ── Keep pulling fresh data from Supabase the whole time the overlay is open. ──
     // A local setInterval alone only ever re-reads *this browser's* localStorage, which
     // was populated once at boot — so if a match is ended from the admin panel on another
@@ -5922,6 +6163,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
       const changed = await sbLoad();
       const syncEl=document.getElementById('ov-card-synced');
       if(syncEl)syncEl.textContent=(changed?'synced ':'sync failed ')+new Date().toLocaleTimeString();
+      if(OV_DEBUG_ON)renderOverlayDebugHud(changed,changed?'data pulled':'sbLoad returned false');
       if(changed && overlayParams.get('overlay')==='lb'){
         const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
         renderOverlayLb(type, overlayParams.get('board')||'main');
