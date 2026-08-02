@@ -215,6 +215,45 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
 
+/* ── OVERLAY DESIGN SYSTEM ─────────────────────────────────────────
+   Fully customizable from Admin → Settings → Overlay Design: 3 accent
+   colors, a background style, and a corner style. These variables drive
+   both OBS overlays (the TikTok stat card + the leaderboard broadcast
+   graphic) below. Defaults reproduce the original look. ── */
+:root{
+  --ov-c1:#6366f1; --ov-c2:#ec4899; --ov-c3:#22d3ee;
+  --ov-c1-a55:rgba(99,102,241,.55); --ov-c1-a10:rgba(99,102,241,.1); --ov-c1-a22:rgba(99,102,241,.22);
+  --ov-radius:24px; --ov-radius-sm:18px; --ov-radius-av:9px;
+}
+html, html[data-ovbg="dark-glass"]{
+  --ov-bg1:rgba(10,13,22,.94); --ov-bg2:rgba(20,16,38,.94);
+  --ov-fg:#ffffff; --ov-fg-dim:rgba(255,255,255,.85); --ov-fg-dim2:rgba(255,255,255,.5); --ov-fg-dim3:rgba(255,255,255,.4);
+  --ov-border:rgba(255,255,255,.08); --ov-border2:rgba(255,255,255,.09);
+  --ov-row-bg:rgba(255,255,255,.03); --ov-row-border:rgba(255,255,255,.05);
+  --ov-shadow:0 20px 65px rgba(0,0,0,.55);
+}
+html[data-ovbg="jet-black"]{
+  --ov-bg1:rgba(0,0,0,.94); --ov-bg2:rgba(0,0,0,.94);
+  --ov-fg:#ffffff; --ov-fg-dim:rgba(255,255,255,.85); --ov-fg-dim2:rgba(255,255,255,.5); --ov-fg-dim3:rgba(255,255,255,.4);
+  --ov-border:rgba(255,255,255,.09); --ov-border2:rgba(255,255,255,.1);
+  --ov-row-bg:rgba(255,255,255,.04); --ov-row-border:rgba(255,255,255,.07);
+  --ov-shadow:0 20px 65px rgba(0,0,0,.7);
+}
+html[data-ovbg="glass-light"]{
+  --ov-bg1:rgba(255,255,255,.93); --ov-bg2:rgba(244,245,250,.93);
+  --ov-fg:#0f172a; --ov-fg-dim:rgba(15,23,42,.78); --ov-fg-dim2:rgba(15,23,42,.48); --ov-fg-dim3:rgba(15,23,42,.4);
+  --ov-border:rgba(15,23,42,.09); --ov-border2:rgba(15,23,42,.1);
+  --ov-row-bg:rgba(15,23,42,.035); --ov-row-border:rgba(15,23,42,.07);
+  --ov-shadow:0 20px 55px rgba(15,23,42,.25);
+}
+html[data-ovbg="transparent"]{
+  --ov-bg1:rgba(8,10,16,.35); --ov-bg2:rgba(8,10,16,.35);
+  --ov-fg:#ffffff; --ov-fg-dim:rgba(255,255,255,.9); --ov-fg-dim2:rgba(255,255,255,.55); --ov-fg-dim3:rgba(255,255,255,.45);
+  --ov-border:rgba(255,255,255,.05); --ov-border2:rgba(255,255,255,.06);
+  --ov-row-bg:rgba(255,255,255,.02); --ov-row-border:rgba(255,255,255,.04);
+  --ov-shadow:none;
+}
+
 /* ── STREAM OVERLAY (TikTok / OBS) — built for a vertical 9:16 canvas ─────
    Add as a Browser Source in TikTok LIVE Studio (or OBS→TikTok RTMP).
    Recommended source size: 1080×1920 (or any 9:16 ratio, it scales with vw/vh).
@@ -229,20 +268,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ov-bg-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 /* Breathing glow — grows/shrinks in place, never travels across the screen */
 .ov-blob{position:absolute;border-radius:50%;filter:blur(70px);mix-blend-mode:screen;transform-origin:center}
-.ov-blob-a{width:44vw;height:44vw;background:radial-gradient(circle,#6366f1,transparent 70%);
+.ov-blob-a{width:44vw;height:44vw;background:radial-gradient(circle,var(--ov-c1),transparent 70%);
   top:-14%;left:50%;margin-left:-22vw;opacity:.35;animation:ov-breathe 6s ease-in-out infinite}
-.ov-blob-b{width:30vw;height:30vw;background:radial-gradient(circle,#ec4899,transparent 70%);
+.ov-blob-b{width:30vw;height:30vw;background:radial-gradient(circle,var(--ov-c2),transparent 70%);
   bottom:-8%;left:8%;opacity:.25;animation:ov-breathe 6s ease-in-out infinite 2s}
-.ov-blob-c{width:30vw;height:30vw;background:radial-gradient(circle,#22d3ee,transparent 70%);
+.ov-blob-c{width:30vw;height:30vw;background:radial-gradient(circle,var(--ov-c3),transparent 70%);
   bottom:-8%;right:8%;opacity:.25;animation:ov-breathe 6s ease-in-out infinite 4s}
 @keyframes ov-breathe{0%,100%{transform:scale(1);opacity:.22}50%{transform:scale(1.18);opacity:.42}}
 .ov-card{position:relative;z-index:1;width:100%;max-width:1180px;margin:0 auto;
-  background:linear-gradient(135deg,rgba(10,13,22,.94),rgba(20,16,38,.94));
-  backdrop-filter:blur(18px);border-radius:24px;overflow:hidden;
-  box-shadow:0 20px 65px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08)}
+  background:linear-gradient(135deg,var(--ov-bg1),var(--ov-bg2));
+  backdrop-filter:blur(18px);border-radius:var(--ov-radius);overflow:hidden;
+  box-shadow:var(--ov-shadow);border:1px solid var(--ov-border)}
 /* Color-cycling border — hue rotates in place, no gradient position travel, so nothing "slides" */
-.ov-card::before{content:'';position:absolute;inset:0;border-radius:24px;padding:2px;pointer-events:none;
-  background:conic-gradient(from 0deg,#6366f1,#ec4899,#22d3ee,#6366f1);
+.ov-card::before{content:'';position:absolute;inset:0;border-radius:var(--ov-radius);padding:2px;pointer-events:none;
+  background:conic-gradient(from 0deg,var(--ov-c1),var(--ov-c2),var(--ov-c3),var(--ov-c1));
   -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
   -webkit-mask-composite:xor;mask-composite:exclude;animation:ov-hue-cycle 10s linear infinite;opacity:.85}
 @keyframes ov-hue-cycle{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
@@ -251,14 +290,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   border:1px solid rgba(239,68,68,.35);color:#ff7a7a;font-weight:800;font-size:.72rem;letter-spacing:1.5px;
   text-transform:uppercase;padding:.32rem .85rem;border-radius:99px;flex-shrink:0}
 .ov-card-live .dot{width:7px;height:7px;border-radius:50%;background:#ff7a7a;animation:pulse 1.2s infinite}
-.ov-card-brand{margin-left:auto;font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;color:rgba(255,255,255,.42);letter-spacing:1.5px}
+.ov-card-brand{margin-left:auto;font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;color:var(--ov-fg-dim3);letter-spacing:1.5px}
 .ov-card-body{position:relative;display:flex;align-items:center;gap:1.2rem;padding:.6rem 1.6rem 1.4rem;min-height:96px}
 /* Icon glows in place — a still box with a pulsing halo, no movement */
 .ov-card-icon{position:relative;width:60px;height:60px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  font-size:1.55rem;color:#fff;background:linear-gradient(135deg,#4f46e5,#818cf8)}
+  font-size:1.55rem;color:#fff;background:linear-gradient(135deg,var(--ov-c1),var(--ov-c3))}
 .ov-card-icon::after{content:'';position:absolute;inset:-6px;border-radius:20px;
-  box-shadow:0 0 0 0 rgba(129,140,248,.55);animation:ov-icon-halo 2.4s ease-out infinite}
-@keyframes ov-icon-halo{0%{box-shadow:0 0 0 0 rgba(129,140,248,.5)}100%{box-shadow:0 0 0 14px rgba(129,140,248,0)}}
+  box-shadow:0 0 0 0 var(--ov-c1-a55);animation:ov-icon-halo 2.4s ease-out infinite}
+@keyframes ov-icon-halo{0%{box-shadow:0 0 0 0 var(--ov-c1-a55)}100%{box-shadow:0 0 0 14px transparent}}
 .ov-card-content{flex:1;min-width:0;display:flex;align-items:center;min-height:66px;position:relative}
 /* Fixed in place — content simply dissolves (pure opacity) from one stat to the next.
    No translate, no scale, no slide of any kind. */
@@ -268,14 +307,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
 /* Compact top-5 mini leaderboard, used as one of the rotating ticker items */
 .ov-mini-lb{width:100%}
-.ov-mini-lb-title{font-size:.85rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#ec4899;margin-bottom:.4rem}
-.ov-mini-lb-row{display:flex;align-items:center;gap:.6rem;font-size:1.02rem;padding:.15rem 0;color:#fff}
-.ov-mini-lb-rank{width:1.4rem;flex-shrink:0;font-family:'DM Mono',monospace;color:rgba(255,255,255,.5);font-weight:700}
+.ov-mini-lb-title{font-size:.85rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--ov-c2);margin-bottom:.4rem}
+.ov-mini-lb-row{display:flex;align-items:center;gap:.6rem;font-size:1.02rem;padding:.15rem 0;color:var(--ov-fg)}
+.ov-mini-lb-rank{width:1.4rem;flex-shrink:0;font-family:'DM Mono',monospace;color:var(--ov-fg-dim2);font-weight:700}
 .ov-mini-lb-name{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ov-mini-lb-val{flex-shrink:0;font-family:'DM Mono',monospace;font-weight:800;color:#ec4899}
+.ov-mini-lb-val{flex-shrink:0;font-family:'DM Mono',monospace;font-weight:800;color:var(--ov-c2)}
 @media (max-width:480px){.ov-mini-lb-row{font-size:.82rem}}
-.ov-card-progress{position:relative;height:4px;background:rgba(255,255,255,.08)}
-.ov-card-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#ec4899,#22d3ee)}
+.ov-card-progress{position:relative;height:4px;background:var(--ov-row-border)}
+.ov-card-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--ov-c1),var(--ov-c2),var(--ov-c3))}
+#overlay-root .tdm-banner-ticker-item{color:var(--ov-fg-dim)}
+#overlay-root .tdm-banner-ticker-item b{color:var(--ov-fg)}
 @media (max-width:480px){.ov-card-icon{width:44px;height:44px;font-size:1.15rem}.ov-card-content .tdm-banner-ticker-item{font-size:1rem}.ov-card-body{min-height:74px}}
 
 /* ── LEADERBOARD BROADCAST OVERLAY — widescreen 16:9 standings graphic (OBS Browser Source) ──
@@ -285,31 +326,31 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   padding:3.5vh 3vw;box-sizing:border-box;overflow:hidden}
 #ovlb-root.show{display:flex}
 .ovlb-card{position:relative;width:min(560px,94vw);max-height:93vh;overflow:hidden;
-  background:linear-gradient(160deg,rgba(10,13,22,.94),rgba(20,16,38,.94));
-  backdrop-filter:blur(18px);border-radius:18px;border:1px solid rgba(255,255,255,.09);
-  box-shadow:0 20px 65px rgba(0,0,0,.55);display:flex;flex-direction:column}
+  background:linear-gradient(160deg,var(--ov-bg1),var(--ov-bg2));
+  backdrop-filter:blur(18px);border-radius:var(--ov-radius-sm);border:1px solid var(--ov-border2);
+  box-shadow:var(--ov-shadow);display:flex;flex-direction:column}
 .ovlb-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;
-  padding:1.1rem 1.3rem .9rem;border-bottom:1px solid rgba(255,255,255,.08)}
-.ovlb-eyebrow{font-size:.66rem;font-weight:800;letter-spacing:1.8px;color:#ec4899;text-transform:uppercase}
-.ovlb-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:#fff;margin-top:.15rem}
-.ovlb-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:.78rem;color:rgba(255,255,255,.4);letter-spacing:1.5px;flex-shrink:0}
+  padding:1.1rem 1.3rem .9rem;border-bottom:1px solid var(--ov-border)}
+.ovlb-eyebrow{font-size:.66rem;font-weight:800;letter-spacing:1.8px;color:var(--ov-c2);text-transform:uppercase}
+.ovlb-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--ov-fg);margin-top:.15rem}
+.ovlb-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:.78rem;color:var(--ov-fg-dim3);letter-spacing:1.5px;flex-shrink:0}
 .ovlb-rows{padding:.6rem .8rem 1rem;overflow:hidden}
 .ovlb-row{display:flex;align-items:center;gap:.7rem;padding:.55rem .6rem;border-radius:10px;margin-bottom:.3rem;
-  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+  background:var(--ov-row-bg);border:1px solid var(--ov-row-border);
   opacity:0;transform:translateY(6px);animation:ovlb-row-in .4s ease forwards}
-.ovlb-row.top3{background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.22)}
+.ovlb-row.top3{background:var(--ov-c1-a10);border-color:var(--ov-c1-a22)}
 @keyframes ovlb-row-in{to{opacity:1;transform:translateY(0)}}
-.ovlb-rank{width:26px;flex-shrink:0;text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:.92rem;color:rgba(255,255,255,.5)}
+.ovlb-rank{width:26px;flex-shrink:0;text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:.92rem;color:var(--ov-fg-dim2)}
 .ovlb-row.top3 .ovlb-rank{color:#fbbf24}
-.ovlb-av{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:.85rem;color:#fff;background:linear-gradient(135deg,#4f46e5,#818cf8)}
+.ovlb-av{width:32px;height:32px;border-radius:var(--ov-radius-av);flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.85rem;color:#fff;background:linear-gradient(135deg,var(--ov-c1),var(--ov-c3))}
 .ovlb-name{flex:1;min-width:0;overflow:hidden}
-.ovlb-ign{font-weight:700;font-size:.92rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ovlb-team{font-size:.68rem;color:rgba(255,255,255,.42);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovlb-ign{font-weight:700;font-size:.92rem;color:var(--ov-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovlb-team{font-size:.68rem;color:var(--ov-fg-dim3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ovlb-stat{flex-shrink:0;text-align:right;font-family:'DM Mono',monospace}
-.ovlb-stat-val{font-weight:800;font-size:1rem;color:#ec4899}
-.ovlb-stat-lbl{font-size:.6rem;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.5px}
-.ovlb-empty{padding:2rem 1rem;text-align:center;color:rgba(255,255,255,.4);font-size:.85rem}
+.ovlb-stat-val{font-weight:800;font-size:1rem;color:var(--ov-c2)}
+.ovlb-stat-lbl{font-size:.6rem;color:var(--ov-fg-dim3);text-transform:uppercase;letter-spacing:.5px}
+.ovlb-empty{padding:2rem 1rem;text-align:center;color:var(--ov-fg-dim3);font-size:.85rem}
 @media (max-width:480px){.ovlb-card{width:94vw}.ovlb-title{font-size:1.1rem}.ovlb-ign{font-size:.82rem}.ovlb-stat-val{font-size:.88rem}}
 
 /* ── TDM player search / roster ─────────────────────────── */
@@ -865,6 +906,13 @@ tr:last-child td{border-bottom:none}
 .tp-reset{margin-top:.75rem;width:100%;background:none;border:1px dashed var(--border);color:var(--textM);
   border-radius:8px;padding:.4rem;font-size:.7rem;cursor:pointer;font-family:var(--font-main)}
 .tp-reset:hover{color:var(--text);border-color:var(--borderH)}
+.ov-preset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1rem}
+.ov-preset-sw{border:2px solid var(--border);border-radius:10px;padding:.5rem .3rem;cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;gap:.35rem;background:var(--bg3);transition:all .15s;font-size:.62rem;
+  font-weight:600;color:var(--textM);text-align:center}
+.ov-preset-sw:hover{border-color:var(--borderH);transform:translateY(-1px)}
+.ov-preset-sw.active{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 3px var(--accentGlow)}
+.ov-preset-dot{width:26px;height:8px;border-radius:99px}
 </style>
 </head>
 <body>
@@ -1436,6 +1484,59 @@ tr:last-child td{border-bottom:none}
             </div>
           </div>
           <div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-paint-roller"></i> Overlay Design</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Fully customize how <strong>both</strong> OBS overlays look — the TikTok stat card and the leaderboard broadcast graphic. Pick a preset or dial in your own colors, background, and corner style.</div>
+              <div class="fg"><label class="fl">Presets</label></div>
+              <div class="ov-preset-grid" id="ov-preset-grid">
+                <div class="ov-preset-sw" data-preset="neon" onclick="applyOverlayPreset('neon')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#6366f1,#ec4899,#22d3ee)"></div>Neon</div>
+                <div class="ov-preset-sw" data-preset="sunset" onclick="applyOverlayPreset('sunset')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#f97316,#ec4899,#fbbf24)"></div>Sunset</div>
+                <div class="ov-preset-sw" data-preset="ocean" onclick="applyOverlayPreset('ocean')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#0ea5e9,#06b6d4,#22d3ee)"></div>Ocean</div>
+                <div class="ov-preset-sw" data-preset="toxic" onclick="applyOverlayPreset('toxic')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#22c55e,#a3e635,#facc15)"></div>Toxic</div>
+                <div class="ov-preset-sw" data-preset="royal" onclick="applyOverlayPreset('royal')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#8b5cf6,#d946ef,#fbbf24)"></div>Royal</div>
+                <div class="ov-preset-sw" data-preset="blood" onclick="applyOverlayPreset('blood')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#dc2626,#f97316,#f59e0b)"></div>Blood</div>
+                <div class="ov-preset-sw" data-preset="mono" onclick="applyOverlayPreset('mono')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#94a3b8,#e2e8f0,#64748b)"></div>Mono</div>
+              </div>
+              <div class="frow3" style="margin-bottom:.9rem">
+                <div class="fg" style="margin-bottom:0"><label class="fl">Color 1</label><input class="fi" id="cfg-ov-c1" type="color" value="#6366f1" style="height:40px;padding:.2rem" oninput="previewOverlayDesign()"/></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Color 2</label><input class="fi" id="cfg-ov-c2" type="color" value="#ec4899" style="height:40px;padding:.2rem" oninput="previewOverlayDesign()"/></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Color 3</label><input class="fi" id="cfg-ov-c3" type="color" value="#22d3ee" style="height:40px;padding:.2rem" oninput="previewOverlayDesign()"/></div>
+              </div>
+              <div class="frow" style="margin-bottom:.9rem">
+                <div class="fg" style="margin-bottom:0"><label class="fl">Background</label>
+                  <select class="fi fsel" id="cfg-ov-bg" onchange="previewOverlayDesign()">
+                    <option value="dark-glass">Dark Glass (default)</option>
+                    <option value="jet-black">Jet Black</option>
+                    <option value="glass-light">Light Glass</option>
+                    <option value="transparent">Transparent</option>
+                  </select>
+                </div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Corners</label>
+                  <select class="fi fsel" id="cfg-ov-corner" onchange="previewOverlayDesign()">
+                    <option value="rounded">Rounded (default)</option>
+                    <option value="soft">Soft</option>
+                    <option value="sharp">Sharp</option>
+                  </select>
+                </div>
+              </div>
+              <div class="fg"><label class="fl">Live Preview</label></div>
+              <div id="ov-design-preview" style="position:relative;border-radius:var(--ov-radius);overflow:hidden;background:linear-gradient(135deg,var(--ov-bg1),var(--ov-bg2));border:1px solid var(--ov-border);box-shadow:var(--ov-shadow);padding:1rem;margin-bottom:1rem">
+                <div style="position:absolute;inset:0;border-radius:var(--ov-radius);padding:2px;pointer-events:none;background:conic-gradient(from 0deg,var(--ov-c1),var(--ov-c2),var(--ov-c3),var(--ov-c1));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.85"></div>
+                <div style="position:relative;display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
+                  <span style="display:inline-flex;align-items:center;gap:.4rem;background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.35);color:#ff7a7a;font-weight:800;font-size:.6rem;letter-spacing:1.2px;text-transform:uppercase;padding:.25rem .6rem;border-radius:99px"><span style="width:6px;height:6px;border-radius:50%;background:#ff7a7a"></span>LIVE</span>
+                  <span style="margin-left:auto;font-family:'Syne',sans-serif;font-weight:800;font-size:.68rem;color:var(--ov-fg-dim3);letter-spacing:1.2px">RAGEISM</span>
+                </div>
+                <div style="position:relative;display:flex;align-items:center;gap:.8rem">
+                  <div style="width:44px;height:44px;border-radius:var(--ov-radius-av);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:#fff;background:linear-gradient(135deg,var(--ov-c1),var(--ov-c3))"><i class="fa-solid fa-bolt"></i></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--ov-fg-dim)"><b style="color:var(--ov-fg)">ShadowFox</b> 12 kills this match <span style="opacity:.4">·</span> career <b style="color:var(--ov-fg)">340</b> kills</div>
+                    <div style="height:3px;background:var(--ov-row-border);border-radius:99px;margin-top:.6rem;overflow:hidden"><div style="height:100%;width:60%;background:linear-gradient(90deg,var(--ov-c1),var(--ov-c2),var(--ov-c3))"></div></div>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-accent btn-fw" onclick="saveOverlayDesign()"><i class="fa-solid fa-floppy-disk"></i> Save Overlay Design</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="resetOverlayDesign()"><i class="fa-solid fa-rotate-left"></i> Reset to Default</button>
+            </div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-tv"></i> Stream Overlay (TikTok LIVE Studio / OBS)</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">
@@ -2992,7 +3093,14 @@ function showPage(n){
   if(n==='compare'){renderCmpSelects();doCompare();}if(n==='community'){renderPolls();renderSugs();}
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players')renderAPlayers();if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
-  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();}
+  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
+    const oc1=document.getElementById('cfg-ov-c1');if(oc1)oc1.value=cfg.ovC1||'#6366f1';
+    const oc2=document.getElementById('cfg-ov-c2');if(oc2)oc2.value=cfg.ovC2||'#ec4899';
+    const oc3=document.getElementById('cfg-ov-c3');if(oc3)oc3.value=cfg.ovC3||'#22d3ee';
+    const obg=document.getElementById('cfg-ov-bg');if(obg)obg.value=cfg.ovBg||'dark-glass';
+    const ocr=document.getElementById('cfg-ov-corner');if(ocr)ocr.value=cfg.ovCorner||'rounded';
+    applyOverlayDesign(cfg);
+    migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();}
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
@@ -5658,6 +5766,67 @@ function resetThemeColors(){
   notify('Theme reset to default','','n-ok');
 }
 
+// ── Overlay Design (OBS / TikTok overlay appearance) — 3 accent colors, background style, corner style ──
+const OVERLAY_PRESETS={
+  neon:  {c1:'#6366f1',c2:'#ec4899',c3:'#22d3ee',label:'Neon (default)'},
+  sunset:{c1:'#f97316',c2:'#ec4899',c3:'#fbbf24',label:'Sunset'},
+  ocean: {c1:'#0ea5e9',c2:'#06b6d4',c3:'#22d3ee',label:'Ocean'},
+  toxic: {c1:'#22c55e',c2:'#a3e635',c3:'#facc15',label:'Toxic'},
+  royal: {c1:'#8b5cf6',c2:'#d946ef',c3:'#fbbf24',label:'Royal'},
+  blood: {c1:'#dc2626',c2:'#f97316',c3:'#f59e0b',label:'Blood'},
+  mono:  {c1:'#94a3b8',c2:'#e2e8f0',c3:'#64748b',label:'Mono'},
+};
+const OVERLAY_CORNERS={rounded:{r:'24px',rs:'18px',rav:'9px'},soft:{r:'14px',rs:'12px',rav:'7px'},sharp:{r:'4px',rs:'4px',rav:'3px'}};
+const OVERLAY_BGS=['dark-glass','jet-black','glass-light','transparent'];
+function ovRgbaFromHex(hex,alpha){const{r,g,b}=ovHexToRgb(hex);return`rgba(${r},${g},${b},${alpha})`;}
+function applyOverlayDesign(cfg){
+  cfg=cfg||DB.get('cfg',{});
+  const c1=cfg.ovC1||'#6366f1',c2=cfg.ovC2||'#ec4899',c3=cfg.ovC3||'#22d3ee';
+  const bg=OVERLAY_BGS.includes(cfg.ovBg)?cfg.ovBg:'dark-glass';
+  const corner=OVERLAY_CORNERS[cfg.ovCorner]?cfg.ovCorner:'rounded';
+  const root=document.documentElement;
+  root.style.setProperty('--ov-c1',c1);root.style.setProperty('--ov-c2',c2);root.style.setProperty('--ov-c3',c3);
+  root.style.setProperty('--ov-c1-a55',ovRgbaFromHex(c1,.55));
+  root.style.setProperty('--ov-c1-a10',ovRgbaFromHex(c1,.1));
+  root.style.setProperty('--ov-c1-a22',ovRgbaFromHex(c1,.22));
+  const cr=OVERLAY_CORNERS[corner];
+  root.style.setProperty('--ov-radius',cr.r);root.style.setProperty('--ov-radius-sm',cr.rs);root.style.setProperty('--ov-radius-av',cr.rav);
+  root.setAttribute('data-ovbg',bg);
+}
+function applyOverlayPreset(name){
+  const p=OVERLAY_PRESETS[name];if(!p)return;
+  const a=document.getElementById('cfg-ov-c1');if(a)a.value=p.c1;
+  const b=document.getElementById('cfg-ov-c2');if(b)b.value=p.c2;
+  const c=document.getElementById('cfg-ov-c3');if(c)c.value=p.c3;
+  document.querySelectorAll('#ov-preset-grid .ov-preset-sw').forEach(el=>el.classList.toggle('active',el.dataset.preset===name));
+  previewOverlayDesign();
+}
+function previewOverlayDesign(){
+  applyOverlayDesign({
+    ovC1:v('cfg-ov-c1')||'#6366f1',ovC2:v('cfg-ov-c2')||'#ec4899',ovC3:v('cfg-ov-c3')||'#22d3ee',
+    ovBg:v('cfg-ov-bg')||'dark-glass',ovCorner:v('cfg-ov-corner')||'rounded',
+  });
+  document.querySelectorAll('#ov-preset-grid .ov-preset-sw').forEach(el=>el.classList.remove('active'));
+}
+function saveOverlayDesign(){
+  const cfg=DB.get('cfg',{});
+  cfg.ovC1=v('cfg-ov-c1')||'#6366f1';cfg.ovC2=v('cfg-ov-c2')||'#ec4899';cfg.ovC3=v('cfg-ov-c3')||'#22d3ee';
+  cfg.ovBg=v('cfg-ov-bg')||'dark-glass';cfg.ovCorner=v('cfg-ov-corner')||'rounded';
+  DB.set('cfg',cfg);applyOverlayDesign(cfg);
+  notify('Overlay design saved!','Your OBS/TikTok overlay will use this look','n-ok');
+  logAdminAction('Overlay design changed',`Overlay colors/style updated by ${CU?CU.name:'Admin'}`);
+}
+function resetOverlayDesign(){
+  const cfg=DB.get('cfg',{});delete cfg.ovC1;delete cfg.ovC2;delete cfg.ovC3;delete cfg.ovBg;delete cfg.ovCorner;DB.set('cfg',cfg);
+  const a=document.getElementById('cfg-ov-c1');if(a)a.value='#6366f1';
+  const b=document.getElementById('cfg-ov-c2');if(b)b.value='#ec4899';
+  const c=document.getElementById('cfg-ov-c3');if(c)c.value='#22d3ee';
+  const bgsel=document.getElementById('cfg-ov-bg');if(bgsel)bgsel.value='dark-glass';
+  const cornersel=document.getElementById('cfg-ov-corner');if(cornersel)cornersel.value='rounded';
+  applyOverlayDesign(cfg);
+  notify('Overlay design reset','','n-ok');
+}
+
 // ── SITE APPEARANCE — admin-controlled default font + color theme, plus a personal
 //    per-visitor override saved only in that visitor's own browser (the theme bubble). ──
 const FONT_STACKS={dmsans:"'DM Sans',sans-serif",inter:"'Inter',sans-serif",poppins:"'Poppins',sans-serif",montserrat:"'Montserrat',sans-serif",nunito:"'Nunito',sans-serif"};
@@ -5723,6 +5892,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     sbHideOverlay();
     seed();
     applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
+    applyOverlayDesign();
     document.getElementById('ls').style.display='none';
     document.body.style.background='transparent';
     if(overlayParams.get('overlay')==='lb'){
@@ -5756,6 +5926,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   sbHideOverlay();
   seed(); startCountdown();
   applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
+  applyOverlayDesign();
   bootAppearance();
   setTimeout(()=>{document.querySelectorAll('.progress-fill,.xp-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});},400);
   document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
