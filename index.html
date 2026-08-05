@@ -1816,13 +1816,29 @@ tr:last-child td{border-bottom:none}
 
       <!-- ░ COMPARE ░ -->
       <div class="page" id="page-compare">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Head-to-Head <span style="color:var(--accentL)">Compare</span></div></div></div>
-        <div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:center;margin-bottom:1.2rem">
-          <select class="fi fsel" id="cmp1" onchange="doCompare()" style="text-align:center"><option value="">— Player 1 —</option></select>
-          <div style="text-align:center;font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
-          <select class="fi fsel" id="cmp2" onchange="doCompare()" style="text-align:center"><option value="">— Player 2 —</option></select>
+        <div class="sh-row"><div class="sh"><div class="sh-title">Head-to-Head <span style="color:var(--accentL)">Compare</span></div></div>
+          <div style="display:flex;gap:.4rem">
+            <button class="btn btn-accent btn-sm" id="cmp-tab-players" onclick="switchCompareTab('players')"><i class="fa-solid fa-user"></i> Players</button>
+            <button class="btn btn-ghost btn-sm" id="cmp-tab-teams" onclick="switchCompareTab('teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
+          </div>
         </div>
-        <div id="cmp-result"></div>
+        <div id="cmp-players-block">
+          <div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:center;margin-bottom:1.2rem">
+            <select class="fi fsel" id="cmp1" onchange="doCompare()" style="text-align:center"><option value="">— Player 1 —</option></select>
+            <div style="text-align:center;font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
+            <select class="fi fsel" id="cmp2" onchange="doCompare()" style="text-align:center"><option value="">— Player 2 —</option></select>
+          </div>
+          <div id="cmp-result"></div>
+        </div>
+        <div id="cmp-teams-block" style="display:none">
+          <div style="font-size:.78rem;color:var(--textD);margin-bottom:1rem">Scrims stats only — TDM records are tracked separately and never mixed in here.</div>
+          <div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:center;margin-bottom:1.2rem">
+            <select class="fi fsel" id="cmpT1" onchange="doCompareTeams()" style="text-align:center"><option value="">— Team 1 —</option></select>
+            <div style="text-align:center;font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
+            <select class="fi fsel" id="cmpT2" onchange="doCompareTeams()" style="text-align:center"><option value="">— Team 2 —</option></select>
+          </div>
+          <div id="cmp-team-result"></div>
+        </div>
       </div>
 
       <!-- ░ COMMUNITY ░ -->
@@ -3113,7 +3129,7 @@ function showPage(n){
   document.querySelectorAll('.sb-item').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+n+"'"))b.classList.add('active');});
   const tt=document.getElementById('topbar-title');if(tt)tt.textContent=PAGE_TITLES[n]||n;
   if(n==='leaderboard')renderLB();if(n==='teams')renderTeams();if(n==='matches')renderMatches();
-  if(n==='compare'){renderCmpSelects();doCompare();}if(n==='community'){renderPolls();renderSugs();}
+  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderPolls();renderSugs();}
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players')renderAPlayers();if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
   if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
@@ -3173,8 +3189,45 @@ function buildTicker(){
 
 // ═══ COUNTDOWN ═══
 function startCountdown(){
-  const t=new Date();t.setDate(t.getDate()+1);t.setHours(18,0,0,0);
-  setInterval(()=>{const d=t-new Date();const el=document.getElementById('countdown');if(!el)return;if(d<=0){el.textContent='LIVE';return;}const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;},1000);
+  tickCountdown();
+  setInterval(tickCountdown,1000);
+}
+// Resolves which teams the currently logged-in player belongs to (as a member, captain, or manager)
+function myTeamIdsForCountdown(){
+  if(!CU)return[];
+  const players=DB.get('players',[]);
+  const p=players.find(x=>x.ign===CU.ign)
+    ||players.find(x=>x.ign===CU.name)
+    ||players.find(x=>x.discord&&x.discord.toLowerCase()===((CU.disc||CU.name||'').toLowerCase()));
+  const myIgn=p?p.ign:(CU.ign||CU.name);
+  if(!myIgn)return[];
+  const teams=DB.get('teams',[]).filter(t=>t.approved);
+  return teams.filter(t=>t.captain===myIgn||t.manager===myIgn||(t.members||[]).includes(myIgn)).map(t=>t.id);
+}
+function matchDateTs(m){
+  try{const d=new Date(`${m.date} ${m.time}`);if(!isNaN(d.getTime()))return d.getTime();}catch{}
+  return Infinity;
+}
+// The dashboard countdown only starts once MY team has signed up for a match AND an admin has
+// accepted the request (i.e. the match's m.teams array actually includes one of my team ids) —
+// until then it stays frozen at 00:00:00 instead of counting down to someone else's match.
+function myNextAcceptedMatch(){
+  const teamIds=myTeamIdsForCountdown();
+  if(!teamIds.length)return null;
+  const ms=DB.get('matches',[]).filter(m=>(m.status==='upcoming'||m.status==='live')&&(m.teams||[]).some(t=>teamIds.includes(t.teamId)));
+  if(!ms.length)return null;
+  return ms.slice().sort((a,b)=>matchDateTs(a)-matchDateTs(b))[0];
+}
+function tickCountdown(){
+  const el=document.getElementById('countdown');if(!el)return;
+  const match=myNextAcceptedMatch();
+  if(!match){el.textContent='00:00:00';return;}
+  const target=matchDateTs(match);
+  if(!isFinite(target)){el.textContent='00:00:00';return;}
+  const d=target-Date.now();
+  if(d<=0){el.textContent='LIVE';return;}
+  const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
+  el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 // ═══ STATS ═══
@@ -5358,6 +5411,53 @@ function doCompare(){
   </div>${row('Kills',p1.kills,p2.kills)}${row('K / D',kd1,kd2)}${row('Wins',p1.wins,p2.wins)}${row('Damage',p1.damage||0,p2.damage||0)}${row('XP',p1.xp||0,p2.xp||0)}${row('Deaths',p1.deaths,p2.deaths,false)}</div>${h2hCardHTML(p1,p2)}`;
 }
 
+// ── Compare page: Players / Teams tab switcher ──
+function switchCompareTab(tab){
+  const pb=document.getElementById('cmp-players-block'),tb=document.getElementById('cmp-teams-block');
+  const bp=document.getElementById('cmp-tab-players'),bt=document.getElementById('cmp-tab-teams');
+  if(tab==='teams'){
+    if(pb)pb.style.display='none';if(tb)tb.style.display='';
+    if(bp)bp.className='btn btn-ghost btn-sm';if(bt)bt.className='btn btn-accent btn-sm';
+    renderCmpTeamSelects();doCompareTeams();
+  }else{
+    if(pb)pb.style.display='';if(tb)tb.style.display='none';
+    if(bp)bp.className='btn btn-accent btn-sm';if(bt)bt.className='btn btn-ghost btn-sm';
+  }
+}
+// ── Team vs Team compare (scrims only — TDM records live in the separate TDM tab/boards) ──
+function renderCmpTeamSelects(){
+  const te=DB.get('teams',[]).filter(t=>t.approved);
+  ['cmpT1','cmpT2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;
+    s.innerHTML='<option value="">— Select Team —</option>'+te.map(t=>`<option value="${t.id}">${esc(t.name)}${t.tag?` [${esc(t.tag)}]`:''}</option>`).join('');
+    if(cur)s.value=cur;});
+}
+function doCompareTeams(){
+  const t1id=v('cmpT1'),t2id=v('cmpT2');const el=document.getElementById('cmp-team-result');if(!el)return;
+  if(!t1id||!t2id){el.innerHTML='<div style="text-align:center;padding:3rem;color:var(--textD)">Select two teams to compare.</div>';return;}
+  if(t1id===t2id){el.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--textD)">Select different teams.</div>';return;}
+  const teams=DB.get('teams',[]);const t1=teams.find(t=>t.id===t1id),t2=teams.find(t=>t.id===t2id);if(!t1||!t2)return;
+  const avg1=(t1.matchesPlayed||0)>0?((t1.points||0)/t1.matchesPlayed).toFixed(1):'0.0';
+  const avg2=(t2.matchesPlayed||0)>0?((t2.points||0)/t2.matchesPlayed).toFixed(1):'0.0';
+  const row=(lbl,v1,v2,hi=true)=>{const n1=parseFloat(v1)||0,n2=parseFloat(v2)||0,w=hi?n1>n2:n1<n2;
+    return `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="text-align:right"><span class="chip font-mono" style="${w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v1}</span></div>
+      <div style="font-size:.65rem;font-weight:700;color:var(--textD);text-align:center;letter-spacing:.8px;text-transform:uppercase;min-width:80px">${lbl}</div>
+      <div><span class="chip font-mono" style="${!w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v2}</span></div>
+    </div>`;};
+  el.innerHTML=`<div class="card"><div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:center;text-align:center;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border)">
+    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,${t1.color||'var(--accent)'},#67e8f9)">${esc((t1.tag||t1.name||'?')[0])}</div><div style="font-weight:700;font-size:.9rem">${esc(t1.name)}</div><div class="text-dim" style="font-size:.75rem">${esc(t1.tag||'')}</div></div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
+    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,#a855f7,#ec4899)">${esc((t2.tag||t2.name||'?')[0])}</div><div style="font-weight:700;font-size:.9rem">${esc(t2.name)}</div><div class="text-dim" style="font-size:.75rem">${esc(t2.tag||'')}</div></div>
+  </div>
+  ${row('Points',t1.points||0,t2.points||0)}
+  ${row('Wins',t1.wins||0,t2.wins||0)}
+  ${row('Kills',t1.kills||0,t2.kills||0)}
+  ${row('Matches Played',t1.matchesPlayed||0,t2.matchesPlayed||0)}
+  ${row('Avg Pts / Match',avg1,avg2)}
+  ${row('Roster Size',(t1.members||[]).length,(t2.members||[]).length)}
+  </div>`;
+}
+
 // ═══ POLLS ═══
 function renderPolls(){
   const polls=DB.get('polls');const c=document.getElementById('polls-list');if(!c)return;
@@ -6014,7 +6114,12 @@ window.addEventListener('DOMContentLoaded',async()=>{
     const sbR = await sbInit();
     if(sbR){await sbLoad();}
     sbHideOverlay();
-    seed();
+    // NOTE: deliberately NOT calling seed() here. seed() wipes players/teams/matches/tdmMatches
+    // back to empty (and mirrors that wipe to Supabase!) whenever the seeded-flag isn't already
+    // set — and an OBS Browser Source runs its own fresh, isolated browser profile that almost
+    // never has that flag. That was silently nuking real data right after loading it, which is
+    // why the ticker/leaderboard overlay looked empty/broken. Every DB.get() below already has
+    // a safe [] / {} fallback, so the overlay never needed seeding to render correctly.
     applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
     applyOverlayDesign();
     document.getElementById('ls').style.display='none';
@@ -6026,7 +6131,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(sbR){ setInterval(()=>{ sbLoad(); }, 6000); }
     if(overlayParams.get('overlay')==='lb'){
       // Widescreen standings graphic — separate from the TikTok ticker overlay.
-      const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
+      const typeParam=overlayParams.get('type');
+      const type=(typeParam==='tdm'||typeParam==='ranking')?typeParam:'scrims';
       const board=overlayParams.get('board')||'main';
       document.getElementById('ovlb-root').classList.add('show');
       renderOverlayLb(type,board);
