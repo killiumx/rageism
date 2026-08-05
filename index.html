@@ -350,8 +350,10 @@ html[data-ovbg="transparent"]{
 .ovlb-stat{flex-shrink:0;text-align:right;font-family:'DM Mono',monospace}
 .ovlb-stat-val{font-weight:800;font-size:1rem;color:var(--ov-c2)}
 .ovlb-stat-lbl{font-size:.6rem;color:var(--ov-fg-dim3);text-transform:uppercase;letter-spacing:.5px}
+.ovlb-stat-group{flex-shrink:0;display:flex;align-items:center;gap:.85rem}
+.ovlb-stat-group .ovlb-stat-val{font-size:.88rem}
 .ovlb-empty{padding:2rem 1rem;text-align:center;color:var(--ov-fg-dim3);font-size:.85rem}
-@media (max-width:480px){.ovlb-card{width:94vw}.ovlb-title{font-size:1.1rem}.ovlb-ign{font-size:.82rem}.ovlb-stat-val{font-size:.88rem}}
+@media (max-width:480px){.ovlb-card{width:94vw}.ovlb-title{font-size:1.1rem}.ovlb-ign{font-size:.82rem}.ovlb-stat-val{font-size:.88rem}.ovlb-stat-group{gap:.5rem}}
 
 /* ── TDM player search / roster ─────────────────────────── */
 .tdm-search-results{position:relative;margin-top:.3rem;max-height:180px;overflow-y:auto;border-radius:var(--rS);
@@ -1545,6 +1547,14 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><input class="fi" id="ov-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ov-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
+              <div style="height:1px;background:var(--border);margin:1rem 0"></div>
+              <div class="fg"><label class="fl">"Up Next" Label</label><input class="fi" id="cfg-ov-upnext-text" placeholder="Up next"/></div>
+              <div class="fg"><label class="fl">No Match Message</label><input class="fi" id="cfg-ov-nomatch-text" placeholder="No live match right now"/></div>
+              <div class="fg" style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+                <input type="checkbox" id="cfg-ov-tdm-wins" style="width:auto;accent-color:var(--accent)"/>
+                <label class="fl" style="margin:0" for="cfg-ov-tdm-wins">Show Wins on TDM ticker slide</label>
+              </div>
+              <button class="btn btn-accent btn-fw" onclick="saveOverlayText()"><i class="fa-solid fa-floppy-disk"></i> Save Overlay Text & Toggles</button>
             </div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Leaderboard Broadcast Overlay</div>
@@ -1552,12 +1562,25 @@ tr:last-child td{border-bottom:none}
                 A clean standings table sized for a <strong>widescreen 16:9 canvas</strong> — built for tournament broadcasts, TDM simulators, or PMGC-style standings graphics. Pick which board it should show, then add the link as a Browser Source in OBS. Scrims and TDM are always kept separate.
               </div>
               <div class="g2" style="margin-bottom:.6rem">
-                <div class="fg" style="margin-bottom:0"><label class="fl">Source</label><select class="fi fsel" id="ovlb-type" onchange="onOvlbTypeChange();buildOverlayLbLink()"><option value="scrims">Scrims Leaderboard</option><option value="tdm">TDM Leaderboard</option></select></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Source</label><select class="fi fsel" id="ovlb-type" onchange="onOvlbTypeChange();buildOverlayLbLink()"><option value="scrims">Scrims Leaderboard</option><option value="tdm">TDM Leaderboard</option><option value="ranking">Custom Ranking</option></select></div>
                 <div class="fg" style="margin-bottom:0"><label class="fl">Board</label><select class="fi fsel" id="ovlb-board" onchange="buildOverlayLbLink()"><option value="main">Main</option></select></div>
               </div>
               <div class="fg"><input class="fi" id="ovlb-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLbLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ovlb-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
+            </div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-list-ol"></i> Custom Ranking Boards</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">
+                Simple rank + name graphics like "Top 10 NA" — no wins/kills needed. Type names in order, one per line, then pick "Custom Ranking" as the Source above.
+              </div>
+              <div class="g2" style="margin-bottom:.6rem">
+                <div class="fg" style="margin-bottom:0"><label class="fl">Board</label><select class="fi fsel" id="rb-board-sel" onchange="switchRankingBoard(this.value)"></select></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">&nbsp;</label><button class="btn btn-ghost btn-fw" onclick="createRankingBoard()"><i class="fa-solid fa-plus"></i> New Board</button></div>
+              </div>
+              <div class="fg"><label class="fl">Names (one per line, in rank order)</label><textarea class="fta" id="rb-board-entries" rows="8" placeholder="Asher&#10;Shah&#10;Pakhton"></textarea></div>
+              <button class="btn btn-accent btn-fw" onclick="saveRankingBoard()"><i class="fa-solid fa-floppy-disk"></i> Save Board</button>
+              <button class="btn btn-danger btn-fw" style="margin-top:.5rem" onclick="deleteRankingBoard()"><i class="fa-solid fa-trash"></i> Delete Board</button>
             </div>
             <div class="card mb2 master-only">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Log <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
@@ -2076,7 +2099,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards'];
 let SB_OK = false, SB_WRITES = 0;
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
@@ -3100,6 +3123,10 @@ function showPage(n){
     const obg=document.getElementById('cfg-ov-bg');if(obg)obg.value=cfg.ovBg||'dark-glass';
     const ocr=document.getElementById('cfg-ov-corner');if(ocr)ocr.value=cfg.ovCorner||'rounded';
     applyOverlayDesign(cfg);
+    const oun=document.getElementById('cfg-ov-upnext-text');if(oun)oun.value=cfg.ovUpNextText||'Up next';
+    const onm=document.getElementById('cfg-ov-nomatch-text');if(onm)onm.value=cfg.ovNoMatchText||'No live match right now';
+    const otw=document.getElementById('cfg-ov-tdm-wins');if(otw)otw.checked=cfg.ovTdmShowWins!==false;
+    renderRankingBoardSelect();
     migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();}
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
@@ -3691,18 +3718,21 @@ function tdmScoreChipItem(m){
 // Overall best player across the whole roster (not just this match) — season-wide standout
 // Compact "Top 5" leaderboard slide for the TikTok ticker overlay — separate builders so
 // scrims and TDM standings never get mixed into the same rotation item.
-function ovMiniLbRows(rows,statKey){
-  return rows.slice(0,5).map((p,i)=>`<div class="ov-mini-lb-row"><span class="ov-mini-lb-rank">#${i+1}</span><span class="ov-mini-lb-name">${esc(p.ign)}</span><span class="ov-mini-lb-val">${p[statKey]||0}</span></div>`).join('');
+function ovMiniLbRows(rows,statKey,showVal=true){
+  return rows.slice(0,5).map((p,i)=>`<div class="ov-mini-lb-row"><span class="ov-mini-lb-rank">#${i+1}</span><span class="ov-mini-lb-name">${esc(p.ign)}</span>${showVal?`<span class="ov-mini-lb-val">${p[statKey]||0}</span>`:''}</div>`).join('');
 }
 function scrimsMiniLbItem(){
   const rows=[...DB.get('players',[])].filter(p=>(p.points||0)>0).sort((a,b)=>(b.points||0)-(a.points||0));
   if(!rows.length)return '';
   return `<div class="ov-mini-lb"><div class="ov-mini-lb-title">Scrims Leaderboard</div>${ovMiniLbRows(rows,'points')}</div>`;
 }
+// TDM ticker slide is just Name + Wins (no kills) — Wins itself can be hidden via the
+// "Show Wins on TDM ticker slide" toggle in Admin → Settings → Stream Overlay.
 function tdmMiniLbItem(){
   const rows=tdmMainBoardPlayers();
   if(!rows.length)return '';
-  return `<div class="ov-mini-lb"><div class="ov-mini-lb-title">TDM Leaderboard</div>${ovMiniLbRows(rows,'tdmWins')}</div>`;
+  const showWins=DB.get('cfg',{}).ovTdmShowWins!==false;
+  return `<div class="ov-mini-lb"><div class="ov-mini-lb-title">TDM Leaderboard</div>${ovMiniLbRows(rows,'tdmWins',showWins)}</div>`;
 }
 function tdmOverallBestItem(){
   const pl=DB.get('players',[]);
@@ -3864,6 +3894,10 @@ function onOvlbTypeChange(){
     const boards=DB.get('tdmBoards',[]);
     boardSel.innerHTML='<option value="main">Main</option>'+boards.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
     boardSel.parentElement.style.display='';
+  }else if(type==='ranking'){
+    const boards=DB.get('rankingBoards',[]);
+    boardSel.innerHTML=boards.length?boards.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join(''):'<option value="">No boards yet — create one below</option>';
+    boardSel.parentElement.style.display='';
   }else{
     boardSel.innerHTML='<option value="main">All Players</option>';
     boardSel.parentElement.style.display='';
@@ -3879,18 +3913,81 @@ function copyOverlayLbLink(){
   try{navigator.clipboard.writeText(el.value);notify('Overlay link copied!','Paste it as a Browser Source in OBS.','n-ok');}catch{}
 }
 
+// ── Editable ticker text + TDM wins toggle (used by renderOverlay / tdmMiniLbItem) ──
+function saveOverlayText(){
+  if(!ADM)return;
+  const cfg=DB.get('cfg',{});
+  cfg.ovUpNextText=v('cfg-ov-upnext-text')||'Up next';
+  cfg.ovNoMatchText=v('cfg-ov-nomatch-text')||'No live match right now';
+  cfg.ovTdmShowWins=!!document.getElementById('cfg-ov-tdm-wins')?.checked;
+  DB.set('cfg',cfg);
+  notify('Overlay text saved!','Ticker labels and toggle updated','n-ok');
+  logAdminAction('Overlay text updated',`Ticker labels/toggles changed by ${CU?CU.name:'Admin'}`);
+}
+
+// ── Custom Ranking Boards (rank + name only, e.g. "Top 10 NA") ──
+let RB_ACTIVE=null;
+function renderRankingBoardSelect(){
+  const boards=DB.get('rankingBoards',[]);
+  const sel=document.getElementById('rb-board-sel');if(!sel)return;
+  if(!boards.length){sel.innerHTML='<option value="">No boards yet — create one</option>';RB_ACTIVE=null;}
+  else{
+    if(!RB_ACTIVE||!boards.find(b=>b.id===RB_ACTIVE))RB_ACTIVE=boards[0].id;
+    sel.innerHTML=boards.map(b=>`<option value="${b.id}" ${b.id===RB_ACTIVE?'selected':''}>${esc(b.name)}</option>`).join('');
+  }
+  loadRankingBoardIntoForm();
+}
+function loadRankingBoardIntoForm(){
+  const boards=DB.get('rankingBoards',[]);
+  const b=boards.find(x=>x.id===RB_ACTIVE);
+  const ta=document.getElementById('rb-board-entries');if(ta)ta.value=b?(b.entries||[]).join('\n'):'';
+}
+function switchRankingBoard(id){RB_ACTIVE=id;loadRankingBoardIntoForm();}
+function createRankingBoard(){
+  if(!ADM)return;
+  const name=prompt('Name for the new ranking board (e.g. "Top 10 NA"):');
+  if(!name||!name.trim())return;
+  const boards=DB.get('rankingBoards',[]);
+  const board={id:'rb'+Date.now(),name:name.trim(),entries:[]};
+  boards.push(board);DB.set('rankingBoards',boards);
+  RB_ACTIVE=board.id;renderRankingBoardSelect();
+  logAdminAction('Ranking board created',`"${board.name}" created by ${CU?CU.name:'Admin'}`);
+  notify('Ranking board created!','Add names below, then Save','n-ok');
+  if(document.getElementById('ovlb-type'))onOvlbTypeChange();
+}
+function saveRankingBoard(){
+  if(!ADM)return;
+  if(!RB_ACTIVE)return notify('Create a board first','Use "New Board" above','n-bad');
+  const boards=DB.get('rankingBoards',[]);const b=boards.find(x=>x.id===RB_ACTIVE);if(!b)return;
+  const raw=document.getElementById('rb-board-entries')?.value||'';
+  b.entries=raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  DB.set('rankingBoards',boards);
+  notify('Board saved!',`${b.entries.length} names on "${b.name}"`,'n-ok');
+  logAdminAction('Ranking board saved',`"${b.name}" updated by ${CU?CU.name:'Admin'}`);
+  if(document.getElementById('ovlb-type'))onOvlbTypeChange();
+}
+function deleteRankingBoard(){
+  if(!ADM||!RB_ACTIVE)return;
+  const boards=DB.get('rankingBoards',[]);const b=boards.find(x=>x.id===RB_ACTIVE);
+  if(!confirm(`Delete ranking board "${b?b.name:''}"?`))return;
+  const kept=boards.filter(x=>x.id!==RB_ACTIVE);DB.set('rankingBoards',kept);
+  logAdminAction('Ranking board deleted',`"${b?b.name:RB_ACTIVE}" deleted by ${CU?CU.name:'Admin'}`);
+  RB_ACTIVE=null;renderRankingBoardSelect();notify('Board deleted','','n-ok');
+  if(document.getElementById('ovlb-type'))onOvlbTypeChange();
+}
+
 // ── Widescreen Leaderboard Broadcast Overlay (?overlay=lb) ──
-// Renders either the scrims leaderboard (player.points/kills) or a TDM board (player.tdmKills, or a
-// custom hand-ordered board) — the two never mix, matching the split enforced everywhere else.
+// Renders the scrims leaderboard (player.points), a TDM board (Wins / Kills / Tournament Wins), or a
+// name-only Custom Ranking board — the three never mix, matching the split enforced everywhere else.
 function renderOverlayLb(type,boardId){
   const eyebrow=document.getElementById('ovlb-eyebrow');
   const titleEl=document.getElementById('ovlb-title');
   const rowsEl=document.getElementById('ovlb-rows');
   if(!rowsEl)return;
-  let rows=[],statKey='pts',statLabel='PTS',title='Leaderboard';
+  let rows=[],statKey='pts',statLabel='PTS',title='Leaderboard',mode='single';
   if(type==='tdm'){
     eyebrow.textContent='TDM LEADERBOARD';
-    statKey='tdmWins';statLabel='WINS';
+    mode='tdmMulti';
     if(boardId==='main'){
       rows=tdmMainBoardPlayers();title='Main';
     }else{
@@ -3899,6 +3996,12 @@ function renderOverlayLb(type,boardId){
       rows=b?(b.playerIds||[]).map(id=>pl.find(p=>p.id===id)).filter(Boolean):[];
       title=b?b.name:'Leaderboard';
     }
+  }else if(type==='ranking'){
+    eyebrow.textContent='RANKINGS';
+    mode='nameOnly';
+    const boards=DB.get('rankingBoards',[]);const b=boards.find(x=>x.id===boardId);
+    rows=b?(b.entries||[]).map(name=>({ign:name})):[];
+    title=b?b.name:'Rankings';
   }else{
     eyebrow.textContent='SCRIMS LEADERBOARD';
     statKey='points';statLabel='PTS';title='Main';
@@ -3907,12 +4010,30 @@ function renderOverlayLb(type,boardId){
   titleEl.textContent=title;
   rows=rows.slice(0,10);
   if(!rows.length){rowsEl.innerHTML='<div class="ovlb-empty">No standings yet</div>';return;}
-  rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
-    <div class="ovlb-rank">${i+1}</div>
-    <div class="ovlb-av">${(p.ign||'?')[0]}</div>
-    <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div><div class="ovlb-team">${esc(p.team||'')}</div></div>
-    <div class="ovlb-stat"><div class="ovlb-stat-val">${p[statKey]||0}</div><div class="ovlb-stat-lbl">${statLabel}</div></div>
-  </div>`).join('');
+  if(mode==='tdmMulti'){
+    rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
+      <div class="ovlb-rank">${i+1}</div>
+      <div class="ovlb-av">${(p.ign||'?')[0]}</div>
+      <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div><div class="ovlb-team">${esc(p.team||'')}</div></div>
+      <div class="ovlb-stat-group">
+        <div class="ovlb-stat"><div class="ovlb-stat-val">${p.tdmWins||0}</div><div class="ovlb-stat-lbl">Wins</div></div>
+        <div class="ovlb-stat"><div class="ovlb-stat-val">${p.tdmKills||0}</div><div class="ovlb-stat-lbl">Kills</div></div>
+        <div class="ovlb-stat"><div class="ovlb-stat-val">${p.wins||0}</div><div class="ovlb-stat-lbl">T.Wins</div></div>
+      </div>
+    </div>`).join('');
+  }else if(mode==='nameOnly'){
+    rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
+      <div class="ovlb-rank">${i+1}</div>
+      <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div></div>
+    </div>`).join('');
+  }else{
+    rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
+      <div class="ovlb-rank">${i+1}</div>
+      <div class="ovlb-av">${(p.ign||'?')[0]}</div>
+      <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div><div class="ovlb-team">${esc(p.team||'')}</div></div>
+      <div class="ovlb-stat"><div class="ovlb-stat-val">${p[statKey]||0}</div><div class="ovlb-stat-lbl">${statLabel}</div></div>
+    </div>`).join('');
+  }
 }
 
 
@@ -4073,9 +4194,12 @@ function renderOverlay(){
     const matches=DB.get('matches',[]);
     const live=matches.find(m=>m.status==='live');
     const upcoming=matches.find(m=>m.status==='upcoming');
+    const cfgTxt=DB.get('cfg',{});
+    const upNextTxt=esc(cfgTxt.ovUpNextText||'Up next');
+    const noMatchTxt=esc(cfgTxt.ovNoMatchText||'No live match right now');
     if(live)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-gamepad"></i> ${live.name} <span style="opacity:.4">·</span> ${MI[live.map]||''} ${live.map||''}</span>`);
-    else if(upcoming)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clock"></i> Up next <span style="opacity:.4">·</span> ${upcoming.name}</span>`);
-    else items.push(`<span class="tdm-banner-ticker-item">No live match right now</span>`);
+    else if(upcoming)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clock"></i> ${upNextTxt} <span style="opacity:.4">·</span> ${upcoming.name}</span>`);
+    else items.push(`<span class="tdm-banner-ticker-item">${noMatchTxt}</span>`);
     const overallItem=scrimsOverallBestItem();
     if(overallItem)items.push(overallItem);
     const miniLb=scrimsMiniLbItem();
@@ -5895,6 +6019,11 @@ window.addEventListener('DOMContentLoaded',async()=>{
     applyOverlayDesign();
     document.getElementById('ls').style.display='none';
     document.body.style.background='transparent';
+    // Keep pulling fresh data from Supabase while this runs as an OBS Browser Source. The
+    // admin dashboard writing changes is almost always a *different* browser/machine, so this
+    // tab never receives a 'storage' event for those changes — without this poll, the overlay
+    // freezes on whatever it loaded when OBS first opened it.
+    if(sbR){ setInterval(()=>{ sbLoad(); }, 6000); }
     if(overlayParams.get('overlay')==='lb'){
       // Widescreen standings graphic — separate from the TikTok ticker overlay.
       const type=overlayParams.get('type')==='tdm'?'tdm':'scrims';
