@@ -1134,15 +1134,27 @@ tr:last-child td{border-bottom:none}
         <!-- POTW + Next Match -->
         <div class="g2 mb3">
           <div class="card" style="background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(6,182,212,.06));border-color:rgba(99,102,241,.2)">
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem">
               <span style="color:var(--amber);font-size:.9rem"><i class="fa-solid fa-crown"></i></span>
               <span style="font-size:.72rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Player of the Week</span>
             </div>
-            <div id="potw-name" style="font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;letter-spacing:-.3px;background:linear-gradient(135deg,var(--accentL),#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent">—</div>
-            <div style="display:flex;gap:1.5rem;margin-top:.8rem">
-              <div><div class="font-mono" style="font-size:1.3rem;font-weight:500;color:var(--accentL)" id="potw-k">—</div><div style="font-size:.7rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">Kills</div></div>
-              <div><div class="font-mono" style="font-size:1.3rem;font-weight:500;color:var(--accentL)" id="potw-kd">—</div><div style="font-size:.7rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">K/D</div></div>
-              <div><div class="font-mono" style="font-size:1.3rem;font-weight:500;color:var(--accentL)" id="potw-w">—</div><div style="font-size:.7rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-top:.1rem">Wins</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div>
+                <div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.15rem">Scrims</div>
+                <div id="potw-name" style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:-.3px;background:linear-gradient(135deg,var(--accentL),#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent">—</div>
+                <div style="display:flex;gap:.9rem;margin-top:.5rem">
+                  <div><div class="font-mono" style="font-size:1.05rem;font-weight:500;color:var(--accentL)" id="potw-k">—</div><div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Kills</div></div>
+                  <div><div class="font-mono" style="font-size:1.05rem;font-weight:500;color:var(--accentL)" id="potw-w">—</div><div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Wins</div></div>
+                </div>
+              </div>
+              <div style="border-left:1px solid var(--border);padding-left:1rem">
+                <div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.15rem">TDM</div>
+                <div id="potw-tdm-name" style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:-.3px;background:linear-gradient(135deg,#f97316,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent">—</div>
+                <div style="display:flex;gap:.9rem;margin-top:.5rem">
+                  <div><div class="font-mono" style="font-size:1.05rem;font-weight:500;color:var(--accentL)" id="potw-tdm-k">—</div><div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Kills</div></div>
+                  <div><div class="font-mono" style="font-size:1.05rem;font-weight:500;color:var(--accentL)" id="potw-tdm-w">—</div><div style="font-size:.62rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Wins</div></div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="card">
@@ -1330,10 +1342,10 @@ tr:last-child td{border-bottom:none}
         <div id="res-meta-bar" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.7rem 1.1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <div id="res-meta-name" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem"></div>
           <div id="res-meta-map" class="chip chip-neutral" style="font-size:.72rem"></div>
-          <div id="res-meta-status" class="chip" style="font-size:.72rem"></div>
+          <div id="res-meta-status" class="chip" style="font-size:.72rem;cursor:pointer" onclick="cycleResMatchStatus()" title="Click to cycle: Upcoming → Live → Ended"></div>
           <div style="margin-left:auto;display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="addResTeamSlot()"><i class="fa-solid fa-plus"></i> Add Team Slot</button>
-            <button class="btn btn-accent btn-sm" onclick="submitResults()"><i class="fa-solid fa-floppy-disk"></i> Save Results</button>
+            <button class="btn btn-accent btn-sm" onclick="submitResults()" title="Tallies every kill entered above and marks the match Ended"><i class="fa-solid fa-flag-checkered"></i> End Match &amp; Save</button>
           </div>
         </div>
         <!-- live score bar -->
@@ -1349,7 +1361,8 @@ tr:last-child td{border-bottom:none}
             </div>
             <div id="result-rows" style="display:flex;flex-direction:column;gap:.6rem"></div>
             <div id="res-save-row" style="display:none;margin-top:.8rem">
-              <button class="btn btn-accent btn-fw" onclick="submitResults()"><i class="fa-solid fa-floppy-disk"></i> Save Match Results</button>
+              <button class="btn btn-accent btn-fw" onclick="submitResults()" title="Tallies every kill entered above and marks the match Ended"><i class="fa-solid fa-flag-checkered"></i> End Match &amp; Save Results</button>
+              <div style="font-size:.68rem;color:var(--textD);text-align:center;margin-top:.4rem">Add kills live with the <i class="fa-solid fa-plus"></i> button as the match plays out — this just tallies and closes it out when you're ready.</div>
             </div>
           </div>
 
@@ -1555,7 +1568,7 @@ tr:last-child td{border-bottom:none}
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ov-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
               <div style="height:1px;background:var(--border);margin:1rem 0"></div>
-              <div class="fg"><label class="fl">"Up Next" Label</label><input class="fi" id="cfg-ov-upnext-text" placeholder="Up next"/></div>
+              <div class="fg"><label class="fl">"Up Next" Ticker Text (shown as-is — the actual match name is never appended)</label><input class="fi" id="cfg-ov-upnext-text" placeholder="Up next"/></div>
               <div class="fg"><label class="fl">No Match Message</label><input class="fi" id="cfg-ov-nomatch-text" placeholder="No live match right now"/></div>
               <div class="fg" style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
                 <input type="checkbox" id="cfg-ov-tdm-wins" style="width:auto;accent-color:var(--accent)"/>
@@ -1607,7 +1620,11 @@ tr:last-child td{border-bottom:none}
               <div style="display:flex;flex-direction:column;gap:.5rem">
                 <button class="btn btn-danger btn-fw" onclick="resetSec('players')"><i class="fa-solid fa-users-slash"></i> Clear All Players</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('teams')"><i class="fa-solid fa-shield-slash"></i> Clear All Teams</button>
-                <button class="btn btn-danger btn-fw" onclick="resetSec('stats')"><i class="fa-solid fa-chart-simple"></i> Reset All Stats</button>
+                <button class="btn btn-danger btn-fw" onclick="resetSec('stats')"><i class="fa-solid fa-chart-simple"></i> Reset All Stats (Scrims + TDM)</button>
+                <button class="btn btn-danger btn-fw" onclick="resetSec('tdmOnly')"><i class="fa-solid fa-skull-crossbones"></i> Clear TDM Stats Only</button>
+                <button class="btn btn-ghost btn-fw" onclick="resetSec('weekly')" style="border-color:rgba(99,102,241,.3)"><i class="fa-solid fa-calendar-week"></i> Reset Weekly Stats (for Player of the Week)</button>
+                <button class="btn btn-ghost btn-fw" onclick="postPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post Scrims Player of the Week Now</button>
+                <button class="btn btn-ghost btn-fw" onclick="postTdmPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post TDM Player of the Week Now</button>
                 <button class="btn btn-danger btn-fw" onclick="resetAll()" style="border-color:rgba(239,68,68,.5);font-weight:700"><i class="fa-solid fa-bomb"></i> Full Tournament Reset</button>
               </div>
             </div>
@@ -2482,6 +2499,10 @@ function findDiscordOwner(discord, authId, excludeId){
 }
 let CU=null,ADM=false;
 const RC={Bronze:'#cd7f32',Silver:'#94a3b8',Gold:'#f59e0b',Platinum:'#06b6d4',Diamond:'#3b82f6',Master:'#a855f7',Conqueror:'#ef4444'};
+// Region is a broad PUBGM server group, not a country, so this maps each to a representative
+// flag/globe emoji rather than trying to guess anyone's actual nationality.
+const REGION_FLAGS={'Asia — South':'🇮🇳','Asia — East':'🌏','Middle East':'🇦🇪','Europe':'🇪🇺','North America':'🌎'};
+function regionFlag(region){return region?(REGION_FLAGS[region]||'🌐'):'';}
 const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
 // ── PUBG Esports Points System (PGC standard) ──
 // Placement points: 1st=10, 2nd=6, 3rd=5, 4th=4, 5th=3, 6th=2, 7th-8th=1, 9th+=0
@@ -3266,26 +3287,50 @@ function tickCountdown(){
 // Weekly recap / Player-of-the-Week can't run on a true schedule — this is a client-side app
 // with no server cron, so "auto" just means: the first time any admin's browser touches the
 // dashboard in a new calendar week, it fires once and remembers via cfg so it won't repeat.
+// scrims and TDM are tracked with their own cfg key so posting one doesn't skip the other.
 function weekId(){const d=new Date();const onejan=new Date(d.getFullYear(),0,1);const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);return `${d.getFullYear()}-W${week}`;}
-function maybeAutoPostPotw(topPlayer){
+function maybeAutoPostPotw(topPlayer,kind='scrims'){
   if(!ADM||!topPlayer)return;
-  const cfg=DB.get('cfg',{});const wk=weekId();
-  if(cfg.lastPotwWeek===wk)return;
-  cfg.lastPotwWeek=wk;DB.set('cfg',cfg);
-  fireWebhookEvent('playerOfWeek',{title:'👑 Player of the Week',color:16766720,fields:[
+  const cfg=DB.get('cfg',{});const wk=weekId();const key=kind==='tdm'?'lastPotwWeekTdm':'lastPotwWeekScrims';
+  if(cfg[key]===wk)return;
+  cfg[key]=wk;DB.set('cfg',cfg);
+  const kills=kind==='tdm'?(topPlayer.weeklyTdmKills||topPlayer.tdmKills||0):(topPlayer.weeklyKills||topPlayer.kills||0);
+  const wins=kind==='tdm'?(topPlayer.weeklyTdmWins||topPlayer.tdmWins||0):(topPlayer.weeklyWins||topPlayer.wins||0);
+  fireWebhookEvent('playerOfWeek',{title:kind==='tdm'?'👑 TDM Player of the Week':'👑 Player of the Week',color:16766720,fields:[
     {name:'Player',value:topPlayer.ign,inline:true},
-    {name:'Kills',value:String(topPlayer.kills||0),inline:true},
-    {name:'Wins',value:String(topPlayer.wins||0),inline:true}
+    {name:'Kills',value:String(kills),inline:true},
+    {name:'Wins',value:String(wins),inline:true}
   ]});
+}
+function weeklyPotwPlayer(){
+  const pl=DB.get('players',[]);
+  const weekly=[...pl].filter(p=>(p.weeklyKills||0)>0).sort((a,b)=>(b.weeklyKills||0)-(a.weeklyKills||0))[0];
+  return weekly||[...pl].sort((a,b)=>b.kills-a.kills)[0]; // fall back to lifetime before any weekly data exists
+}
+function weeklyTdmPotwPlayer(){
+  const pl=DB.get('players',[]);
+  const weekly=[...pl].filter(p=>(p.weeklyTdmKills||0)>0).sort((a,b)=>(b.weeklyTdmKills||0)-(a.weeklyTdmKills||0))[0];
+  const fallback=[...pl].sort((a,b)=>(b.tdmKills||0)-(a.tdmKills||0))[0];
+  const top=weekly||fallback;
+  return top&&((top.tdmKills||0)>0||(top.weeklyTdmKills||0)>0)?top:null;
 }
 function postPlayerOfWeekNow(){
   if(!ADM)return;
-  const top=[...DB.get('players',[])].sort((a,b)=>b.kills-a.kills)[0];
+  const top=weeklyPotwPlayer();
   if(!top)return notify('No players yet','','n-bad');
   fireWebhookEvent('playerOfWeek',{title:'👑 Player of the Week',color:16766720,fields:[
-    {name:'Player',value:top.ign,inline:true},{name:'Kills',value:String(top.kills||0),inline:true},{name:'Wins',value:String(top.wins||0),inline:true}
+    {name:'Player',value:top.ign,inline:true},{name:'Kills',value:String(top.weeklyKills||top.kills||0),inline:true},{name:'Wins',value:String(top.weeklyWins||top.wins||0),inline:true}
   ]});
   notify('Posted!','Player of the Week sent to any subscribed Discord channel','n-ok');
+}
+function postTdmPlayerOfWeekNow(){
+  if(!ADM)return;
+  const top=weeklyTdmPotwPlayer();
+  if(!top)return notify('No TDM stats yet','','n-bad');
+  fireWebhookEvent('playerOfWeek',{title:'👑 TDM Player of the Week',color:16766720,fields:[
+    {name:'Player',value:top.ign,inline:true},{name:'Kills',value:String(top.weeklyTdmKills||top.tdmKills||0),inline:true},{name:'Wins',value:String(top.weeklyTdmWins||top.tdmWins||0),inline:true}
+  ]});
+  notify('Posted!','TDM Player of the Week sent to any subscribed Discord channel','n-ok');
 }
 // Weekly recap — built from the most recently logged matches (not a strict calendar week, since
 // log timestamps are locale strings rather than sortable dates). "Closest Match" stands in for
@@ -3321,8 +3366,15 @@ function updateStats(){
   const set=(id,v2)=>{const e=document.getElementById(id);if(e)e.textContent=v2;};
   set('k-players',pl.length);set('k-kills',kills.toLocaleString());set('k-teams',te.length);set('k-matches',ms.filter(m=>m.status==='done').length);
   set('ak-players',pl.length);set('ak-kills',kills.toLocaleString());set('ak-teams',te.length);set('ak-live',ms.filter(m=>m.status==='live').length);
-  const top=[...pl].sort((a,b)=>b.kills-a.kills)[0];
-  if(top){set('potw-name',top.ign);set('potw-k',top.kills);set('potw-kd',(top.kills/(top.deaths||1)).toFixed(1));set('potw-w',top.wins);}
+  // Player of the Week reads the WEEKLY counters (weeklyKills/weeklyWins etc) — those already
+  // existed and reset via "Reset Weekly Stats", but POTW used to read lifetime kills instead, so
+  // resetting weekly stats never visibly changed who was shown here. Falls back to lifetime stats
+  // only when nothing's been logged yet this week (so the widget isn't empty on a fresh season).
+  const top=weeklyPotwPlayer();
+  if(top){set('potw-name',top.ign);set('potw-k',top.weeklyKills||top.kills||0);set('potw-w',top.weeklyWins||top.wins||0);}
+  const topTdm=weeklyTdmPotwPlayer();
+  if(topTdm){set('potw-tdm-name',topTdm.ign);set('potw-tdm-k',topTdm.weeklyTdmKills||topTdm.tdmKills||0);set('potw-tdm-w',topTdm.weeklyTdmWins||topTdm.tdmWins||0);}
+  if(ADM){maybeAutoPostPotw(top,'scrims');maybeAutoPostPotw(topTdm,'tdm');}
   const cfg=DB.get('cfg',{maxP:300,maxT:40});const mp=parseInt(cfg.maxP)||300,mt=parseInt(cfg.maxT)||40;
   set('p-players',`${pl.length}/${mp}`);set('p-teams',`${te.length}/${mt}`);
   const e1=document.getElementById('pb-players');if(e1)e1.style.width=Math.min(pl.length/mp*100,100)+'%';
@@ -3542,7 +3594,7 @@ function renderReg(){
     <td>${p.team||'<span class="text-dim">—</span>'}</td>
     <td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td>
     <td><span class="chip chip-neutral">${p.role}</span></td>
-    <td class="text-muted" style="font-size:.78rem">${p.region}</td>
+    <td class="text-muted" style="font-size:.78rem">${regionFlag(p.region)} ${p.region}</td>
     <td style="display:flex;gap:.3rem">
       <button class="btn btn-ghost btn-xs" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button>
       <button class="btn btn-danger btn-xs" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button>
@@ -3701,6 +3753,7 @@ function tdmRecordPlayerParticipation(allRoster,winRoster){
     gp.tdmMatches=(gp.tdmMatches||0)+1;
     if(winIgns.has(r.ign)){
       gp.tdmWins=(gp.tdmWins||0)+1;
+      gp.weeklyTdmWins=(gp.weeklyTdmWins||0)+1;
       gp.curTdmWinStreak=(gp.curTdmWinStreak||0)+1;
     }else{
       gp.curTdmWinStreak=0;
@@ -3775,7 +3828,7 @@ function tdmSetPlayerKills(side,playerId){
   const key=side==='a'?'scoreA':'scoreB';
   m[key]=Math.max(0,(m[key]||0)+diff);
   const players=DB.get('players');const gp=players.find(x=>x.id===playerId||x.ign===p.ign);
-  if(gp){gp.tdmKills=Math.max(0,(gp.tdmKills||0)+diff);DB.set('players',players);}
+  if(gp){gp.tdmKills=Math.max(0,(gp.tdmKills||0)+diff);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)+diff);DB.set('players',players);}
   if(m.status==='live'&&(m.scoreA>=m.target||m.scoreB>=m.target)){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
     tdmFinishMatch(m,ms);
@@ -3795,7 +3848,7 @@ function addTdmKill(side,playerId){
   m.killLog.push({ign:p.ign,name:p.name,side,ts:new Date().toISOString()});
   // reflect onto the player's persistent stats too
   const players=DB.get('players');const gp=players.find(x=>x.id===playerId||x.ign===p.ign);
-  if(gp){gp.tdmKills=(gp.tdmKills||0)+1;DB.set('players',players);}
+  if(gp){gp.tdmKills=(gp.tdmKills||0)+1;gp.weeklyTdmKills=(gp.weeklyTdmKills||0)+1;DB.set('players',players);}
   if(m.scoreA>=m.target||m.scoreB>=m.target){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
     tdmFinishMatch(m,ms);
@@ -3810,7 +3863,7 @@ function undoTdmKill(){
   const last=m.killLog.pop();
   const key=last.side==='a'?'scoreA':'scoreB';m[key]=Math.max(0,(m[key]||0)-1);
   const players=DB.get('players');const gp=players.find(x=>x.ign===last.ign);
-  if(gp){gp.tdmKills=Math.max(0,(gp.tdmKills||0)-1);DB.set('players',players);}
+  if(gp){gp.tdmKills=Math.max(0,(gp.tdmKills||0)-1);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)-1);DB.set('players',players);}
   DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Last kill undone','','n-ok');
 }
 
@@ -4392,7 +4445,7 @@ function renderOverlay(){
     const upNextTxt=esc(cfgTxt.ovUpNextText||'Up next');
     const noMatchTxt=esc(cfgTxt.ovNoMatchText||'No live match right now');
     if(live)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-gamepad"></i> ${live.name} <span style="opacity:.4">·</span> ${MI[live.map]||''} ${live.map||''}</span>`);
-    else if(upcoming)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clock"></i> ${upNextTxt} <span style="opacity:.4">·</span> ${upcoming.name}</span>`);
+    else if(upcoming)items.push(`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clock"></i> ${upNextTxt}</span>`);
     else items.push(`<span class="tdm-banner-ticker-item">${noMatchTxt}</span>`);
     const overallItem=scrimsOverallBestItem();
     if(overallItem)items.push(overallItem);
@@ -4484,7 +4537,7 @@ function onMatchSelect(){
   if(m){
     const nn=document.getElementById('res-meta-name');if(nn)nn.textContent=m.name||m.id;
     const nm=document.getElementById('res-meta-map');if(nm)nm.textContent=(MI[m.map]||'🗺')+' '+(m.map||'—');
-    const ns=document.getElementById('res-meta-status');if(ns){const sc=m.status==='live'?'chip-red':m.status==='done'?'chip-accent':'chip-neutral';ns.className='chip '+sc;ns.style.fontSize='.72rem';ns.textContent=m.status||'scheduled';}
+    const ns=document.getElementById('res-meta-status');if(ns){const sc=m.status==='live'?'chip-red':m.status==='done'?'chip-accent':'chip-neutral';ns.className='chip '+sc;ns.style.fontSize='.72rem';ns.style.cursor='pointer';ns.textContent=m.status||'scheduled';}
   }
   // Auto-detect teams in match from bracket/groups or just create 4 empty slots
   const teams=DB.get('teams').filter(t=>t.approved);
@@ -4522,6 +4575,14 @@ function onResTeamChange(i){
   setTimeout(()=>{const k=document.getElementById(`res-k-${i}-0`);if(k)k.focus();},50);
 }
 
+// Tap-to-add, exactly like the TDM live scoring buttons — for logging kills as they happen
+// during a live match instead of typing a final total once it's over.
+function bumpResKill(i,j){
+  if(!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
+  const k=document.getElementById(`res-k-${i}-${j}`);if(!k)return;
+  k.value=(parseInt(k.value)||0)+1;
+  onResKillChange(i,j);
+}
 function onResKillChange(i,j){
   const k=document.getElementById(`res-k-${i}-${j}`);
   if(!k||!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
@@ -4609,15 +4670,17 @@ function renderResSlots(){
       <div class="res-player-rows">
         <div style="display:flex;gap:.4rem;align-items:center;padding:.15rem .1rem .3rem;margin-bottom:.1rem">
           <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;flex:1">Player</span>
-          <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:70px;text-align:center">Kills</span>
+          <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:46px;text-align:center">Kills</span>
+          <span style="width:26px"></span>
           <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:60px;text-align:center">Status</span>
           <span style="font-size:.6rem;font-weight:700;color:var(--accentL);text-transform:uppercase;letter-spacing:.5px;width:40px;text-align:center">Pts</span>
         </div>
         ${players.length?players.map((p,j)=>{
           const pPts=(p.kills||0)*KILL_PT;
-          return `<div style="display:grid;grid-template-columns:1fr 70px 60px 40px;gap:.4rem;margin-bottom:.3rem;align-items:center">
+          return `<div style="display:grid;grid-template-columns:1fr 46px 26px 60px 40px;gap:.3rem;margin-bottom:.3rem;align-items:center">
             <div class="res-ign-label" onclick="openProfileByIgn('${p.ign}')">${p.ign}</div>
             <input class="res-kills-in" id="res-k-${i}-${j}" type="number" min="0" max="99" value="${p.kills||''}" placeholder="0" oninput="onResKillChange(${i},${j})" ${p.elim?'style="opacity:.4"':''}/>
+            <button class="btn btn-ghost btn-xs" title="+1 kill — tap this live as it happens, no need to type a final number" onclick="bumpResKill(${i},${j})" style="padding:.2rem .35rem"><i class="fa-solid fa-plus"></i></button>
             <button class="res-elim-btn ${p.elim?'elim':''}" id="res-e-${i}-${j}" onclick="toggleElim(${i},${j})">${p.elim?'☠ Dead':'Alive'}</button>
             <div id="res-ppts-${i}-${j}" style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accentL);text-align:center;font-weight:600">${pPts||'—'}</div>
           </div>`;
@@ -4694,8 +4757,9 @@ function submitResults(){
       const playerPts=(sp.kills||0)*KILL_PT+(place===1?Math.round(placePts/Math.max(slot.players.length,1)):0);
       if(p){
         p.kills=(p.kills||0)+(sp.kills||0);
+        p.weeklyKills=(p.weeklyKills||0)+(sp.kills||0);
         p.points=(p.points||0)+playerPts;
-        if(!sp.elim&&place===1){p.wins=(p.wins||0)+1;}
+        if(!sp.elim&&place===1){p.wins=(p.wins||0)+1;p.weeklyWins=(p.weeklyWins||0)+1;}
         if(sp.elim)p.deaths=(p.deaths||0)+1;
         else if(place>1)p.deaths=(p.deaths||0)+1;
         p.gamesPlayed=(p.gamesPlayed||0)+1;
@@ -4976,7 +5040,7 @@ function buildProfileCardHTML(p,isOwn=false){
         ${p.rank?`<span class="chip" style="font-size:.63rem;color:${rankColor};background:${rankColor}15;border:1px solid ${rankColor}25">${p.rank}</span>`:''}
         ${p.role?`<span class="chip chip-neutral" style="font-size:.63rem">${p.role}</span>`:''}
         ${p.platform?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
-        ${p.region?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
+        ${p.region?`<span class="chip chip-neutral" style="font-size:.63rem">${regionFlag(p.region)} ${p.region}</span>`:''}
       </div>
       ${playerBadgesHTML(p)}
       ${p.bio?`<div style="font-size:.84rem;color:var(--textM);line-height:1.6;margin-bottom:.7rem;padding:.6rem .7rem;background:var(--bg3);border-radius:var(--rS);border-left:3px solid var(--accent)">${p.bio}</div>`:''}
@@ -5302,7 +5366,7 @@ function buildMyProfile(){
           ${p.rank?`<span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>`:''}
           ${p.role?`<span class="chip chip-neutral">${p.role}</span>`:''}
           ${p.platform?`<span class="chip chip-neutral"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
-          ${p.region?`<span class="chip chip-neutral"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
+          ${p.region?`<span class="chip chip-neutral">${regionFlag(p.region)} ${p.region}</span>`:''}
           ${p.discord?`<span class="chip chip-disc"><i class="fa-brands fa-discord"></i> ${p.discord}</span>`:''}
         </div>
 
@@ -5609,6 +5673,20 @@ function renderTdmMatchesList(list){
 }
 function filterMatches(f,btn){document.querySelectorAll('#page-matches .topbar-pills,.btn-filter,.btn-accent.btn-sm,.btn-ghost.btn-sm').forEach(b=>{if(b.getAttribute('onclick')?.includes('filterMatches'))b.className='btn btn-ghost btn-sm';});if(btn){btn.className='btn btn-accent btn-sm';}renderMatches(f);}
 function cycleMatchStatus(id){const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;const s=['upcoming','live','done'];m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();notify(`#${id} → ${m.status}!`,'','n-ok');}
+// Same status cycle as above, but scoped to whatever match is loaded on the Results page and
+// wired to refresh that page's own status chip — so an admin can go Upcoming → Live → Ended
+// without leaving the results/kill-logging screen.
+function cycleResMatchStatus(){
+  if(!ADM)return;
+  const mid=document.getElementById('res-mid')?.value;if(!mid)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===mid);if(!m)return;
+  const s=['upcoming','live','done'];m.status=s[(s.indexOf(m.status)+1)%3];
+  DB.set('matches',ms);
+  const ns=document.getElementById('res-meta-status');
+  if(ns){const sc=m.status==='live'?'chip-red':m.status==='done'?'chip-accent':'chip-neutral';ns.className='chip '+sc;ns.style.fontSize='.72rem';ns.style.cursor='pointer';ns.textContent=m.status;}
+  renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();
+  notify(`Match status → ${m.status}`,'','n-ok');
+}
 function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,teams:[]});DB.set('matches',ms);closeModal('match-modal');renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,'','n-ok');}
 
 // ═══ COMPARE ═══
@@ -6385,7 +6463,20 @@ function doBulkImportPlayers(){
 // TDM field (tdmKills, tdmWins, tdmMatches, streaks) was left untouched, so the TDM leaderboard
 // (which reads those fields straight off the player record) looked completely unchanged afterward.
 // Also clearing the tdmMatches collection itself so old TDM match history doesn't linger either.
-function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;p.tdmKills=0;p.tdmWins=0;p.tdmMatches=0;p.curWinStreak=0;p.curKillStreak=0;p.bestWinStreak=0;p.curTdmWinStreak=0;p.bestTdmWinStreak=0;p.bestMatchKills=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);DB.set('tdmMatches',[]);DB.set('h2hRecords',{});}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
+function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;p.tdmKills=0;p.tdmWins=0;p.tdmMatches=0;p.curWinStreak=0;p.curKillStreak=0;p.bestWinStreak=0;p.curTdmWinStreak=0;p.bestTdmWinStreak=0;p.bestMatchKills=0;p.weeklyKills=0;p.weeklyWins=0;p.weeklyTdmKills=0;p.weeklyTdmWins=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);DB.set('tdmMatches',[]);DB.set('h2hRecords',{});}
+  else if(what==='tdmOnly'){
+    // Wipes ONLY the TDM side (tdmKills/tdmWins/tdmMatches/TDM streaks + the tdmMatches history) —
+    // scrims stats and everything else are left completely untouched, for when you just want to
+    // clear TDM without risking the scrims leaderboard.
+    const pl=DB.get('players');pl.forEach(p=>{p.tdmKills=0;p.tdmWins=0;p.tdmMatches=0;p.curTdmWinStreak=0;p.bestTdmWinStreak=0;p.weeklyTdmKills=0;p.weeklyTdmWins=0;});
+    DB.set('players',pl);DB.set('tdmMatches',[]);DB.set('h2hRecords',{});
+  }else if(what==='weekly'){
+    // Zeroes just the weekly counters that Player of the Week is scored on — lifetime career
+    // stats (kills/wins/tdmKills/tdmWins etc.) are never touched by this.
+    const pl=DB.get('players');pl.forEach(p=>{p.weeklyKills=0;p.weeklyWins=0;p.weeklyTdmKills=0;p.weeklyTdmWins=0;});
+    DB.set('players',pl);
+  }
+  renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
 function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, polls, brackets, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
