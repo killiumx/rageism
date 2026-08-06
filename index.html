@@ -1578,6 +1578,7 @@ tr:last-child td{border-bottom:none}
                 <div class="fg" style="margin-bottom:0"><label class="fl">Board</label><select class="fi fsel" id="rb-board-sel" onchange="switchRankingBoard(this.value)"></select></div>
                 <div class="fg" style="margin-bottom:0"><label class="fl">&nbsp;</label><button class="btn btn-ghost btn-fw" onclick="createRankingBoard()"><i class="fa-solid fa-plus"></i> New Board</button></div>
               </div>
+              <div class="fg"><label class="fl">Board Title</label><input class="fi" id="rb-board-title" placeholder="Top 10 NA"/></div>
               <div class="fg"><label class="fl">Names (one per line, in rank order)</label><textarea class="fta" id="rb-board-entries" rows="8" placeholder="Asher&#10;Shah&#10;Pakhton"></textarea></div>
               <button class="btn btn-accent btn-fw" onclick="saveRankingBoard()"><i class="fa-solid fa-floppy-disk"></i> Save Board</button>
               <button class="btn btn-danger btn-fw" style="margin-top:.5rem" onclick="deleteRankingBoard()"><i class="fa-solid fa-trash"></i> Delete Board</button>
@@ -3994,6 +3995,7 @@ function loadRankingBoardIntoForm(){
   const boards=DB.get('rankingBoards',[]);
   const b=boards.find(x=>x.id===RB_ACTIVE);
   const ta=document.getElementById('rb-board-entries');if(ta)ta.value=b?(b.entries||[]).join('\n'):'';
+  const ti=document.getElementById('rb-board-title');if(ti)ti.value=b?b.name:'';
 }
 function switchRankingBoard(id){RB_ACTIVE=id;loadRankingBoardIntoForm();}
 function createRankingBoard(){
@@ -4008,13 +4010,18 @@ function createRankingBoard(){
   notify('Ranking board created!','Add names below, then Save','n-ok');
   if(document.getElementById('ovlb-type'))onOvlbTypeChange();
 }
+// Board Title is editable any time — it's saved together with the names, so renaming a
+// board after the fact just means typing the new title in and hitting Save.
 function saveRankingBoard(){
   if(!ADM)return;
   if(!RB_ACTIVE)return notify('Create a board first','Use "New Board" above','n-bad');
   const boards=DB.get('rankingBoards',[]);const b=boards.find(x=>x.id===RB_ACTIVE);if(!b)return;
+  const newTitle=(document.getElementById('rb-board-title')?.value||'').trim();
+  if(newTitle)b.name=newTitle;
   const raw=document.getElementById('rb-board-entries')?.value||'';
   b.entries=raw.split('\n').map(s=>s.trim()).filter(Boolean);
   DB.set('rankingBoards',boards);
+  renderRankingBoardSelect();
   notify('Board saved!',`${b.entries.length} names on "${b.name}"`,'n-ok');
   logAdminAction('Ranking board saved',`"${b.name}" updated by ${CU?CU.name:'Admin'}`);
   if(document.getElementById('ovlb-type'))onOvlbTypeChange();
