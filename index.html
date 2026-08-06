@@ -1641,7 +1641,8 @@ tr:last-child td{border-bottom:none}
             <div class="frow"><div class="fg"><label class="fl">Real Name</label><input class="fi" id="rn" placeholder="John Doe"/></div><div class="fg"><label class="fl">IGN (used as your login username)</label><input class="fi" id="ri" placeholder="RAGEISM_001"/></div></div>
             <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"></div></div>
             <div class="frow"><div class="fg"><label class="fl">Discord</label><input class="fi" id="rd" placeholder="user#0001"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="rrk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div><div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="rc"></select></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="rrk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div><div class="fg"></div></div>
             <div class="frow"><div class="fg"><label class="fl">Role</label><select class="fi fsel" id="rro"><option>Fragger</option><option>Support</option><option>Sniper</option><option>IGL</option><option>Entry Fragger</option><option>Flanker</option></select></div><div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="rpl"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div></div>
             <div class="frow"><div class="fg"><label class="fl">Team (optional)</label><input class="fi" id="rtm" placeholder="Leave blank if solo"/></div><div class="fg"></div></div>
             <div class="fg"><label class="fl">Bio</label><textarea class="fta" id="rb" placeholder="Your playstyle, favourite weapons..."></textarea></div>
@@ -1961,6 +1962,7 @@ tr:last-child td{border-bottom:none}
         <div class="fg"><label class="fl">Discord</label><input class="fi" id="es-discord"/></div>
         <div class="fg"><label class="fl">Team</label><input class="fi" id="es-team" list="ign-dl-teamnames"/></div>
         <div class="fg"><label class="fl">Region</label><input class="fi" id="es-region"/></div>
+        <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows their flag)</span></label><select class="fi fsel" id="es-country"></select></div>
       </div>
       <div>
         <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--textD);margin-bottom:.5rem">Stats (editable)</div>
@@ -2124,6 +2126,7 @@ tr:last-child td{border-bottom:none}
     <div class="frow">
       <div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="ep-rk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
       <div class="fg"><label class="fl">Role</label><select class="fi fsel" id="ep-role"><option value="Fragger">Fragger</option><option value="IGL">IGL</option><option value="Support">Support</option><option value="Scout">Scout</option><option value="Flex">Flex</option></select></div>
+      <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="ep-country"></select></div>
     </div>
     <div class="fg" style="margin-bottom:.8rem"><label class="fl">Bio</label><textarea class="fta" id="ep-bio" rows="2" placeholder="Tell the community about yourself..."></textarea></div>
     <div style="font-size:.72rem;font-weight:700;color:var(--textM);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Social Links</div>
@@ -2503,6 +2506,29 @@ const RC={Bronze:'#cd7f32',Silver:'#94a3b8',Gold:'#f59e0b',Platinum:'#06b6d4',Di
 // flag/globe emoji rather than trying to guess anyone's actual nationality.
 const REGION_FLAGS={'Asia — South':'🇮🇳','Asia — East':'🌏','Middle East':'🇦🇪','Europe':'🇪🇺','North America':'🌎'};
 function regionFlag(region){return region?(REGION_FLAGS[region]||'🌐'):'';}
+// Real per-player country flags (separate from the broad Region field above) — a proper flag
+// picker, not a guess. Flags are derived from the ISO code so there's nothing to hand-map.
+function flagEmoji(code){if(!code)return '';return String.fromCodePoint(...[...code.toUpperCase()].map(c=>0x1F1E6+c.charCodeAt(0)-65));}
+const COUNTRIES=[
+  ['JM','Jamaica'],['TT','Trinidad & Tobago'],['BB','Barbados'],['BS','Bahamas'],['GY','Guyana'],['BZ','Belize'],['HT','Haiti'],['DO','Dominican Republic'],
+  ['AG','Antigua & Barbuda'],['GD','Grenada'],['LC','St Lucia'],['VC','St Vincent & the Grenadines'],['KN','St Kitts & Nevis'],['DM','Dominica'],['SR','Suriname'],
+  ['US','United States'],['CA','Canada'],['MX','Mexico'],
+  ['BR','Brazil'],['AR','Argentina'],['CO','Colombia'],['CL','Chile'],['PE','Peru'],['VE','Venezuela'],['EC','Ecuador'],
+  ['GB','United Kingdom'],['IE','Ireland'],['FR','France'],['DE','Germany'],['ES','Spain'],['PT','Portugal'],['IT','Italy'],['NL','Netherlands'],
+  ['SE','Sweden'],['NO','Norway'],['PL','Poland'],['UA','Ukraine'],['RU','Russia'],['TR','Turkey'],
+  ['IN','India'],['PK','Pakistan'],['BD','Bangladesh'],['NP','Nepal'],['LK','Sri Lanka'],
+  ['CN','China'],['JP','Japan'],['KR','South Korea'],['PH','Philippines'],['ID','Indonesia'],['MY','Malaysia'],['SG','Singapore'],['TH','Thailand'],['VN','Vietnam'],
+  ['SA','Saudi Arabia'],['AE','UAE'],['EG','Egypt'],['IQ','Iraq'],['JO','Jordan'],['KW','Kuwait'],['QA','Qatar'],
+  ['ZA','South Africa'],['NG','Nigeria'],['GH','Ghana'],['KE','Kenya'],
+  ['AU','Australia'],['NZ','New Zealand'],
+];
+function populateCountrySelect(id,selected){
+  const sel=document.getElementById(id);if(!sel)return;
+  sel.innerHTML='<option value="">— None —</option>'+COUNTRIES.map(([code,name])=>`<option value="${code}" ${selected===code?'selected':''}>${flagEmoji(code)} ${name}</option>`).join('');
+}
+// Prefer the player's own country flag; fall back to the broad region flag if they haven't set one.
+function playerFlag(p){return p.country?flagEmoji(p.country):regionFlag(p.region);}
+function countryName(code){const m=COUNTRIES.find(c=>c[0]===code);return m?m[1]:'';}
 const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
 // ── PUBG Esports Points System (PGC standard) ──
 // Placement points: 1st=10, 2nd=6, 3rd=5, 4th=4, 5th=3, 6th=2, 7th-8th=1, 9th+=0
@@ -3505,7 +3531,7 @@ async function regPlayer(){
     const dupe=findDiscordOwner(discord,null,null);
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
-  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,region:v('rr'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0,joinedAt:Date.now()};
+  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,region:v('rr'),country:v('rc'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0,joinedAt:Date.now()};
   // If this is the currently signed-in Discord user filling out their full profile, keep them linked to their account
   if(CU&&CU.authId&&CU.ign&&CU.ign.toLowerCase()===ig.toLowerCase())entry.authId=CU.authId;
   pl.push(entry);
@@ -3594,7 +3620,7 @@ function renderReg(){
     <td>${p.team||'<span class="text-dim">—</span>'}</td>
     <td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td>
     <td><span class="chip chip-neutral">${p.role}</span></td>
-    <td class="text-muted" style="font-size:.78rem">${regionFlag(p.region)} ${p.region}</td>
+    <td class="text-muted" style="font-size:.78rem">${playerFlag(p)} ${p.country?countryName(p.country):(p.region||'')}</td>
     <td style="display:flex;gap:.3rem">
       <button class="btn btn-ghost btn-xs" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button>
       <button class="btn btn-danger btn-xs" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button>
@@ -5069,7 +5095,7 @@ function buildProfileCardHTML(p,isOwn=false){
         ${p.rank?`<span class="chip" style="font-size:.63rem;color:${rankColor};background:${rankColor}15;border:1px solid ${rankColor}25">${p.rank}</span>`:''}
         ${p.role?`<span class="chip chip-neutral" style="font-size:.63rem">${p.role}</span>`:''}
         ${p.platform?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
-        ${p.region?`<span class="chip chip-neutral" style="font-size:.63rem">${regionFlag(p.region)} ${p.region}</span>`:''}
+        ${(p.region||p.country)?`<span class="chip chip-neutral" style="font-size:.63rem">${playerFlag(p)} ${p.country?countryName(p.country):p.region}</span>`:''}
       </div>
       ${playerBadgesHTML(p)}
       ${p.bio?`<div style="font-size:.84rem;color:var(--textM);line-height:1.6;margin-bottom:.7rem;padding:.6rem .7rem;background:var(--bg3);border-radius:var(--rS);border-left:3px solid var(--accent)">${p.bio}</div>`:''}
@@ -5164,6 +5190,7 @@ function setupEditMe(){
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
   set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  populateCountrySelect('ep-country',p.country||'');
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
   set('ep-xt',p.twitter||'');set('ep-ig',p.instagram||'');set('ep-wh',p.webhook||'');
 }
@@ -5178,7 +5205,7 @@ function saveEditPlayer(){
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
   p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;
-  p.rank=g('ep-rk')||p.rank;p.role=g('ep-role')||p.role;p.bio=g('ep-bio');
+  p.rank=g('ep-rk')||p.rank;p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');
   p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
   p.twitter=g('ep-xt');p.instagram=g('ep-ig');p.webhook=g('ep-wh');
   DB.set('players',pl);
@@ -5197,6 +5224,7 @@ function openEditStats(id){
   const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val??'';};
   set('es-id',p.id);set('es-name',p.name);set('es-ign',p.ign);set('es-uid',p.uid);
   set('es-discord',p.discord);set('es-team',p.team);set('es-region',p.region);
+  populateCountrySelect('es-country',p.country||'');
   set('es-kills',p.kills||0);set('es-deaths',p.deaths||0);set('es-wins',p.wins||0);
   set('es-damage',p.damage||0);set('es-points',p.points||0);set('es-gp',p.gamesPlayed||0);set('es-xp',p.xp||0);
   openModal('edit-stats-modal');
@@ -5211,7 +5239,7 @@ function saveEditStats(){
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
   p.name=v('es-name')||p.name;p.ign=newIgn||p.ign;p.uid=v('es-uid')||p.uid;
-  p.discord=newDiscord;p.team=v('es-team');p.region=v('es-region');
+  p.discord=newDiscord;p.team=v('es-team');p.region=v('es-region');p.country=v('es-country');
   p.kills=Math.max(0,parseInt(v('es-kills'))||0);p.deaths=Math.max(0,parseInt(v('es-deaths'))||0);
   p.wins=Math.max(0,parseInt(v('es-wins'))||0);p.damage=Math.max(0,parseInt(v('es-damage'))||0);
   p.points=Math.max(0,parseInt(v('es-points'))||0);p.gamesPlayed=Math.max(0,parseInt(v('es-gp'))||0);
@@ -5226,6 +5254,7 @@ function openEditAdmin(id){
   const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
   set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  populateCountrySelect('ep-country',p.country||'');
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
   set('ep-xt',p.twitter||'');set('ep-ig',p.instagram||'');set('ep-wh',p.webhook||'');
   openModal('edit-player-modal');
@@ -5395,7 +5424,7 @@ function buildMyProfile(){
           ${p.rank?`<span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>`:''}
           ${p.role?`<span class="chip chip-neutral">${p.role}</span>`:''}
           ${p.platform?`<span class="chip chip-neutral"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
-          ${p.region?`<span class="chip chip-neutral">${regionFlag(p.region)} ${p.region}</span>`:''}
+          ${(p.region||p.country)?`<span class="chip chip-neutral">${playerFlag(p)} ${p.country?countryName(p.country):p.region}</span>`:''}
           ${p.discord?`<span class="chip chip-disc"><i class="fa-brands fa-discord"></i> ${p.discord}</span>`:''}
         </div>
 
@@ -6567,7 +6596,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
   // ── 2. Hide overlay and boot app ──
   sbHideOverlay();
-  seed(); startCountdown();
+  seed(); startCountdown(); populateCountrySelect('rc');
   applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
   applyOverlayDesign();
   bootAppearance();
