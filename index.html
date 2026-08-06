@@ -3703,11 +3703,13 @@ function tdmSeriesRecord(seriesId,aName,bName){
 // for the series winner; otherwise it auto-starts the next game with the same rosters.
 function tdmFinishMatch(m,ms){
   recordH2H(m);
-  const teams=DB.get('teams');
   const mvpSide=m.scoreA>=m.scoreB?m.aRoster:m.bRoster;
   let mvp=null;(mvpSide||[]).forEach(r=>{const kc=tdmPlayerKillCount(m,r.ign);if(!mvp||kc>mvp.kc)mvp={ign:r.ign,kc};});
   if(!m.bo3){
-    const wt=teams.find(t=>t.name===m.winner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    // NOTE: deliberately NOT touching team.wins here — that field is the scrims win counter, and
+    // this was previously incrementing it on every TDM win too, silently polluting the scrims
+    // team leaderboard with TDM results. Player-level tdmWins (below) is the source of truth for
+    // TDM wins; there's no team-level TDM win stat anywhere in the UI to keep in sync with.
     tdmRecordPlayerParticipation([...m.aRoster,...m.bRoster],m.winner===m.aName?m.aRoster:m.bRoster);
     fireWebhookEvent('tdmResults',{title:`TDM Result — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
@@ -3724,7 +3726,7 @@ function tdmFinishMatch(m,ms){
   if(rec.winsA>=2||rec.winsB>=2||m.gameNum>=3){
     const seriesWinner=rec.winsA>rec.winsB?m.aName:(rec.winsB>rec.winsA?m.bName:m.winner);
     m.seriesDone=true;m.seriesWinner=seriesWinner;
-    const wt=teams.find(t=>t.name===seriesWinner);if(wt){wt.wins=(wt.wins||0)+1;DB.set('teams',teams);}
+    // Same as above — no team.wins bump here either, for the same reason (keeps TDM out of scrims stats).
     tdmRecordPlayerParticipation([...m.aRoster,...m.bRoster],seriesWinner===m.aName?m.aRoster:m.bRoster);
     fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
       {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
@@ -4350,15 +4352,42 @@ function renderTdmBoards(){
     <td class="font-mono text-dim">#${i+1}</td>
     <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.ign}</div><div class="cell-sub">${p.name||''}</div></div></div></td>
     <td class="text-dim">${p.team||'—'}</td>
-    <td><span class="chip chip-accent" style="font-weight:700">${p.tdmWins||0}</span></td>
-    <td class="text-dim font-mono">${p.tdmKills||0}</td>
+    <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${p.tdmWins||0}" onchange="editTdmStat('${p.id}','tdmWins',this.value)" title="Edit wins"/>`:`<span class="chip chip-accent" style="font-weight:700">${p.tdmWins||0}</span>`}</td>
+    <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${p.tdmKills||0}" onchange="editTdmStat('${p.id}','tdmKills',this.value)" title="Edit kills"/>`:`<span class="text-dim font-mono">${p.tdmKills||0}</span>`}</td>
     <td class="text-dim font-mono">${p.tdmMatches||0}</td>
-    <td class="admin-only" style="display:${ADM?'table-cell':'none'}">${isCustom?`<div style="display:flex;gap:.25rem">
-        <button class="btn btn-ghost btn-xs" title="Move up" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',-1)"><i class="fa-solid fa-arrow-up"></i></button>
+    <td class="admin-only" style="display:${ADM?'table-cell':'none'}"><div style="display:flex;gap:.25rem">
+        ${isCustom?`<button class="btn btn-ghost btn-xs" title="Move up" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',-1)"><i class="fa-solid fa-arrow-up"></i></button>
         <button class="btn btn-ghost btn-xs" title="Move down" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',1)"><i class="fa-solid fa-arrow-down"></i></button>
-        <button class="btn btn-danger btn-xs" title="Remove from board" onclick="tdmBoardRemovePlayer('${TDM_ACTIVE_BOARD}','${p.id}')"><i class="fa-solid fa-xmark"></i></button>
-      </div>`:''}</td>
+        <button class="btn btn-danger btn-xs" title="Remove from this board only" onclick="tdmBoardRemovePlayer('${TDM_ACTIVE_BOARD}','${p.id}')"><i class="fa-solid fa-xmark"></i></button>`:''}
+        <button class="btn btn-danger btn-xs" title="Remove this player completely — deletes their whole profile, not just this board" onclick="fullyRemoveTdmPlayer('${p.id}')"><i class="fa-solid fa-user-slash"></i></button>
+      </div></td>
   </tr>`).join('');
+}
+// Wins/kills columns on the TDM board table are editable directly (not just view-only) — for
+// manual corrections when the auto-tally doesn't match what actually happened in-game. This
+// writes straight to the real player record, so it's reflected everywhere (Main board, custom
+// boards, overlays) — a board is just a curated view of real players, not a separate dataset.
+function editTdmStat(playerId,field,val){
+  if(!ADM)return;
+  const n=Math.max(0,parseInt(val)||0);
+  const pl=DB.get('players',[]);const p=pl.find(x=>x.id===playerId);if(!p)return;
+  const old=p[field]||0;p[field]=n;DB.set('players',pl);
+  logAdminAction('TDM stat corrected',`${p.ign}'s ${field==='tdmWins'?'wins':'kills'} manually changed from ${old} to ${n} by ${CU?CU.name:'Admin'}`);
+  renderTdmBoards();
+  notify('Updated','','n-ok',1200);
+}
+// "Remove from board" only unlists them from this curated board — this deletes the player
+// entirely (profile + every stat, TDM and scrims), and also cleans up any stray reference to
+// them left behind in other custom TDM boards so nothing shows a ghost entry.
+function fullyRemoveTdmPlayer(id){
+  if(!ADM)return;
+  const pl=DB.get('players',[]);const p=pl.find(x=>x.id===id);
+  if(!confirm(`Completely remove ${p?p.ign:'this player'}? This deletes their whole profile and every stat — not just this board.`))return;
+  delPlayer(id);
+  const boards=DB.get('tdmBoards',[]);let changed=false;
+  boards.forEach(b=>{if((b.playerIds||[]).includes(id)){b.playerIds=b.playerIds.filter(x=>x!==id);changed=true;}});
+  if(changed)DB.set('tdmBoards',boards);
+  renderTdmBoards();
 }
 function switchTdmBoard(id){TDM_ACTIVE_BOARD=id;renderTdmBoards();}
 function createTdmBoard(){
