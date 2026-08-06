@@ -352,6 +352,10 @@ html[data-ovbg="transparent"]{
 .ovlb-stat-lbl{font-size:.6rem;color:var(--ov-fg-dim3);text-transform:uppercase;letter-spacing:.5px}
 .ovlb-stat-group{flex-shrink:0;display:flex;align-items:center;gap:.85rem}
 .ovlb-stat-group .ovlb-stat-val{font-size:.88rem}
+.ovlb-arrow{font-size:.72rem;margin-left:4px;vertical-align:1px}
+.ovlb-arrow-up{color:#22c55e}
+.ovlb-arrow-down{color:#ef4444}
+.ovlb-arrow-same{color:var(--ov-fg-dim3);font-size:.55rem}
 .ovlb-empty{padding:2rem 1rem;text-align:center;color:var(--ov-fg-dim3);font-size:.85rem}
 @media (max-width:480px){.ovlb-card{width:94vw}.ovlb-title{font-size:1.1rem}.ovlb-ign{font-size:.82rem}.ovlb-stat-val{font-size:.88rem}.ovlb-stat-group{gap:.5rem}}
 
@@ -1366,7 +1370,10 @@ tr:last-child td{border-bottom:none}
       <div class="page" id="page-admin-players">
         <div class="sh-row">
           <div class="sh"><div class="sh-title">Player <span style="color:var(--accentL)">Management</span></div><div class="sh-sub">Search, edit any stat, or remove a player</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="renderTransferRequests();openModal('transfer-request-modal')"><i class="fa-solid fa-right-left"></i> Transfer Requests <span id="transfer-req-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('bulk-import-modal')"><i class="fa-solid fa-file-import"></i> Bulk Import</button>
+            <button class="btn btn-ghost btn-sm" onclick="renderTransferRequests();openModal('transfer-request-modal')"><i class="fa-solid fa-right-left"></i> Transfer Requests <span id="transfer-req-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
+          </div>
         </div>
         <datalist id="ign-dl-teamnames"></datalist>
         <div class="card mb2" style="padding:.8rem 1rem">
@@ -1583,6 +1590,12 @@ tr:last-child td{border-bottom:none}
               <button class="btn btn-accent btn-fw" onclick="saveRankingBoard()"><i class="fa-solid fa-floppy-disk"></i> Save Board</button>
               <button class="btn btn-danger btn-fw" style="margin-top:.5rem" onclick="deleteRankingBoard()"><i class="fa-solid fa-trash"></i> Delete Board</button>
             </div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-star"></i> Sponsor / Shoutout Slides</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">One line each — every line becomes its own slide in the ticker rotation (both the mini overlay and any stream you're running). Good for "Sponsored by X," shoutouts to streamers you're bringing on, or a Discord invite plug.</div>
+              <div class="fg"><textarea class="fta" id="cfg-sponsors" rows="4" placeholder="Sponsored by ExampleGG — use code RAGE10&#10;Watch live w/ @streamername — drop a follow"></textarea></div>
+              <button class="btn btn-accent btn-fw" onclick="saveSponsors()"><i class="fa-solid fa-floppy-disk"></i> Save Sponsor Slides</button>
+            </div>
             <div class="card mb2 master-only">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Log <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
               <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Role grants/revokes, settings changes, resets, and deletions performed by any admin — mirrored to any "Admin Activity Log" webhook configured in Discord Webhooks above.</div>
@@ -1726,7 +1739,10 @@ tr:last-child td{border-bottom:none}
       <!-- ░ LEADERBOARD ░ -->
       <div class="page" id="page-leaderboard">
         <div class="sh-row"><div class="sh"><div class="sh-title"><span style="color:var(--accentL)">Leaderboard</span></div></div>
-          <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem" id="lb-filter" onchange="renderLB()"><option value="points">Sort by Points</option><option value="kills">Sort by Kills</option><option value="kd">Sort by K/D</option><option value="wins">Sort by Wins</option><option value="games">Sort by Games</option></select>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem" id="lb-filter" onchange="renderLB()"><option value="points">Sort by Points</option><option value="kills">Sort by Kills</option><option value="kd">Sort by K/D</option><option value="wins">Sort by Wins</option><option value="games">Sort by Games</option></select>
+            <button class="btn btn-ghost btn-sm" onclick="exportLbCsv()" title="Download standings as CSV"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+          </div>
         </div>
         <div id="podium" class="mb3" style="display:flex;gap:1rem;justify-content:center;align-items:flex-end;flex-wrap:wrap"></div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Pts</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Games</th><th>Level</th><th></th></tr></thead><tbody id="lb-body"></tbody></table></div></div>
@@ -2008,6 +2024,19 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div class="modal-overlay" id="bulk-import-modal">
+  <div class="modal-box" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('bulk-import-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title">Bulk Import Players</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">
+      Paste one player per line. Just an IGN works, or add more fields separated by commas: <span class="font-mono" style="font-size:.75rem">IGN, Discord, Team</span>. Duplicate IGNs (case-insensitive, matched against existing players) are skipped automatically.
+    </div>
+    <div class="fg"><textarea class="fta" id="bulk-import-text" rows="10" placeholder="Asher, asher#0001, Ghost Squad&#10;Shah&#10;Pakhton, pakhton_yt"></textarea></div>
+    <button class="btn btn-accent btn-fw" onclick="doBulkImportPlayers()"><i class="fa-solid fa-file-import"></i> Import Players</button>
+    <div id="bulk-import-result" style="margin-top:.8rem;font-size:.8rem;color:var(--textM)"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="transfer-request-modal">
   <div class="modal-box" style="max-width:600px">
     <button class="modal-close" onclick="closeModal('transfer-request-modal')"><i class="fa-solid fa-xmark"></i></button>
@@ -2116,7 +2145,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors'];
 let SB_OK = false, SB_WRITES = 0;
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
@@ -2242,7 +2271,7 @@ async function completeDiscordLink(){
     if(!existing.discordId && discordId) existing.discordId = discordId;
     p = existing;
   } else {
-    p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0 };
+    p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0, joinedAt:Date.now() };
     players.push(p);
     fireWebhookEvent('playerRegistration',{title:'New Player Registered',color:5793266,fields:[
       {name:'IGN',value:ign,inline:true},
@@ -3144,6 +3173,7 @@ function showPage(n){
     const onm=document.getElementById('cfg-ov-nomatch-text');if(onm)onm.value=cfg.ovNoMatchText||'No live match right now';
     const otw=document.getElementById('cfg-ov-tdm-wins');if(otw)otw.checked=cfg.ovTdmShowWins!==false;
     renderRankingBoardSelect();
+    loadSponsorsField();
     migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();}
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
@@ -3232,6 +3262,58 @@ function tickCountdown(){
 }
 
 // ═══ STATS ═══
+// Weekly recap / Player-of-the-Week can't run on a true schedule — this is a client-side app
+// with no server cron, so "auto" just means: the first time any admin's browser touches the
+// dashboard in a new calendar week, it fires once and remembers via cfg so it won't repeat.
+function weekId(){const d=new Date();const onejan=new Date(d.getFullYear(),0,1);const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);return `${d.getFullYear()}-W${week}`;}
+function maybeAutoPostPotw(topPlayer){
+  if(!ADM||!topPlayer)return;
+  const cfg=DB.get('cfg',{});const wk=weekId();
+  if(cfg.lastPotwWeek===wk)return;
+  cfg.lastPotwWeek=wk;DB.set('cfg',cfg);
+  fireWebhookEvent('playerOfWeek',{title:'👑 Player of the Week',color:16766720,fields:[
+    {name:'Player',value:topPlayer.ign,inline:true},
+    {name:'Kills',value:String(topPlayer.kills||0),inline:true},
+    {name:'Wins',value:String(topPlayer.wins||0),inline:true}
+  ]});
+}
+function postPlayerOfWeekNow(){
+  if(!ADM)return;
+  const top=[...DB.get('players',[])].sort((a,b)=>b.kills-a.kills)[0];
+  if(!top)return notify('No players yet','','n-bad');
+  fireWebhookEvent('playerOfWeek',{title:'👑 Player of the Week',color:16766720,fields:[
+    {name:'Player',value:top.ign,inline:true},{name:'Kills',value:String(top.kills||0),inline:true},{name:'Wins',value:String(top.wins||0),inline:true}
+  ]});
+  notify('Posted!','Player of the Week sent to any subscribed Discord channel','n-ok');
+}
+// Weekly recap — built from the most recently logged matches (not a strict calendar week, since
+// log timestamps are locale strings rather than sortable dates). "Closest Match" stands in for
+// "biggest upset" — there's no historical points snapshot to detect a true underdog win from.
+function buildWeeklyRecapEmbed(){
+  const logs=DB.get('rlogs5',[]).slice(0,15);
+  if(!logs.length)return null;
+  const teamTotals={};let topFragger=null,closest=null,closestGap=Infinity;
+  logs.forEach(l=>{
+    (l.matchSummary||[]).forEach(s=>{teamTotals[s.teamName]=(teamTotals[s.teamName]||0)+(s.totalPts||0);});
+    (l.entries||[]).forEach(e=>{if(!topFragger||e.kills>topFragger.kills)topFragger={ign:e.ign,kills:e.kills,match:l.matchName};});
+    const sorted=[...(l.matchSummary||[])].sort((a,b)=>b.totalPts-a.totalPts);
+    if(sorted.length>=2){const gap=sorted[0].totalPts-sorted[1].totalPts;if(gap<closestGap){closestGap=gap;closest={match:l.matchName,a:sorted[0],b:sorted[1]};}}
+  });
+  const topTeam=Object.entries(teamTotals).sort((a,b)=>b[1]-a[1])[0];
+  return{title:'📊 Weekly Recap',color:3447003,description:`Covering the last ${logs.length} logged match${logs.length===1?'':'es'}.`,fields:[
+    {name:'Top Team (recent form)',value:topTeam?`${topTeam[0]} — ${topTeam[1]}pts`:'—',inline:true},
+    {name:'Top Fragger',value:topFragger?`${topFragger.ign} — ${topFragger.kills}K (${topFragger.match})`:'—',inline:true},
+    {name:'Closest Match',value:closest?`${closest.match}: ${closest.a.teamName} beat ${closest.b.teamName} by ${closestGap}pt${closestGap===1?'':'s'}`:'—',inline:false}
+  ]};
+}
+function postWeeklyRecap(){
+  if(!ADM)return;
+  const embed=buildWeeklyRecapEmbed();
+  if(!embed)return notify('Nothing to recap yet','Log some match results first','n-bad');
+  fireWebhookEvent('weeklyRecap',embed);
+  notify('Weekly recap posted!','Sent to any channel subscribed to "Weekly Recap"','n-ok');
+  logAdminAction('Weekly recap posted',`Manually posted by ${CU?CU.name:'Admin'}`);
+}
 function updateStats(){
   const pl=DB.get('players'),teAll=DB.get('teams'),te=teAll.filter(t=>t.approved),ms=DB.get('matches');
   const kills=pl.reduce((a,p)=>a+p.kills,0);
@@ -3370,7 +3452,7 @@ async function regPlayer(){
     const dupe=findDiscordOwner(discord,null,null);
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
-  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,region:v('rr'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0};
+  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,region:v('rr'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0,joinedAt:Date.now()};
   // If this is the currently signed-in Discord user filling out their full profile, keep them linked to their account
   if(CU&&CU.authId&&CU.ign&&CU.ign.toLowerCase()===ig.toLowerCase())entry.authId=CU.authId;
   pl.push(entry);
@@ -3616,7 +3698,13 @@ function tdmRecordPlayerParticipation(allRoster,winRoster){
   (allRoster||[]).forEach(r=>{
     const gp=players.find(x=>x.id===r.id||x.ign===r.ign);if(!gp)return;
     gp.tdmMatches=(gp.tdmMatches||0)+1;
-    if(winIgns.has(r.ign))gp.tdmWins=(gp.tdmWins||0)+1;
+    if(winIgns.has(r.ign)){
+      gp.tdmWins=(gp.tdmWins||0)+1;
+      gp.curTdmWinStreak=(gp.curTdmWinStreak||0)+1;
+    }else{
+      gp.curTdmWinStreak=0;
+    }
+    gp.bestTdmWinStreak=Math.max(gp.bestTdmWinStreak||0,gp.curTdmWinStreak||0);
   });
   DB.set('players',players);
 }
@@ -3730,7 +3818,13 @@ function endTdmMatch(){
   if(!confirm('End this TDM match early?'))return;
   const ms=DB.get('tdmMatches',[]);const m=ms.find(x=>x.status==='live');if(!m)return;
   m.status='done';m.winner=m.scoreA===m.scoreB?'Draw':(m.scoreA>m.scoreB?m.aName:m.bName);m.doneTs=new Date().toISOString();
-  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Match ended','','n-ok');
+  // "End Match Early" was only flipping the status flag and skipping tdmFinishMatch() — the auto-finish
+  // path (hitting the kill target) was the only thing that ever recorded the team win, fired webhooks,
+  // or (for a Best-of-3) started the next game. That's why ending Game 1 of a BO3 early looked like it
+  // did nothing: nobody could ever reach Game 2 or 3 that way.
+  if(m.winner!=='Draw')tdmFinishMatch(m,ms);
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  notify('Match ended',m.bo3&&!m.seriesDone?`${m.winner} takes this game — series continues`:'','n-ok');
 }
 
 function delTdmMatch(id){
@@ -3787,6 +3881,20 @@ function tdmMiniLbItem(){
   if(!rows.length)return '';
   const showWins=DB.get('cfg',{}).ovTdmShowWins!==false;
   return `<div class="ov-mini-lb"><div class="ov-mini-lb-title">TDM Leaderboard</div>${ovMiniLbRows(rows,'tdmWins',showWins)}</div>`;
+}
+// ── "Recently joined" ticker slide — surfaces the newest signup so viewers watching the
+//    stream see the community actively growing (helps the Discord-growth push). ──
+function recentJoinItem(){
+  const pl=DB.get('players',[]).filter(p=>p.joinedAt).sort((a,b)=>b.joinedAt-a.joinedAt);
+  if(!pl.length)return '';
+  const p=pl[0];
+  const mins=Math.max(1,Math.round((Date.now()-p.joinedAt)/60000));
+  const when=mins<60?`${mins}m ago`:mins<1440?`${Math.round(mins/60)}h ago`:`${Math.round(mins/1440)}d ago`;
+  return `<span class="tdm-banner-ticker-item"><i class="fa-solid fa-user-plus" style="color:#22c55e"></i> <b>${esc(p.ign)}</b> just joined the arena <span style="opacity:.4">·</span> ${when}</span>`;
+}
+// ── Sponsor / shoutout slides — admin-managed one-liners that rotate into the ticker ──
+function sponsorItems(){
+  return DB.get('sponsors',[]).map(s=>`<span class="tdm-banner-ticker-item"><i class="fa-solid fa-star" style="color:#f59e0b"></i> ${esc(s.text)}</span>`);
 }
 function tdmOverallBestItem(){
   const pl=DB.get('players',[]);
@@ -3979,7 +4087,19 @@ function saveOverlayText(){
   logAdminAction('Overlay text updated',`Ticker labels/toggles changed by ${CU?CU.name:'Admin'}`);
 }
 
-// ── Custom Ranking Boards (rank + name only, e.g. "Top 10 NA") ──
+// ── Sponsor / Shoutout ticker slides ──
+function loadSponsorsField(){
+  const list=DB.get('sponsors',[]);
+  const ta=document.getElementById('cfg-sponsors');if(ta)ta.value=list.map(s=>s.text).join('\n');
+}
+function saveSponsors(){
+  if(!ADM)return;
+  const raw=document.getElementById('cfg-sponsors')?.value||'';
+  const list=raw.split('\n').map(s=>s.trim()).filter(Boolean).map(text=>({text}));
+  DB.set('sponsors',list);
+  notify('Sponsor slides saved!',`${list.length} slide(s) now in the ticker rotation`,'n-ok');
+  logAdminAction('Sponsor slides updated',`${list.length} sponsor/shoutout slides saved by ${CU?CU.name:'Admin'}`);
+}
 let RB_ACTIVE=null;
 function renderRankingBoardSelect(){
   const boards=DB.get('rankingBoards',[]);
@@ -4039,6 +4159,17 @@ function deleteRankingBoard(){
 // ── Widescreen Leaderboard Broadcast Overlay (?overlay=lb) ──
 // Renders the scrims leaderboard (player.points), a TDM board (Wins / Kills / Tournament Wins), or a
 // name-only Custom Ranking board — the three never mix, matching the split enforced everywhere else.
+// OVLB_PREV_RANKS remembers each name's rank from the last render (per board, so switching boards
+// doesn't show bogus arrows) so we can draw a ▲/▼ when someone moves between refreshes.
+let OVLB_PREV_RANKS={};
+function ovlbRankArrow(boardKey,rowKey,newRank){
+  const prevBoard=OVLB_PREV_RANKS[boardKey];
+  if(!prevBoard||prevBoard[rowKey]===undefined)return '';
+  const prevRank=prevBoard[rowKey];
+  if(newRank<prevRank)return '<i class="fa-solid fa-caret-up ovlb-arrow ovlb-arrow-up"></i>';
+  if(newRank>prevRank)return '<i class="fa-solid fa-caret-down ovlb-arrow ovlb-arrow-down"></i>';
+  return '<i class="fa-solid fa-minus ovlb-arrow ovlb-arrow-same"></i>';
+}
 function renderOverlayLb(type,boardId){
   const eyebrow=document.getElementById('ovlb-eyebrow');
   const titleEl=document.getElementById('ovlb-title');
@@ -4069,10 +4200,11 @@ function renderOverlayLb(type,boardId){
   }
   titleEl.textContent=title;
   rows=rows.slice(0,10);
-  if(!rows.length){rowsEl.innerHTML='<div class="ovlb-empty">No standings yet</div>';return;}
+  const boardKey=type+':'+boardId;
+  if(!rows.length){rowsEl.innerHTML='<div class="ovlb-empty">No standings yet</div>';OVLB_PREV_RANKS[boardKey]={};return;}
   if(mode==='tdmMulti'){
     rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
-      <div class="ovlb-rank">${i+1}</div>
+      <div class="ovlb-rank">${i+1}${ovlbRankArrow(boardKey,p.ign,i)}</div>
       <div class="ovlb-av">${(p.ign||'?')[0]}</div>
       <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div><div class="ovlb-team">${esc(p.team||'')}</div></div>
       <div class="ovlb-stat-group">
@@ -4083,17 +4215,18 @@ function renderOverlayLb(type,boardId){
     </div>`).join('');
   }else if(mode==='nameOnly'){
     rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
-      <div class="ovlb-rank">${i+1}</div>
+      <div class="ovlb-rank">${i+1}${ovlbRankArrow(boardKey,p.ign,i)}</div>
       <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div></div>
     </div>`).join('');
   }else{
     rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
-      <div class="ovlb-rank">${i+1}</div>
+      <div class="ovlb-rank">${i+1}${ovlbRankArrow(boardKey,p.ign,i)}</div>
       <div class="ovlb-av">${(p.ign||'?')[0]}</div>
       <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div><div class="ovlb-team">${esc(p.team||'')}</div></div>
       <div class="ovlb-stat"><div class="ovlb-stat-val">${p[statKey]||0}</div><div class="ovlb-stat-lbl">${statLabel}</div></div>
     </div>`).join('');
   }
+  OVLB_PREV_RANKS[boardKey]=rows.reduce((m,p,i)=>{m[p.ign]=i;return m;},{});
 }
 
 
@@ -4265,6 +4398,8 @@ function renderOverlay(){
     const miniLb=scrimsMiniLbItem();
     if(miniLb)items.push(miniLb);
   }
+  const rj=recentJoinItem();if(rj)items.push(rj);
+  items.push(...sponsorItems());
   OV_ITEMS = items.length?items:['<span class="tdm-banner-ticker-item">RAGEISM Tournament — stay tuned</span>'];
   if(OV_IDX>=OV_ITEMS.length)OV_IDX=0;
 
@@ -4552,6 +4687,13 @@ function submitResults(){
         p.gamesPlayed=(p.gamesPlayed||0)+1;
         p.xp=(p.xp||0)+((sp.kills||0)*50)+(place===1?500:place===2?250:place===3?100:0);
         if(place===1&&!winnerIGN)winnerIGN=sp.ign;
+        // Win/kill streaks — win streak resets on anything but 1st, kill streak resets on a
+        // dry match. bestMatchKills feeds the "10-Kill Game" badge.
+        p.curWinStreak=(place===1)?(p.curWinStreak||0)+1:0;
+        p.bestWinStreak=Math.max(p.bestWinStreak||0,p.curWinStreak);
+        p.curKillStreak=((sp.kills||0)>0)?(p.curKillStreak||0)+1:0;
+        p.bestKillStreak=Math.max(p.bestKillStreak||0,p.curKillStreak);
+        p.bestMatchKills=Math.max(p.bestMatchKills||0,sp.kills||0);
       }
       entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*KILL_PT,pts:playerPts,team:tn,ts:new Date().toLocaleTimeString()});
     });
@@ -4780,6 +4922,23 @@ function profileMatchHistoryHTML(p){
   }).join('');
 }
 
+// ── Badges — computed live from existing stat fields, no separate award-tracking needed ──
+const BADGE_DEFS=[
+  {id:'firstWin',icon:'fa-trophy',color:'#f59e0b',label:'First Win',test:p=>(p.wins||0)>=1||(p.tdmWins||0)>=1},
+  {id:'tenKill',icon:'fa-fire',color:'#ef4444',label:'10-Kill Game',test:p=>(p.bestMatchKills||0)>=10},
+  {id:'sharpshooter',icon:'fa-crosshairs',color:'#22d3ee',label:'Sharpshooter — 50+ career kills',test:p=>(p.kills||0)>=50},
+  {id:'slayer',icon:'fa-skull',color:'#a855f7',label:'Slayer — 100+ career kills',test:p=>(p.kills||0)>=100},
+  {id:'tdmAce',icon:'fa-medal',color:'#eab308',label:'TDM Ace — 10+ TDM wins',test:p=>(p.tdmWins||0)>=10},
+  {id:'hotStreak',icon:'fa-fire-flame-curved',color:'#f97316',label:'On Fire — 3+ match win streak',test:p=>(p.bestWinStreak||0)>=3||(p.bestTdmWinStreak||0)>=3},
+  {id:'veteran',icon:'fa-shield',color:'#64748b',label:'Veteran — 20+ games played',test:p=>(p.gamesPlayed||0)>=20},
+];
+function playerBadgesHTML(p){
+  const earned=BADGE_DEFS.filter(b=>b.test(p));
+  if(!earned.length)return '';
+  return `<div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.6rem">
+    ${earned.map(b=>`<span class="chip" title="${b.label}" style="font-size:.63rem;color:${b.color};background:${b.color}15;border:1px solid ${b.color}30"><i class="fa-solid ${b.icon}"></i> ${b.label}</span>`).join('')}
+  </div>`;
+}
 function buildProfileCardHTML(p,isOwn=false){
   const rankColor=RC[p.rank]||'var(--textM)';
   const hasSocials=p.discord||p.youtube||p.tiktok||p.twitch||p.twitter||p.instagram;
@@ -4805,6 +4964,7 @@ function buildProfileCardHTML(p,isOwn=false){
         ${p.platform?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
         ${p.region?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-globe"></i> ${p.region}</span>`:''}
       </div>
+      ${playerBadgesHTML(p)}
       ${p.bio?`<div style="font-size:.84rem;color:var(--textM);line-height:1.6;margin-bottom:.7rem;padding:.6rem .7rem;background:var(--bg3);border-radius:var(--rS);border-left:3px solid var(--accent)">${p.bio}</div>`:''}
     </div>
   </div>
@@ -5216,7 +5376,7 @@ function renderLB(){
   const ic=['<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>','<i class="fa-solid fa-medal" style="color:#94a3b8"></i>','<i class="fa-solid fa-medal" style="color:#cd7f32"></i>'];
   body.innerHTML=s.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(2);const lvl=Math.floor((p.xp||0)/500)+1;const games=(p.gamesPlayed||p.kills+p.deaths)||0;
     return `<tr class="rank-${i+1}"><td><span style="font-size:.9rem">${ic[i]||i+1}</span></td>
-    <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.ign}</div><div class="cell-sub">${p.discord||''}</div></div></div></td>
+    <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.ign}${(p.curWinStreak||0)>=2?`<span class="chip" style="font-size:.56rem;background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.3);margin-left:.4rem" title="${p.curWinStreak} match win streak"><i class="fa-solid fa-fire"></i> ${p.curWinStreak}</span>`:''}${(p.curKillStreak||0)>=3?`<span class="chip" style="font-size:.56rem;background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);margin-left:.3rem" title="${p.curKillStreak} matches in a row with a kill"><i class="fa-solid fa-crosshairs"></i> ${p.curKillStreak}</span>`:''}</div><div class="cell-sub">${p.discord||''}</div></div></div></td>
     <td class="text-muted" style="font-size:.83rem">${p.team||'—'}</td>
     <td><span class="chip chip-accent" style="font-weight:700">${p.points||0}</span></td>
     <td><span class="chip chip-red">${p.kills||0}</span></td><td class="text-dim">${p.deaths||0}</td>
@@ -5227,6 +5387,28 @@ function renderLB(){
     <td><button class="btn btn-ghost btn-xs" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button></td></tr>`;
   }).join('');
   renderTeamStandings();
+}
+// Downloads the current sorted standings (same sort as the on-screen table/filter) as a CSV —
+// handy for prize payouts or reposting results somewhere else.
+function exportLbCsv(){
+  const pl=DB.get('players',[]);const f=document.getElementById('lb-filter')?.value||'points';
+  const s=[...pl].sort((a,b)=>{
+    if(f==='points')return (b.points||0)-(a.points||0);
+    if(f==='kills')return (b.kills||0)-(a.kills||0);
+    if(f==='kd')return(b.kills/(b.deaths||1))-(a.kills/(a.deaths||1));
+    if(f==='wins')return (b.wins||0)-(a.wins||0);
+    return((b.gamesPlayed||b.kills+b.deaths)||0)-((a.gamesPlayed||a.kills+a.deaths)||0);
+  });
+  if(!s.length)return notify('Nothing to export','No players registered yet','n-bad');
+  const esc2=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const rows=[['Rank','IGN','Team','Points','Kills','Deaths','K/D','Wins','Games','Win Streak','Kill Streak']];
+  s.forEach((p,i)=>rows.push([i+1,p.ign,p.team||'',p.points||0,p.kills||0,p.deaths||0,(p.kills/(p.deaths||1)).toFixed(2),p.wins||0,(p.gamesPlayed||p.kills+p.deaths)||0,p.curWinStreak||0,p.curKillStreak||0]));
+  const csv=rows.map(r=>r.map(esc2).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`leaderboard-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  notify('CSV downloaded!',`${s.length} players exported`,'n-ok');
 }
 
 function renderTeamStandings(){
@@ -5438,6 +5620,29 @@ function renderCmpTeamSelects(){
     s.innerHTML='<option value="">— Select Team —</option>'+te.map(t=>`<option value="${t.id}">${esc(t.name)}${t.tag?` [${esc(t.tag)}]`:''}</option>`).join('');
     if(cur)s.value=cur;});
 }
+// Scrims are battle-royale style (many teams per match, ranked by placement) — there's no simple
+// 1-v-1 "team A beat team B" the way TDM has, so "head-to-head" here means: of the matches both
+// teams played in together, who finished higher, plus a 5-match points trend per team.
+function teamRecentFormHTML(t){
+  const logs=DB.get('rlogs5',[]).filter(l=>(l.matchSummary||[]).some(s=>s.teamName===t.name)).slice(0,5).reverse();
+  if(!logs.length)return '<div style="text-align:center;color:var(--textD);font-size:.68rem;padding:.3rem 0">No recent matches</div>';
+  const pts=logs.map(l=>{const s=(l.matchSummary||[]).find(x=>x.teamName===t.name);return s?(s.totalPts||0):0;});
+  const max=Math.max(1,...pts);
+  return `<div style="display:flex;align-items:flex-end;gap:.3rem;height:40px">
+    ${logs.map((l,i)=>{const h=Math.max(5,Math.round((pts[i]/max)*36));
+      return `<div title="${esc(l.matchName)}: ${pts[i]}pts" style="flex:1;height:${h}px;background:linear-gradient(180deg,${t.color||'var(--accent)'},transparent);border-radius:3px 3px 0 0;min-width:5px"></div>`;
+    }).join('')}
+  </div>`;
+}
+function teamSharedRecordHTML(t1,t2){
+  const logs=DB.get('rlogs5',[]).filter(l=>{const s=l.matchSummary||[];return s.some(x=>x.teamName===t1.name)&&s.some(x=>x.teamName===t2.name);});
+  if(!logs.length)return '<div style="text-align:center;color:var(--textD);font-size:.75rem;padding:.6rem 0">These two haven\'t shared a logged match yet.</div>';
+  let w1=0,w2=0;
+  logs.forEach(l=>{const s1=l.matchSummary.find(x=>x.teamName===t1.name),s2=l.matchSummary.find(x=>x.teamName===t2.name);
+    if(s1.placement<s2.placement)w1++;else if(s2.placement<s1.placement)w2++;});
+  return `<div style="text-align:center;padding:.4rem 0 0;font-size:.8rem"><strong>${esc(t1.name)} ${w1}</strong> <span style="color:var(--textD)">— placed higher —</span> <strong>${w2} ${esc(t2.name)}</strong>
+    <div style="color:var(--textD);font-size:.68rem;margin-top:.15rem">across ${logs.length} shared match${logs.length===1?'':'es'}</div></div>`;
+}
 function doCompareTeams(){
   const t1id=v('cmpT1'),t2id=v('cmpT2');const el=document.getElementById('cmp-team-result');if(!el)return;
   if(!t1id||!t2id){el.innerHTML='<div style="text-align:center;padding:3rem;color:var(--textD)">Select two teams to compare.</div>';return;}
@@ -5462,6 +5667,17 @@ function doCompareTeams(){
   ${row('Matches Played',t1.matchesPlayed||0,t2.matchesPlayed||0)}
   ${row('Avg Pts / Match',avg1,avg2)}
   ${row('Roster Size',(t1.members||[]).length,(t2.members||[]).length)}
+  </div>
+  <div class="card" style="margin-top:.8rem">
+    <div style="font-size:.68rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.5rem;text-align:center">Recent Form — last 5 logged matches</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div>${teamRecentFormHTML(t1)}<div style="text-align:center;font-size:.68rem;color:var(--textD);margin-top:.3rem">${esc(t1.name)}</div></div>
+      <div>${teamRecentFormHTML(t2)}<div style="text-align:center;font-size:.68rem;color:var(--textD);margin-top:.3rem">${esc(t2.name)}</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:.8rem">
+    <div style="font-size:.68rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.2rem;text-align:center">Head-to-Head</div>
+    ${teamSharedRecordHTML(t1,t2)}
   </div>`;
 }
 
@@ -5859,6 +6075,8 @@ const WEBHOOK_EVENTS={
   matchSignupAccepted:{label:'Scrim/Match Signup Accepted',icon:'fa-calendar-check',defaultScope:'all',tokens:'{team} {match} {map} {date} {time} {mode} {mentions}'},
   matchSignupDenied:{label:'Scrim/Match Signup Denied',icon:'fa-calendar-xmark',defaultScope:'captain',tokens:'{team} {match} {mentions}'},
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
+  playerOfWeek:{label:'Player of the Week',icon:'fa-crown'},
+  weeklyRecap:{label:'Weekly Recap',icon:'fa-calendar-week'},
   auditLog:{label:'Admin Activity Log',icon:'fa-shield-halved',masterOnly:true}
 };
 function onWhEventChange(){
@@ -6104,8 +6322,39 @@ document.addEventListener('click',e=>{
   if(panel&&panel.classList.contains('open')&&!panel.contains(e.target)&&e.target!==bubble&&!(bubble&&bubble.contains(e.target)))panel.classList.remove('open');
 });
 
-function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, polls, brackets, logs, etc.)');['players','teams','matches','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+// ── Bulk Player Import — paste "IGN, Discord, Team" lines, skip dupes, create the rest ──
+function doBulkImportPlayers(){
+  if(!ADM)return;
+  const raw=document.getElementById('bulk-import-text')?.value||'';
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const resEl=document.getElementById('bulk-import-result');
+  if(!lines.length){if(resEl)resEl.textContent='Paste at least one line first.';return;}
+  const players=DB.get('players',[]);
+  const existingIgns=new Set(players.map(p=>(p.ign||'').toLowerCase()));
+  let created=0,skipped=0;
+  lines.forEach(line=>{
+    const parts=line.split(',').map(s=>s.trim()).filter(Boolean);
+    const ign=parts[0];if(!ign)return;
+    if(existingIgns.has(ign.toLowerCase())){skipped++;return;}
+    const discord=parts[1]||'',team=parts[2]||'';
+    players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,7),name:ign,ign,discord,team,uid:'',rank:'',role:'',platform:'',bio:'',
+      kills:0,deaths:0,damage:0,wins:0,xp:0,points:0,gamesPlayed:0,tdmKills:0,tdmWins:0,tdmMatches:0,joinedAt:Date.now()});
+    existingIgns.add(ign.toLowerCase());
+    created++;
+  });
+  DB.set('players',players);
+  renderAPlayers();updateStats();renderReg();refreshDLs();
+  logAdminAction('Bulk player import',`${created} player(s) imported${skipped?`, ${skipped} skipped as duplicates`:''} by ${CU?CU.name:'Admin'}`);
+  if(resEl)resEl.textContent=`Imported ${created} player${created===1?'':'s'}.${skipped?` Skipped ${skipped} duplicate${skipped===1?'':'s'}.`:''}`;
+  notify('Bulk import complete!',`${created} added${skipped?`, ${skipped} skipped`:''}`,'n-ok');
+  document.getElementById('bulk-import-text').value='';
+}
+// "Reset Stats" was only zeroing scrims fields (kills/deaths/wins/xp/points/gamesPlayed) — every
+// TDM field (tdmKills, tdmWins, tdmMatches, streaks) was left untouched, so the TDM leaderboard
+// (which reads those fields straight off the player record) looked completely unchanged afterward.
+// Also clearing the tdmMatches collection itself so old TDM match history doesn't linger either.
+function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;p.tdmKills=0;p.tdmWins=0;p.tdmMatches=0;p.curWinStreak=0;p.curKillStreak=0;p.bestWinStreak=0;p.curTdmWinStreak=0;p.bestTdmWinStreak=0;p.bestMatchKills=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);DB.set('tdmMatches',[]);DB.set('h2hRecords',{});}renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, polls, brackets, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
