@@ -1736,7 +1736,7 @@ tr:last-child td{border-bottom:none}
         <div id="tdm-live-wrap"></div>
         <div class="card mb2" style="margin-top:1.2rem">
           <div class="card-title"><i class="fa-solid fa-people-arrows"></i> BO3 Match Queue</div>
-          <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Team captains request a Best-of-3 slot below. Once an admin accepts two requests, they're automatically matched up — an admin can still edit the board and adjust the match afterward.</div>
+          <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Anyone can request a Best-of-3 slot below — no team required. Once an admin accepts two requests, whoever's been waiting longest gets automatically matched up first — an admin can still add teammates, edit the board, and adjust the match afterward.</div>
           <div id="tdm-queue-my-request"></div>
           <div id="tdm-queue-admin-list" class="admin-only" style="display:none;margin-top:.8rem"></div>
         </div>
@@ -3838,59 +3838,66 @@ function tdmQuickFill(side){
   tdmRenderRoster(side);
 }
 
-// ═══ BO3 Match Queue — captains request a slot, admin accepts, first two accepted requests
-// auto-pair into a live BO3 match. Admin retains full control afterward (board edits, kill
-// corrections, etc. all still work exactly the same on the resulting match). ═══
-function myCaptainTeam(){
+// ═══ BO3 Match Queue — ANY logged-in player can request a slot (no team needed), admin accepts,
+// the two who've been waiting longest auto-pair into a live BO3 match the moment there are 2
+// accepted. Admin retains full control afterward (board edits, kill corrections, adding
+// teammates, etc. all still work exactly the same on the resulting match). ═══
+function myQueueEntry(queue){
   if(!CU)return null;
-  return DB.get('teams',[]).find(t=>t.approved&&(t.captain===CU.ign||t.manager===CU.ign));
-}
-function teamRosterForTdm(team){
-  const pl=DB.get('players',[]);
-  return (team.members||[]).map(ign=>{const p=pl.find(x=>x.ign===ign);return p?{id:p.id,ign:p.ign}:{id:'guest-'+ign,ign};});
+  return queue.find(q=>q.playerIgn===CU.name&&q.status!=='matched');
 }
 function requestTdmQueue(){
-  const team=myCaptainTeam();
-  if(!team)return notify('Captains only','You need to be a captain or manager of an approved team to request a match.','n-bad');
+  if(!CU)return notify('Login required','','n-bad');
   const queue=DB.get('tdmQueue',[]);
-  if(queue.find(q=>q.teamId===team.id&&(q.status==='pending'||q.status==='accepted')))return notify('Already in queue',`${team.name} already has a pending or accepted request.`,'n-bad');
-  queue.push({id:'tq'+Date.now(),teamId:team.id,teamName:team.name,roster:teamRosterForTdm(team),status:'pending',ts:Date.now()});
+  if(myQueueEntry(queue))return notify('Already in queue','You already have a pending or accepted request.','n-bad');
+  const pl=DB.get('players',[]);const me=pl.find(p=>p.ign===CU.name)||pl.find(p=>p.name===CU.name);
+  queue.push({id:'tq'+Date.now(),playerId:me?me.id:'guest-'+CU.name,playerIgn:CU.name,roster:[{id:me?me.id:'guest-'+CU.name,ign:CU.name}],status:'pending',ts:Date.now()});
   DB.set('tdmQueue',queue);
   renderTdmQueue();
-  notify('Request sent!',`${team.name} is queued for a BO3 match — an admin will accept it soon.`,'n-ok');
+  notify('Request sent!','You\'re queued for a BO3 match — an admin will accept it soon.','n-ok');
 }
 function cancelTdmQueue(id){
   const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
-  const team=myCaptainTeam();
-  if(!ADM&&(!team||team.id!==q.teamId))return;
+  if(!ADM&&(!CU||CU.name!==q.playerIgn))return;
   DB.set('tdmQueue',queue.filter(x=>x.id!==id));
   renderTdmQueue();
   notify('Request cancelled','','n-ok');
+}
+function waitLabel(ts){
+  const mins=Math.floor((Date.now()-ts)/60000);
+  if(mins<1)return 'just now';
+  if(mins<60)return `${mins}m waiting`;
+  const hrs=Math.floor(mins/60);
+  return `${hrs}h ${mins%60}m waiting`;
 }
 function renderTdmQueue(){
   const queue=DB.get('tdmQueue',[]);
   const mineEl=document.getElementById('tdm-queue-my-request');
   if(mineEl){
-    const team=myCaptainTeam();
-    const mine=team?queue.find(q=>q.teamId===team.id&&q.status!=='matched'):null;
-    if(!team){
-      mineEl.innerHTML=`<div class="text-dim" style="font-size:.8rem">Only team captains/managers can request a BO3 slot.</div>`;
+    const mine=myQueueEntry(queue);
+    if(!CU){
+      mineEl.innerHTML=`<div class="text-dim" style="font-size:.8rem">Log in to request a BO3 slot — no team needed, anyone can queue up.</div>`;
     }else if(mine){
       mineEl.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span class="chip ${mine.status==='accepted'?'chip-accent':'chip-neutral'}" style="font-size:.75rem"><i class="fa-solid fa-clock"></i> ${team.name} — ${mine.status==='accepted'?'Accepted, waiting for an opponent':'Pending admin approval'}</span>
+        <span class="chip ${mine.status==='accepted'?'chip-accent':'chip-neutral'}" style="font-size:.75rem"><i class="fa-solid fa-clock"></i> You — ${mine.status==='accepted'?'Accepted, waiting for an opponent':'Pending admin approval'} · ${waitLabel(mine.ts)}</span>
         <button class="btn btn-ghost btn-xs" onclick="cancelTdmQueue('${mine.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
       </div>`;
     }else{
-      mineEl.innerHTML=`<button class="btn btn-accent btn-sm" onclick="requestTdmQueue()"><i class="fa-solid fa-hand"></i> Request a BO3 Match for ${esc(team.name)}</button>`;
+      mineEl.innerHTML=`<button class="btn btn-accent btn-sm" onclick="requestTdmQueue()"><i class="fa-solid fa-hand"></i> Request a BO3 Match</button>`;
     }
   }
   const adminEl=document.getElementById('tdm-queue-admin-list');
   if(adminEl){
     adminEl.style.display=ADM?'block':'none';
     if(ADM){
-      const open=queue.filter(q=>q.status!=='matched');
-      adminEl.innerHTML=!open.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:open.map(q=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
-        <div style="font-size:.85rem"><strong>${esc(q.teamName)}</strong> <span class="text-dim" style="font-size:.72rem">${(q.roster||[]).length} player${(q.roster||[]).length===1?'':'s'} · ${q.status==='accepted'?'accepted, waiting for opponent':'pending'}</span></div>
+      // Smart queue: sorted longest-waiting first so it's obvious who should get matched/accepted
+      // next — accepted requests bubble to the top since they're one step closer to a match.
+      const open=[...queue].filter(q=>q.status!=='matched').sort((a,b)=>{
+        if(a.status!==b.status)return a.status==='accepted'?-1:1;
+        return a.ts-b.ts;
+      });
+      adminEl.innerHTML=!open.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:open.map((q,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div style="font-size:.85rem"><span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span></div>
         <div style="display:flex;gap:.3rem">
           ${q.status==='pending'?`<button class="btn btn-accent btn-xs" onclick="acceptTdmQueue('${q.id}')"><i class="fa-solid fa-check"></i> Accept</button>`:''}
           <button class="btn btn-danger btn-xs" onclick="cancelTdmQueue('${q.id}')"><i class="fa-solid fa-xmark"></i></button>
@@ -3903,23 +3910,23 @@ function acceptTdmQueue(id){
   if(!ADM)return;
   const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
   q.status='accepted';DB.set('tdmQueue',queue);
-  logAdminAction('TDM queue request accepted',`${q.teamName} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
+  logAdminAction('TDM queue request accepted',`${q.playerIgn} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
   tryAutoMatchTdmQueue();
   renderTdmQueue();
 }
 function tryAutoMatchTdmQueue(){
   if(tdmGetLive())return; // don't auto-start a new match over a live one — they'll stay queued until it's free
   const queue=DB.get('tdmQueue',[]);
-  const accepted=queue.filter(q=>q.status==='accepted').sort((a,b)=>a.ts-b.ts);
+  const accepted=queue.filter(q=>q.status==='accepted').sort((a,b)=>a.ts-b.ts); // longest-waiting pair goes first
   if(accepted.length<2)return;
   const [q1,q2]=accepted;
   q1.status='matched';q2.status='matched';
   DB.set('tdmQueue',queue);
   const target=10;
-  createTdmMatchObj(q1.teamName,q2.teamName,q1.roster,q2.roster,true,target);
-  logAdminAction('TDM match auto-created',`${q1.teamName} vs ${q2.teamName} auto-matched from the BO3 queue`);
+  createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,true,target);
+  logAdminAction('TDM match auto-created',`${q1.playerIgn} vs ${q2.playerIgn} auto-matched from the BO3 queue`);
   renderTdmLive();renderTdmHistory();updateTdmBadge();
-  notify('Auto-matched!',`${q1.teamName} vs ${q2.teamName} — Best of 3 is live. Edit the board/roster if needed.`,'n-ok');
+  notify('Auto-matched!',`${q1.playerIgn} vs ${q2.playerIgn} — Best of 3 is live. Add teammates and edit the board as needed.`,'n-ok');
 }
 
 // that creates a live TDM match, pings the pre-match H2H history, and returns it.
