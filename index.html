@@ -3737,11 +3737,14 @@ function tdmFinishMatch(m,ms){
     // team leaderboard with TDM results. Player-level tdmWins (below) is the source of truth for
     // TDM wins; there's no team-level TDM win stat anywhere in the UI to keep in sync with.
     tdmRecordPlayerParticipation([...m.aRoster,...m.bRoster],m.winner===m.aName?m.aRoster:m.bRoster);
+    const h2hFields=tdmH2HWebhookFields(m);
+    const allIgns=[...m.aRoster,...m.bRoster].map(r=>r.ign);
     fireWebhookEvent('tdmResults',{title:`TDM Result — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'Winner',value:m.winner,inline:true},
-      {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
-    ]},mvp?mvp.ign:null);
+      {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true},
+      ...h2hFields
+    ]},allIgns);
     fireWebhookEvent('teamWins',{title:`🏆 ${m.winner} wins the TDM!`,color:16766720,fields:[
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
@@ -3754,11 +3757,14 @@ function tdmFinishMatch(m,ms){
     m.seriesDone=true;m.seriesWinner=seriesWinner;
     // Same as above — no team.wins bump here either, for the same reason (keeps TDM out of scrims stats).
     tdmRecordPlayerParticipation([...m.aRoster,...m.bRoster],seriesWinner===m.aName?m.aRoster:m.bRoster);
+    const h2hFieldsSeries=tdmH2HWebhookFields(m);
+    const allIgnsSeries=[...m.aRoster,...m.bRoster].map(r=>r.ign);
     fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
       {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
       {name:'Final Game',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
-      {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
-    ]},mvp?mvp.ign:null);
+      {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true},
+      ...h2hFieldsSeries
+    ]},allIgnsSeries);
     fireWebhookEvent('teamWins',{title:`🏆 ${seriesWinner} wins the series!`,color:16766720,fields:[
       {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
       {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
@@ -3832,14 +3838,41 @@ function recordH2H(m){
       if(!rec)rec={p1Id:p1.id,p1Ign:p1.ign,p2Id:p2.id,p2Ign:p2.ign,p1Wins:0,p2Wins:0,matches:0,log:[]};
       rec.p1Ign=p1.ign;rec.p2Ign=p2.ign; // keep IGNs fresh in case of renames
       rec.matches++;
+      // p1Score/p2Score: the team score each side of THIS pair posted in this game — lets us
+      // later pull out someone's best win / closest loss for the Discord matchup card.
+      const p1Score=p1.id===pa.id?m.scoreA:m.scoreB;
+      const p2Score=p2.id===pa.id?m.scoreA:m.scoreB;
       if(winSide==='a'){if(rec.p1Id===pa.id)rec.p1Wins++;else rec.p2Wins++;}
       else if(winSide==='b'){if(rec.p1Id===pb.id)rec.p1Wins++;else rec.p2Wins++;}
-      rec.log.unshift({matchId:m.id,ts:m.doneTs||m.ts,winnerIgn:winSide==='a'?pa.ign:(winSide==='b'?pb.ign:'Draw')});
+      rec.log.unshift({matchId:m.id,ts:m.doneTs||m.ts,winnerIgn:winSide==='a'?pa.ign:(winSide==='b'?pb.ign:'Draw'),p1Score,p2Score});
       if(rec.log.length>25)rec.log.length=25;
       store[key]=rec;
     });
   });
   DB.set('h2hRecords',store);
+}
+// Builds "🆚 P1 vs P2" Discord embed fields summarizing every pair's full history (including the
+// game that just finished) — record, best win, and closest loss — for the TDM result webhook.
+// Capped at 4 pairings so a big squad match doesn't blow past Discord's embed limits.
+function tdmH2HWebhookFields(m){
+  if(!m.aRoster||!m.bRoster)return [];
+  const pairs=[];
+  m.aRoster.forEach(pa=>m.bRoster.forEach(pb=>pairs.push([pa,pb])));
+  return pairs.slice(0,4).map(([pa,pb])=>{
+    const rec=getH2HRecord(pa.id,pb.id);if(!rec)return null;
+    const paWins=rec.p1Id===pa.id?rec.p1Wins:rec.p2Wins;
+    const pbWins=rec.p1Id===pa.id?rec.p2Wins:rec.p1Wins;
+    const scoreFor=(l,ign)=>ign===pa.ign?(rec.p1Ign===pa.ign?l.p1Score:l.p2Score):(rec.p1Ign===pb.ign?l.p1Score:l.p2Score);
+    let bestWin=null,closestLoss=null;
+    rec.log.forEach(l=>{
+      if(l.winnerIgn==='Draw')return;
+      const winnerIgn=l.winnerIgn,loserIgn=winnerIgn===pa.ign?pb.ign:pa.ign;
+      const wScore=scoreFor(l,winnerIgn),lScore=scoreFor(l,loserIgn);
+      if(!bestWin||wScore>bestWin.score)bestWin={ign:winnerIgn,score:wScore,against:lScore};
+      if(!closestLoss||lScore>closestLoss.score)closestLoss={ign:loserIgn,score:lScore,against:wScore};
+    });
+    return {name:`🆚 ${pa.ign} vs ${pb.ign}`,value:`Record: **${pa.ign} ${paWins}** – **${pbWins} ${pb.ign}** (${rec.matches} game${rec.matches===1?'':'s'})\n${bestWin?`Best win: ${bestWin.ign} ${bestWin.score}-${bestWin.against}`:''}${bestWin&&closestLoss?' · ':''}${closestLoss?`Closest loss: ${closestLoss.ign} ${closestLoss.score}-${closestLoss.against}`:''}`,inline:false};
+  }).filter(Boolean);
 }
 function getH2HRecord(id1,id2){
   const store=DB.get('h2hRecords',{});
