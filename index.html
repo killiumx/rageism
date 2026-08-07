@@ -1054,6 +1054,7 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Matches</button>
       <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM <span class="sb-badge" id="tdm-live-badge" style="display:none;background:var(--red)">LIVE</span></button>
       <button class="sb-item" onclick="showPage('analytics')"><i class="fa-solid fa-chart-mixed"></i> Analytics</button>
+      <button class="sb-item" onclick="showPage('clips')"><i class="fa-solid fa-clapperboard"></i> Clips</button>
     </div>
 
     <div class="sb-section">
@@ -1389,6 +1390,10 @@ tr:last-child td{border-bottom:none}
           </div>
         </div>
         <datalist id="ign-dl-teamnames"></datalist>
+        <div id="player-reports-wrap" style="display:none" class="mb2">
+          <div style="font-size:.72rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.5rem"><i class="fa-solid fa-flag"></i> Pending Player Reports</div>
+          <div id="player-reports-body"></div>
+        </div>
         <div class="card mb2" style="padding:.8rem 1rem">
           <div class="fg" style="margin:0;position:relative"><input class="fi" id="ap-search" placeholder="Search by name, IGN, UID, Discord, or team..." oninput="renderAPlayers();apShowLookup(this.value)" onfocus="apShowLookup(this.value)" onblur="setTimeout(()=>document.getElementById('ap-lookup-dd').style.display='none',200)"/>
             <div id="ap-lookup-dd" class="xfer-lookup-results" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50"></div>
@@ -1625,6 +1630,8 @@ tr:last-child td{border-bottom:none}
                 <button class="btn btn-ghost btn-fw" onclick="resetSec('weekly')" style="border-color:rgba(99,102,241,.3)"><i class="fa-solid fa-calendar-week"></i> Reset Weekly Stats (for Player of the Week)</button>
                 <button class="btn btn-ghost btn-fw" onclick="postPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post Scrims Player of the Week Now</button>
                 <button class="btn btn-ghost btn-fw" onclick="postTdmPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post TDM Player of the Week Now</button>
+                <button class="btn btn-ghost btn-fw" onclick="postMatchOfWeekNow()"><i class="fa-solid fa-fire"></i> Post Scrims Match of the Week Now</button>
+                <button class="btn btn-ghost btn-fw" onclick="postTdmMatchOfWeekNow()"><i class="fa-solid fa-fire"></i> Post TDM Match of the Week Now</button>
                 <button class="btn btn-danger btn-fw" onclick="resetAll()" style="border-color:rgba(239,68,68,.5);font-weight:700"><i class="fa-solid fa-bomb"></i> Full Tournament Reset</button>
               </div>
             </div>
@@ -1738,6 +1745,7 @@ tr:last-child td{border-bottom:none}
               <option value="tdmKills">Sort by Kills</option>
               <option value="tdmMatches">Sort by Matches Played</option>
               <option value="winrate">Sort by Win Rate</option>
+              <option value="tdmElo">Sort by Elo Rating</option>
             </select>
             <button class="btn btn-ghost btn-sm admin-only" style="display:none" onclick="createTdmBoard()"><i class="fa-solid fa-plus"></i> New Board</button>
           </div>
@@ -1745,12 +1753,17 @@ tr:last-child td{border-bottom:none}
         <div id="tdm-board-tabs" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem"></div>
         <div class="card">
           <div id="tdm-board-toolbar" class="admin-only" style="display:none;margin-bottom:.8rem"></div>
-          <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Wins</th><th>Kills</th><th>Matches</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="tdm-board-body"></tbody></table></div>
+          <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Wins</th><th>Kills</th><th>Matches</th><th title="Elo-style rating — accounts for who you beat, not just how often">Elo</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="tdm-board-body"></tbody></table></div>
           <div id="tdm-board-empty" style="display:none;text-align:center;padding:2.5rem;color:var(--textD)">
             <i class="fa-solid fa-ranking-star" style="font-size:1.6rem;display:block;margin-bottom:.6rem;opacity:.3"></i>
             <div style="font-weight:600;margin-bottom:.3rem">No players on this board yet</div>
             <div style="font-size:.83rem">Use the search box above to add players</div>
           </div>
+        </div>
+        <div class="card mb2" style="margin-top:1.2rem">
+          <div class="card-title"><i class="fa-solid fa-people-arrows"></i> Rivalry Board</div>
+          <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">The most-played matchups across every TDM game logged.</div>
+          <div id="rivalry-board-body"><div style="text-align:center;padding:1.5rem;color:var(--textD);font-size:.85rem">No rivalries yet — play some TDM matches!</div></div>
         </div>
       </div>
 
@@ -1832,7 +1845,9 @@ tr:last-child td{border-bottom:none}
         <div class="sh-row">
           <div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">Schedule</span></div></div>
           <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-            <button class="btn btn-accent btn-sm" onclick="filterMatches('all',this)">All</button>
+            <button class="btn btn-accent btn-sm" id="mv-list-btn" onclick="switchMatchesView('list')"><i class="fa-solid fa-list"></i> List</button>
+            <button class="btn btn-ghost btn-sm" id="mv-cal-btn" onclick="switchMatchesView('calendar')"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterMatches('all',this)">All</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('live',this)">Live</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('upcoming',this)">Upcoming</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('done',this)">Ended</button>
@@ -1841,6 +1856,7 @@ tr:last-child td{border-bottom:none}
           </div>
         </div>
         <div id="matches-list"></div>
+        <div id="matches-calendar" style="display:none"></div>
       </div>
 
       <!-- ░ PROFILE ░ -->
@@ -1875,6 +1891,19 @@ tr:last-child td{border-bottom:none}
           </div>
           <div id="cmp-team-result"></div>
         </div>
+      </div>
+
+      <!-- ░ CLIPS ░ -->
+      <div class="page" id="page-clips">
+        <div class="sh-row"><div class="sh"><div class="sh-title">Community <span style="color:var(--accentL)">Clips</span></div><div class="sh-sub">Drop your best play — admin pins one to the dashboard &amp; ticker</div></div></div>
+        <div class="card mb2">
+          <div class="frow">
+            <div class="fg"><label class="fl">Clip URL</label><input class="fi" id="clip-url" placeholder="https://youtube.com/... or clip link"/></div>
+            <div class="fg"><label class="fl">Note (optional)</label><input class="fi" id="clip-note" placeholder="What's happening in it?"/></div>
+          </div>
+          <button class="btn btn-accent btn-fw" onclick="submitClip()"><i class="fa-solid fa-clapperboard"></i> Submit Clip</button>
+        </div>
+        <div id="clips-list"></div>
       </div>
 
       <!-- ░ COMMUNITY ░ -->
@@ -2057,6 +2086,26 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div class="modal-overlay" id="report-player-modal">
+  <div class="modal-box" style="max-width:440px">
+    <button class="modal-close" onclick="closeModal('report-player-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-flag" style="color:var(--red)"></i> Report Player</div>
+    <input type="hidden" id="rp-target-id"/>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Reporting <strong id="rp-target-name"></strong>. This goes straight to admins — it's not visible to other players.</div>
+    <div class="fg"><label class="fl">Reason</label><textarea class="fta" id="rp-reason" rows="4" placeholder="What happened? Include match/date if relevant."></textarea></div>
+    <button class="btn btn-danger btn-fw" onclick="submitPlayerReport()"><i class="fa-solid fa-flag"></i> Submit Report</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-card-modal">
+  <div class="modal-box" style="max-width:460px;text-align:center">
+    <button class="modal-close" onclick="closeModal('share-card-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-image"></i> Shareable Stat Card</div>
+    <canvas id="share-card-canvas" width="600" height="750" style="width:100%;max-width:340px;border-radius:12px;margin:.5rem auto;display:block;box-shadow:0 8px 30px rgba(0,0,0,.4)"></canvas>
+    <button class="btn btn-accent btn-fw" onclick="downloadShareCard()"><i class="fa-solid fa-download"></i> Download Image</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="transfer-request-modal">
   <div class="modal-box" style="max-width:600px">
     <button class="modal-close" onclick="closeModal('transfer-request-modal')"><i class="fa-solid fa-xmark"></i></button>
@@ -2166,7 +2215,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips'];
 let SB_OK = false, SB_WRITES = 0;
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
@@ -3207,9 +3256,9 @@ function showPage(n){
   document.querySelectorAll('.sb-item').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+n+"'"))b.classList.add('active');});
   const tt=document.getElementById('topbar-title');if(tt)tt.textContent=PAGE_TITLES[n]||n;
   if(n==='leaderboard')renderLB();if(n==='teams')renderTeams();if(n==='matches')renderMatches();
-  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderPolls();renderSugs();}
+  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderPolls();renderSugs();}if(n==='clips')renderClips();
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
-  if(n==='admin-overview')renderAdminOverview();if(n==='admin-players')renderAPlayers();if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
+  if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
   if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
     const oc1=document.getElementById('cfg-ov-c1');if(oc1)oc1.value=cfg.ovC1||'#6366f1';
     const oc2=document.getElementById('cfg-ov-c2');if(oc2)oc2.value=cfg.ovC2||'#ec4899';
@@ -3315,6 +3364,29 @@ function tickCountdown(){
 // dashboard in a new calendar week, it fires once and remembers via cfg so it won't repeat.
 // scrims and TDM are tracked with their own cfg key so posting one doesn't skip the other.
 function weekId(){const d=new Date();const onejan=new Date(d.getFullYear(),0,1);const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);return `${d.getFullYear()}-W${week}`;}
+// Same "no server cron" limitation as weekly recap/POTW — this only fires while an admin actually
+// has the dashboard open (checked every time updateStats() runs), so it's best-effort, not a
+// guaranteed reminder service. Marks m.reminded so it only fires once per match.
+function maybeCheckMatchReminders(){
+  if(!ADM)return;
+  const ms=DB.get('matches',[]);let changed=false;
+  const now=Date.now();
+  ms.forEach(m=>{
+    if(m.status!=='upcoming'||m.reminded||!m.date||!m.time)return;
+    const startTs=new Date(`${m.date}T${m.time}`).getTime();
+    if(isNaN(startTs))return;
+    const diffMin=(startTs-now)/60000;
+    if(diffMin<=30&&diffMin>-5){
+      m.reminded=true;changed=true;
+      const teams=DB.get('teams',[]);const teamIgns=[];
+      (m.teams||[]).forEach(t=>{const team=teams.find(x=>x.id===t.teamId);if(team)teamIgns.push(...teamMentionIgns(team));});
+      fireWebhookEvent('matchReminder',{title:`⏰ ${m.name} starts soon!`,color:16750899,fields:[
+        {name:'Map',value:m.map||'—',inline:true},{name:'Time',value:m.time||'—',inline:true},{name:'Mode',value:m.mode||'—',inline:true}
+      ]},teamIgns,{match:m.name,map:m.map,date:m.date,time:m.time,mode:m.mode});
+    }
+  });
+  if(changed)DB.set('matches',ms);
+}
 function maybeAutoPostPotw(topPlayer,kind='scrims'){
   if(!ADM||!topPlayer)return;
   const cfg=DB.get('cfg',{});const wk=weekId();const key=kind==='tdm'?'lastPotwWeekTdm':'lastPotwWeekScrims';
@@ -3358,6 +3430,61 @@ function postTdmPlayerOfWeekNow(){
   ]});
   notify('Posted!','TDM Player of the Week sent to any subscribed Discord channel','n-ok');
 }
+// ═══ Match of the Week — the closest-scored recent match, scrims and TDM tracked separately ═══
+function weeklyMatchOfWeekScrims(){
+  const logs=DB.get('rlogs5',[]).filter(l=>{const t=new Date(l.ts).getTime();return !isNaN(t)&&(Date.now()-t)<7*86400000;});
+  let best=null,bestGap=Infinity;
+  logs.forEach(l=>{
+    const sorted=[...(l.matchSummary||[])].sort((a,b)=>(b.totalPts||0)-(a.totalPts||0));
+    if(sorted.length<2)return;
+    const gap=(sorted[0].totalPts||0)-(sorted[1].totalPts||0);
+    if(gap<bestGap){bestGap=gap;best=l;}
+  });
+  return best?{...best,gap:bestGap}:null;
+}
+function weeklyMatchOfWeekTdm(){
+  const ms=DB.get('tdmMatches',[]).filter(m=>m.status==='done'&&(!m.bo3||m.seriesDone)).filter(m=>{const t=new Date(m.doneTs||m.ts).getTime();return !isNaN(t)&&(Date.now()-t)<7*86400000;});
+  let best=null,bestGap=Infinity;
+  ms.forEach(m=>{const gap=Math.abs((m.scoreA||0)-(m.scoreB||0));if(gap<bestGap){bestGap=gap;best=m;}});
+  return best;
+}
+function postMatchOfWeekNow(){
+  if(!ADM)return;
+  const s=weeklyMatchOfWeekScrims();
+  if(!s)return notify('No recent scrims matches','','n-bad');
+  const sorted=[...(s.matchSummary||[])].sort((a,b)=>(b.totalPts||0)-(a.totalPts||0));
+  fireWebhookEvent('matchOfWeek',{title:`🔥 Match of the Week — ${s.matchName}`,color:15105570,fields:[
+    {name:'Top 2',value:`${sorted[0]?.teamName||'—'} (${sorted[0]?.totalPts||0}pts) vs ${sorted[1]?.teamName||'—'} (${sorted[1]?.totalPts||0}pts)`,inline:false},
+    {name:'Margin',value:`${s.gap} point${s.gap===1?'':'s'}`,inline:true}
+  ]});
+  notify('Posted!','Match of the Week sent','n-ok');
+}
+function postTdmMatchOfWeekNow(){
+  if(!ADM)return;
+  const m=weeklyMatchOfWeekTdm();
+  if(!m)return notify('No recent TDM matches','','n-bad');
+  fireWebhookEvent('matchOfWeek',{title:`🔥 TDM Match of the Week — ${m.aName} vs ${m.bName}`,color:15105570,fields:[
+    {name:'Final Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},{name:'Winner',value:m.seriesDone?m.seriesWinner:m.winner,inline:true}
+  ]});
+  notify('Posted!','TDM Match of the Week sent','n-ok');
+}
+function maybeAutoPostMatchOfWeek(){
+  if(!ADM)return;
+  const cfg=DB.get('cfg',{});const wk=weekId();
+  if(cfg.lastMowWeek===wk)return;
+  cfg.lastMowWeek=wk;DB.set('cfg',cfg);
+  const s=weeklyMatchOfWeekScrims();
+  if(s){const sorted=[...(s.matchSummary||[])].sort((a,b)=>(b.totalPts||0)-(a.totalPts||0));
+    fireWebhookEvent('matchOfWeek',{title:`🔥 Match of the Week — ${s.matchName}`,color:15105570,fields:[
+      {name:'Top 2',value:`${sorted[0]?.teamName||'—'} (${sorted[0]?.totalPts||0}pts) vs ${sorted[1]?.teamName||'—'} (${sorted[1]?.totalPts||0}pts)`,inline:false},
+      {name:'Margin',value:`${s.gap} point${s.gap===1?'':'s'}`,inline:true}
+    ]});
+  }
+  const t=weeklyMatchOfWeekTdm();
+  if(t)fireWebhookEvent('matchOfWeek',{title:`🔥 TDM Match of the Week — ${t.aName} vs ${t.bName}`,color:15105570,fields:[
+    {name:'Final Score',value:`${t.scoreA} – ${t.scoreB}`,inline:true},{name:'Winner',value:t.seriesDone?t.seriesWinner:t.winner,inline:true}
+  ]});
+}
 // Weekly recap — built from the most recently logged matches (not a strict calendar week, since
 // log timestamps are locale strings rather than sortable dates). "Closest Match" stands in for
 // "biggest upset" — there's no historical points snapshot to detect a true underdog win from.
@@ -3400,7 +3527,7 @@ function updateStats(){
   if(top){set('potw-name',top.ign);set('potw-k',top.weeklyKills||top.kills||0);set('potw-w',top.weeklyWins||top.wins||0);}
   const topTdm=weeklyTdmPotwPlayer();
   if(topTdm){set('potw-tdm-name',topTdm.ign);set('potw-tdm-k',topTdm.weeklyTdmKills||topTdm.tdmKills||0);set('potw-tdm-w',topTdm.weeklyTdmWins||topTdm.tdmWins||0);}
-  if(ADM){maybeAutoPostPotw(top,'scrims');maybeAutoPostPotw(topTdm,'tdm');}
+  if(ADM){maybeAutoPostPotw(top,'scrims');maybeAutoPostPotw(topTdm,'tdm');maybeAutoPostMatchOfWeek();maybeCheckMatchReminders();}
   const cfg=DB.get('cfg',{maxP:300,maxT:40});const mp=parseInt(cfg.maxP)||300,mt=parseInt(cfg.maxT)||40;
   set('p-players',`${pl.length}/${mp}`);set('p-teams',`${te.length}/${mt}`);
   const e1=document.getElementById('pb-players');if(e1)e1.style.width=Math.min(pl.length/mp*100,100)+'%';
@@ -3706,8 +3833,16 @@ function startTdm(){
   const target=parseInt(v('tdm-target'))||10;
   const bo3=!!document.getElementById('tdm-bo3')?.checked;
   const ms=DB.get('tdmMatches',[]);
-  ms.push({id:'tdm'+Date.now(),aName,bName,aRoster:TDM_A.slice(),bRoster:TDM_B.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3,seriesId:bo3?('series'+Date.now()):null,gameNum:1});
+  const newMatch={id:'tdm'+Date.now(),aName,bName,aRoster:TDM_A.slice(),bRoster:TDM_B.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3,seriesId:bo3?('series'+Date.now()):null,gameNum:1};
+  ms.push(newMatch);
   DB.set('tdmMatches',ms);
+  // Pre-match ping: "here's the history" — uses whatever's on record BEFORE this game (it hasn't
+  // been recorded yet), so it's a preview of the rivalry rather than including this game's result.
+  const preH2H=tdmH2HWebhookFields(newMatch);
+  fireWebhookEvent('tdmMatchStart',{title:`⚔️ TDM Match Starting — ${aName} vs ${bName}`,color:15158332,fields:[
+    {name:'Format',value:`First to ${target}${bo3?' · Best of 3':''}`,inline:true},
+    ...(preH2H.length?preH2H:[{name:'🆚 History',value:'First time these players are facing off!',inline:false}])
+  ]},[...newMatch.aRoster,...newMatch.bRoster].map(r=>r.ign));
   TDM_A=[];TDM_B=[];
   ['tdm-a-name','tdm-b-name','tdm-a-search','tdm-b-search'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const bo3cb=document.getElementById('tdm-bo3');if(bo3cb)bo3cb.checked=false;
@@ -3739,6 +3874,7 @@ function tdmFinishMatch(m,ms){
     tdmRecordPlayerParticipation([...m.aRoster,...m.bRoster],m.winner===m.aName?m.aRoster:m.bRoster);
     const h2hFields=tdmH2HWebhookFields(m);
     const allIgns=[...m.aRoster,...m.bRoster].map(r=>r.ign);
+    tdmApplyElo(m);
     fireWebhookEvent('tdmResults',{title:`TDM Result — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'Winner',value:m.winner,inline:true},
@@ -3757,6 +3893,7 @@ function tdmFinishMatch(m,ms){
     m.seriesDone=true;m.seriesWinner=seriesWinner;
     // Same as above — no team.wins bump here either, for the same reason (keeps TDM out of scrims stats).
     tdmRecordPlayerParticipation([...m.aRoster,...m.bRoster],seriesWinner===m.aName?m.aRoster:m.bRoster);
+    tdmApplyElo(m);
     const h2hFieldsSeries=tdmH2HWebhookFields(m);
     const allIgnsSeries=[...m.aRoster,...m.bRoster].map(r=>r.ign);
     fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
@@ -3824,6 +3961,42 @@ function bumpBoardStat(playerId,field,delta,gp){
   if(changed)DB.set('tdmBoards',boards);
 }
 
+// ═══ Rivalry Board — top matchups by games played, drawn straight from h2hRecords ═══
+function renderRivalryBoard(){
+  const body=document.getElementById('rivalry-board-body');if(!body)return;
+  const store=DB.get('h2hRecords',{});
+  const rivalries=Object.values(store).filter(r=>r.matches>0).sort((a,b)=>b.matches-a.matches).slice(0,10);
+  if(!rivalries.length)return;
+  body.innerHTML=rivalries.map(r=>{
+    const leader=r.p1Wins>r.p2Wins?r.p1Ign:(r.p2Wins>r.p1Wins?r.p2Ign:null);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <div style="font-size:.85rem"><strong>${esc(r.p1Ign)}</strong> <span class="text-dim">vs</span> <strong>${esc(r.p2Ign)}</strong></div>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span class="font-mono" style="font-size:.8rem;color:var(--accentL)">${r.p1Wins}–${r.p2Wins}</span>
+        <span class="text-dim" style="font-size:.72rem">${r.matches} game${r.matches===1?'':'s'}</span>
+        ${leader?`<span class="chip chip-accent" style="font-size:.6rem">${esc(leader)} leads</span>`:`<span class="chip chip-neutral" style="font-size:.6rem">Tied</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+// Elo-style rating — factors in who you beat (a win over a stronger squad is worth more than one
+// over a weaker squad), unlike the flat win counter. K=32, squad rating = average of its players'
+// current Elo. Only applied on a DECISIVE result: every non-BO3 match, or once per BO3 series (not
+// per individual game — that would overweight a single series 3x).
+function tdmApplyElo(m){
+  const players=DB.get('players');
+  const eloOf=r=>{const gp=players.find(x=>x.id===r.id||x.ign===r.ign);return gp?(gp.tdmElo||1000):1000;};
+  const teamEloA=m.aRoster.reduce((s,r)=>s+eloOf(r),0)/Math.max(1,m.aRoster.length);
+  const teamEloB=m.bRoster.reduce((s,r)=>s+eloOf(r),0)/Math.max(1,m.bRoster.length);
+  const expectedA=1/(1+Math.pow(10,(teamEloB-teamEloA)/400));
+  const K=32;
+  const winnerName=m.seriesDone?m.seriesWinner:m.winner;
+  const outcomeA=winnerName===m.aName?1:(winnerName===m.bName?0:0.5);
+  const deltaA=Math.round(K*(outcomeA-expectedA));
+  m.aRoster.forEach(r=>{const gp=players.find(x=>x.id===r.id||x.ign===r.ign);if(gp)gp.tdmElo=(gp.tdmElo||1000)+deltaA;});
+  m.bRoster.forEach(r=>{const gp=players.find(x=>x.id===r.id||x.ign===r.ign);if(gp)gp.tdmElo=(gp.tdmElo||1000)-deltaA;});
+  DB.set('players',players);
+}
 function h2hKey(id1,id2){return [id1,id2].sort().join('__');}
 function recordH2H(m){
   if(!m.aRoster||!m.bRoster)return;
@@ -4424,6 +4597,7 @@ function tdmMainBoardPlayers(){
   });
 }
 function renderTdmBoards(){
+  renderRivalryBoard();
   const tabs=document.getElementById('tdm-board-tabs');if(!tabs)return;
   const boards=DB.get('tdmBoards',[]);
   const sortSel=document.getElementById('tdm-sort-sel');if(sortSel)sortSel.value=TDM_SORT_KEY;
@@ -4477,6 +4651,7 @@ function renderTdmBoards(){
     <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${wins}" onchange="editTdmStat('${p.id}','wins',this.value)" title="Edit wins${isCustom?' (this board only)':''}"/>`:`<span class="chip chip-accent" style="font-weight:700">${wins}</span>`}</td>
     <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${kills}" onchange="editTdmStat('${p.id}','kills',this.value)" title="Edit kills${isCustom?' (this board only)':''}"/>`:`<span class="text-dim font-mono">${kills}</span>`}</td>
     <td class="text-dim font-mono">${matches}</td>
+    <td class="font-mono" style="color:var(--amber)">${isCustom?'—':(p.tdmElo||1000)}</td>
     <td class="admin-only" style="display:${ADM?'table-cell':'none'}"><div style="display:flex;gap:.25rem">
         ${isCustom?`<button class="btn btn-ghost btn-xs" title="Move up" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',-1)"><i class="fa-solid fa-arrow-up"></i></button>
         <button class="btn btn-ghost btn-xs" title="Move down" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',1)"><i class="fa-solid fa-arrow-down"></i></button>
@@ -4520,7 +4695,152 @@ function editTdmStat(playerId,field,val){
   renderTdmBoards();
   notify('Updated','','n-ok',1200);
 }
-// "Remove from board" only unlists them from this curated board — this deletes the player
+// ═══ Community Clips ═══
+function submitClip(){
+  if(!CU)return notify('Login required','','n-bad');
+  const url=(document.getElementById('clip-url')?.value||'').trim();
+  if(!url)return notify('Add a link first','','n-bad');
+  if(!/^https?:\/\//i.test(url))return notify('That doesn\'t look like a link','Needs to start with http:// or https://','n-bad');
+  const note=(document.getElementById('clip-note')?.value||'').trim();
+  const clips=DB.get('clips',[]);
+  clips.unshift({id:'clip'+Date.now(),playerIgn:CU.name,url,note,ts:Date.now(),pinned:false});
+  DB.set('clips',clips);
+  document.getElementById('clip-url').value='';document.getElementById('clip-note').value='';
+  renderClips();
+  notify('Clip submitted!','Thanks for sharing — an admin may pin it','n-ok');
+}
+function renderClips(){
+  const el=document.getElementById('clips-list');if(!el)return;
+  const clips=[...DB.get('clips',[])].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.ts-a.ts);
+  if(!clips.length){el.innerHTML='<div class="text-dim" style="padding:2rem;text-align:center">No clips submitted yet — be the first!</div>';return;}
+  el.innerHTML=clips.map(c=>`<div class="card mb2" style="${c.pinned?'border-color:var(--amber)':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;flex-wrap:wrap">
+      <div>
+        ${c.pinned?`<span class="chip" style="font-size:.6rem;color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);margin-bottom:.3rem;display:inline-block"><i class="fa-solid fa-thumbtack"></i> Pinned</span>`:''}
+        <div style="font-weight:600;font-size:.85rem">${esc(c.playerIgn)}</div>
+        <a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:var(--accentL);font-size:.82rem;word-break:break-all">${esc(c.url)}</a>
+        ${c.note?`<div style="font-size:.8rem;color:var(--textM);margin-top:.3rem">${esc(c.note)}</div>`:''}
+        <div class="text-dim" style="font-size:.68rem;margin-top:.3rem">${new Date(c.ts).toLocaleString()}</div>
+      </div>
+      <div class="admin-only" style="display:${ADM?'flex':'none'};gap:.3rem;flex-shrink:0">
+        <button class="btn ${c.pinned?'btn-ghost':'btn-accent'} btn-xs" onclick="pinClip('${c.id}')"><i class="fa-solid fa-thumbtack"></i> ${c.pinned?'Unpin':'Pin'}</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteClip('${c.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+  </div>`).join('');
+}
+function pinClip(id){
+  if(!ADM)return;
+  const clips=DB.get('clips',[]);const c=clips.find(x=>x.id===id);if(!c)return;
+  const wasPinned=c.pinned;
+  clips.forEach(x=>x.pinned=false); // only one pinned clip at a time
+  c.pinned=!wasPinned;
+  DB.set('clips',clips);
+  renderClips();
+  notify(c.pinned?'Clip pinned!':'Clip unpinned','','n-ok');
+}
+function deleteClip(id){
+  if(!ADM)return;
+  if(!confirm('Delete this clip?'))return;
+  DB.set('clips',DB.get('clips',[]).filter(x=>x.id!==id));
+  renderClips();
+  notify('Clip deleted','','n-ok');
+}
+// Ticker slide for whichever clip is currently pinned — same pattern as the sponsor/recent-join slides.
+function pinnedClipItem(){
+  const c=DB.get('clips',[]).find(x=>x.pinned);
+  if(!c)return '';
+  return `<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clapperboard"></i> Clip of the moment — ${esc(c.playerIgn)}${c.note?': '+esc(c.note):''}</span>`;
+}
+
+function openReportPlayer(id){
+  if(!CU)return notify('Log in first','','n-bad');
+  const p=DB.get('players',[]).find(x=>x.id===id);if(!p)return;
+  document.getElementById('rp-target-id').value=id;
+  document.getElementById('rp-target-name').textContent=p.ign;
+  document.getElementById('rp-reason').value='';
+  openModal('report-player-modal');
+}
+function submitPlayerReport(){
+  const id=document.getElementById('rp-target-id')?.value;
+  const reason=document.getElementById('rp-reason')?.value?.trim();
+  if(!reason)return notify('Add a reason first','','n-bad');
+  const p=DB.get('players',[]).find(x=>x.id===id);if(!p)return;
+  const reports=DB.get('playerReports',[]);
+  reports.unshift({id:'rp'+Date.now(),reportedId:id,reportedIgn:p.ign,reporterIgn:CU?CU.name:'Unknown',reason,ts:Date.now(),status:'pending'});
+  DB.set('playerReports',reports);
+  fireWebhookEvent('playerReport',{title:'🚩 Player Report Filed',color:15158332,fields:[
+    {name:'Reported',value:p.ign,inline:true},{name:'Reporter',value:CU?CU.name:'Unknown',inline:true},{name:'Reason',value:reason.slice(0,500),inline:false}
+  ]});
+  closeModal('report-player-modal');
+  updatePendingBadges();
+  notify('Report submitted','An admin will review it — thanks for flagging this.','n-ok');
+}
+function renderPlayerReports(){
+  const body=document.getElementById('player-reports-body');if(!body)return;
+  const reports=DB.get('playerReports',[]).filter(r=>r.status==='pending');
+  const wrap=document.getElementById('player-reports-wrap');
+  if(wrap)wrap.style.display=reports.length?'block':'none';
+  body.innerHTML=reports.map(r=>`<div class="card" style="margin-bottom:.6rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;flex-wrap:wrap">
+      <div><strong>${esc(r.reportedIgn)}</strong> <span class="text-dim" style="font-size:.75rem">reported by ${esc(r.reporterIgn)} · ${new Date(r.ts).toLocaleString()}</span>
+        <div style="font-size:.82rem;color:var(--textM);margin-top:.3rem">${esc(r.reason)}</div></div>
+      <div style="display:flex;gap:.3rem;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" onclick="resolvePlayerReport('${r.id}')"><i class="fa-solid fa-check"></i> Dismiss</button>
+      </div>
+    </div>
+  </div>`).join('');
+}
+function resolvePlayerReport(id){
+  if(!ADM)return;
+  const reports=DB.get('playerReports',[]);const r=reports.find(x=>x.id===id);if(!r)return;
+  r.status='resolved';DB.set('playerReports',reports);
+  renderPlayerReports();updatePendingBadges();
+  notify('Report dismissed','','n-ok');
+}
+
+// ═══ Shareable Stat Card — canvas-rendered PNG, no external libraries needed ═══
+let SHARE_CARD_PLAYER=null;
+function openShareCard(id){
+  const p=DB.get('players',[]).find(x=>x.id===id);if(!p)return;
+  SHARE_CARD_PLAYER=p;
+  openModal('share-card-modal');
+  setTimeout(()=>drawShareCard(p),50); // let the modal/canvas mount first
+}
+function drawShareCard(p){
+  const cv=document.getElementById('share-card-canvas');if(!cv)return;
+  const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;
+  const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'#0f1024');grad.addColorStop(1,'#1a1035');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=2;ctx.strokeRect(20,20,W-40,H-40);
+  // Avatar circle with initial
+  ctx.fillStyle='#6366f1';ctx.beginPath();ctx.arc(W/2,190,70,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='700 64px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText((p.ign||'?')[0].toUpperCase(),W/2,196);
+  // Name
+  ctx.fillStyle='#fff';ctx.font='800 40px Arial';ctx.fillText(p.ign||'',W/2,300);
+  if(p.team){ctx.fillStyle='#9ca3af';ctx.font='20px Arial';ctx.fillText(p.team,W/2,335);}
+  // Stat grid
+  const stats=[['Kills',p.kills||0],['Wins',p.wins||0],['TDM Kills',p.tdmKills||0],['TDM Wins',p.tdmWins||0]];
+  const gy=430,gh=110,gw=W/2;
+  stats.forEach((s,i)=>{
+    const cx=(i%2)*gw+gw/2, cy=gy+Math.floor(i/2)*gh;
+    ctx.fillStyle='#67e8f9';ctx.font='800 44px Arial';ctx.fillText(String(s[1]),cx,cy);
+    ctx.fillStyle='#9ca3af';ctx.font='16px Arial';ctx.fillText(s[0].toUpperCase(),cx,cy+34);
+  });
+  // Footer
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='16px Arial';
+  ctx.fillText((DB.get('cfg',{}).name||'RAGEISM')+' • '+new Date().toLocaleDateString(),W/2,H-40);
+}
+function downloadShareCard(){
+  const cv=document.getElementById('share-card-canvas');if(!cv||!SHARE_CARD_PLAYER)return;
+  const a=document.createElement('a');
+  a.download=`${SHARE_CARD_PLAYER.ign}-stats.png`;
+  a.href=cv.toDataURL('image/png');
+  a.click();
+}
+
+
 // entirely (profile + every stat, TDM and scrims), and also cleans up any stray reference to
 // them left behind in other custom TDM boards so nothing shows a ghost entry.
 function fullyRemoveTdmPlayer(id){
@@ -4627,6 +4947,7 @@ function renderOverlay(){
   }
   const rj=recentJoinItem();if(rj)items.push(rj);
   items.push(...sponsorItems());
+  const pc=pinnedClipItem();if(pc)items.push(pc);
   OV_ITEMS = items.length?items:['<span class="tdm-banner-ticker-item">RAGEISM Tournament — stay tuned</span>'];
   if(OV_IDX>=OV_ITEMS.length)OV_IDX=0;
 
@@ -5205,6 +5526,8 @@ function buildProfileCardHTML(p,isOwn=false){
         </div>
         <div style="display:flex;gap:.35rem;flex-shrink:0;padding-bottom:.3rem">
           ${isOwn?`<button class="btn btn-ghost btn-sm" onclick="openModal('edit-player-modal');setupEditMe()"><i class="fa-solid fa-pen"></i> Edit</button><button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="openShareCard('${p.id}')" title="Get a shareable stat card image"><i class="fa-solid fa-image"></i></button>
+          ${(!isOwn&&CU)?`<button class="btn btn-ghost btn-sm" onclick="openReportPlayer('${p.id}')" title="Report this player"><i class="fa-solid fa-flag"></i></button>`:''}
         </div>
       </div>
       <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
@@ -5382,11 +5705,13 @@ function updatePendingBadges(){
   const joinPending=DB.get('joinRequests',[]).filter(r=>r.status==='pending').length;
   const xferPending=DB.get('transferRequests',[]).filter(r=>r.status==='pending').length;
   const matchPending=DB.get('matchRequests',[]).filter(r=>r.status==='pending').length;
+  const reportPending=DB.get('playerReports',[]).filter(r=>r.status==='pending').length;
   const ptb=document.getElementById('pending-teams-badge');if(ptb)ptb.textContent=pending;
   const jrb=document.getElementById('join-req-badge');if(jrb)jrb.textContent=joinPending;
   const xrb=document.getElementById('transfer-req-badge');if(xrb)xrb.textContent=xferPending;
   updateMatchSignupBadge();
-  const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending+xferPending+matchPending;
+  const alertBadge=document.getElementById('alert-badge');if(alertBadge)alertBadge.textContent=pending+joinPending+xferPending+matchPending+reportPending;
+  const wrap=document.getElementById('player-reports-wrap');if(wrap)wrap.style.display=reportPending?'block':'none';
 }
 
 // ═══ PLAYER LOOKUP (autocomplete dropdown by IGN, name, or UID) ═══
@@ -5750,9 +6075,12 @@ function renderTeams(){
     <div class="team-body">
       ${t.recruiting?`<div class="team-recruit-badge" style="margin-bottom:.6rem"><i class="fa-solid fa-bullhorn"></i> Recruiting${t.recruitNote?' · '+t.recruitNote:''}</div>`:''}
       ${t.members.map((m,i)=>`<div class="team-member"><div class="member-dot" style="background:${['#6366f1','#ef4444','#3b82f6','#10b981'][i]||'var(--accent)'}"></div><div style="flex:1">${m}</div><div style="font-size:.7rem;color:var(--textD)">${roles[i]||'Member'}</div>${m===t.captain?`<span class="chip chip-accent" style="font-size:.6rem">CAP</span>`:m===t.manager?`<span class="chip chip-neutral" style="font-size:.6rem">MGR</span>`:''}</div>`).join('')}
-      <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:.8rem">
+      <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:.8rem;gap:.5rem;flex-wrap:wrap">
         <span class="text-muted">Kills: <span class="text-accent font-mono fw6">${t.kills||0}</span></span>
-        ${isManagerOf(t.id)?`<button class="btn btn-ghost btn-xs" onclick="openManageTeam('${t.id}')"><i class="fa-solid fa-gear"></i> Manage</button>`:''}
+        <div style="display:flex;gap:.4rem">
+          ${(t.recruiting&&CU&&!isManagerOf(t.id)&&!(t.members||[]).includes(CU.ign))?`<button class="btn btn-accent btn-xs" onclick="applyToOpenTeam('${t.id}')"><i class="fa-solid fa-hand"></i> Apply</button>`:''}
+          ${isManagerOf(t.id)?`<button class="btn btn-ghost btn-xs" onclick="openManageTeam('${t.id}')"><i class="fa-solid fa-gear"></i> Manage</button>`:''}
+        </div>
       </div>
     </div>
   </div>`).join('');
@@ -5848,6 +6176,69 @@ function renderTdmMatchesList(list){
   }).join('');
 }
 function filterMatches(f,btn){document.querySelectorAll('#page-matches .topbar-pills,.btn-filter,.btn-accent.btn-sm,.btn-ghost.btn-sm').forEach(b=>{if(b.getAttribute('onclick')?.includes('filterMatches'))b.className='btn btn-ghost btn-sm';});if(btn){btn.className='btn btn-accent btn-sm';}renderMatches(f);}
+
+// ═══ Calendar view — drag a scrims match card onto another day to reschedule it ═══
+let MV_CAL_MONTH=new Date(); // month currently shown; navigated with the prev/next arrows
+function switchMatchesView(view){
+  const listEl=document.getElementById('matches-list'),calEl=document.getElementById('matches-calendar');
+  const lb=document.getElementById('mv-list-btn'),cb=document.getElementById('mv-cal-btn');
+  if(view==='calendar'){
+    listEl.style.display='none';calEl.style.display='block';
+    lb.className='btn btn-ghost btn-sm';cb.className='btn btn-accent btn-sm';
+    renderMatchesCalendar();
+  }else{
+    listEl.style.display='block';calEl.style.display='none';
+    lb.className='btn btn-accent btn-sm';cb.className='btn btn-ghost btn-sm';
+  }
+}
+function calMonthShift(delta){MV_CAL_MONTH=new Date(MV_CAL_MONTH.getFullYear(),MV_CAL_MONTH.getMonth()+delta,1);renderMatchesCalendar();}
+function renderMatchesCalendar(){
+  const el=document.getElementById('matches-calendar');if(!el)return;
+  const y=MV_CAL_MONTH.getFullYear(),mo=MV_CAL_MONTH.getMonth();
+  const first=new Date(y,mo,1),startDow=first.getDay(),daysInMonth=new Date(y,mo+1,0).getDate();
+  const ms=DB.get('matches',[]);
+  const iso=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const cells=[];
+  for(let i=0;i<startDow;i++)cells.push(null);
+  for(let d=1;d<=daysInMonth;d++)cells.push(new Date(y,mo,d));
+  const dowLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem">
+      <button class="btn btn-ghost btn-sm" onclick="calMonthShift(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem">${MV_CAL_MONTH.toLocaleString(undefined,{month:'long',year:'numeric'})}</div>
+      <button class="btn btn-ghost btn-sm" onclick="calMonthShift(1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    ${ADM?'<div style="font-size:.72rem;color:var(--textD);margin-bottom:.6rem"><i class="fa-solid fa-hand"></i> Drag a match card onto another day to reschedule it.</div>':''}
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+      ${dowLabels.map(l=>`<div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;padding:.3rem 0">${l}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+      ${cells.map(d=>{
+        if(!d)return `<div style="min-height:80px"></div>`;
+        const dateStr=iso(d);
+        const dayMs=ms.filter(m=>m.date===dateStr);
+        const isToday=iso(new Date())===dateStr;
+        return `<div class="cal-day-cell" data-date="${dateStr}" ondragover="event.preventDefault()" ondrop="calDropMatch(event,'${dateStr}')" style="min-height:80px;background:var(--bg2);border:1px solid ${isToday?'var(--accent)':'var(--border)'};border-radius:8px;padding:.35rem;overflow:hidden">
+          <div style="font-size:.68rem;color:${isToday?'var(--accentL)':'var(--textD)'};font-weight:${isToday?700:400};margin-bottom:.25rem">${d.getDate()}</div>
+          ${dayMs.map(m=>`<div ${ADM?`draggable="true" ondragstart="calDragStart(event,'${m.id}')"`:''} onclick="openMatchSignupModal('${m.id}')" style="background:${m.status==='live'?'rgba(239,68,68,.15)':'rgba(99,102,241,.12)'};border-radius:4px;padding:.2rem .35rem;font-size:.62rem;margin-bottom:.2rem;cursor:${ADM?'grab':'default'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(m.name)} · ${m.time||''}">${m.status==='live'?'🔴 ':''}${esc(m.name)}</div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+let CAL_DRAG_ID=null;
+function calDragStart(ev,matchId){CAL_DRAG_ID=matchId;ev.dataTransfer.effectAllowed='move';}
+function calDropMatch(ev,newDate){
+  ev.preventDefault();
+  if(!ADM||!CAL_DRAG_ID)return;
+  const ms=DB.get('matches',[]);const m=ms.find(x=>x.id===CAL_DRAG_ID);if(!m)return;
+  if(m.date===newDate){CAL_DRAG_ID=null;return;}
+  const oldDate=m.date;m.date=newDate;
+  DB.set('matches',ms);
+  logAdminAction('Match rescheduled',`"${m.name}" moved from ${oldDate||'unscheduled'} to ${newDate} by ${CU?CU.name:'Admin'}`);
+  CAL_DRAG_ID=null;
+  renderMatchesCalendar();renderMatches();renderDashboardData();
+  notify('Match rescheduled!',`"${m.name}" moved to ${newDate}`,'n-ok');
+}
 function cycleMatchStatus(id){const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;const s=['upcoming','live','done'];m.status=s[(s.indexOf(m.status)+1)%3];DB.set('matches',ms);renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();notify(`#${id} → ${m.status}!`,'','n-ok');}
 // Same status cycle as above, but scoped to whatever match is loaded on the Results page and
 // wired to refresh that page's own status chip — so an admin can go Upcoming → Live → Ended
@@ -6102,7 +6493,13 @@ function requestJoinTeam(){
   if(!CU)return notify('Login required','','n-bad');
   const sel=document.getElementById('profile-team-req');
   if(!sel||!sel.value)return notify('Select a team','','n-bad');
-  const teamId=sel.value;const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return;
+  applyToOpenTeam(sel.value);
+}
+// Same request flow as requestJoinTeam(), but callable directly from a team card's "Apply"
+// button on the Teams browse page — no need to go find the dropdown on your own profile first.
+function applyToOpenTeam(teamId){
+  if(!CU)return notify('Login required','','n-bad');
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return;
   const requests=DB.get('joinRequests',[]);
   if(requests.find(r=>r.ign===CU.ign&&r.teamId===teamId&&r.status==='pending'))return notify('Already requested','','n-bad');
   requests.push({id:'jr'+Date.now(),ign:CU.ign,teamId,teamName:t.name,status:'pending',ts:new Date().toLocaleString()});
@@ -6363,6 +6760,10 @@ const WEBHOOK_EVENTS={
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
   playerOfWeek:{label:'Player of the Week',icon:'fa-crown'},
   weeklyRecap:{label:'Weekly Recap',icon:'fa-calendar-week'},
+  tdmMatchStart:{label:'TDM Match Starting (pre-match H2H)',icon:'fa-people-arrows',defaultScope:'all',tokens:'{mentions}'},
+  matchOfWeek:{label:'Match of the Week',icon:'fa-fire'},
+  matchReminder:{label:'Match Starting Soon (30 min)',icon:'fa-bell',defaultScope:'all',tokens:'{match} {map} {date} {time} {mode} {mentions}'},
+  playerReport:{label:'Player Report Filed',icon:'fa-flag',masterOnly:true},
   auditLog:{label:'Admin Activity Log',icon:'fa-shield-halved',masterOnly:true}
 };
 function onWhEventChange(){
