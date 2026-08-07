@@ -3778,8 +3778,12 @@ function tdmRecordPlayerParticipation(allRoster,winRoster){
   const winIgns=new Set((winRoster||[]).map(r=>r.ign));
   (allRoster||[]).forEach(r=>{
     const gp=players.find(x=>x.id===r.id||x.ign===r.ign);if(!gp)return;
+    // Bump board mirrors BEFORE mutating gp — a first-touch board seeds its baseline off gp's
+    // current (pre-increment) numbers, so seeding after the increment would double-count this event.
+    bumpBoardStat(gp.id,'matches',1,gp);
     gp.tdmMatches=(gp.tdmMatches||0)+1;
     if(winIgns.has(r.ign)){
+      bumpBoardStat(gp.id,'wins',1,gp);
       gp.tdmWins=(gp.tdmWins||0)+1;
       gp.weeklyTdmWins=(gp.weeklyTdmWins||0)+1;
       gp.curTdmWinStreak=(gp.curTdmWinStreak||0)+1;
@@ -3790,7 +3794,30 @@ function tdmRecordPlayerParticipation(allRoster,winRoster){
   });
   DB.set('players',players);
 }
-// ═══ PLAYER VS PLAYER HEAD-TO-HEAD — every pair of opposing players across TDM games ═══
+// ═══ Per-board TDM stat mirroring ═══
+// A custom board's Wins/Kills used to just be a live read of the real player record — which
+// meant clearing a custom board's numbers (e.g. to start a fresh weekly ranking) also zeroed the
+// SAME numbers on the Main board, since it was the same underlying field. Custom boards now keep
+// their own `stats` object per player, seeded once from whatever the player's real numbers were
+// at the time they're first touched, then incremented in parallel with every real match from then
+// on — so they "add up normally" as games are played, but can be wiped independently per board.
+function tdmBoardStatEntry(board,playerId,gp){
+  if(!board.stats)board.stats={};
+  if(!board.stats[playerId])board.stats[playerId]={wins:gp?(gp.tdmWins||0):0,kills:gp?(gp.tdmKills||0):0,matches:gp?(gp.tdmMatches||0):0};
+  return board.stats[playerId];
+}
+function bumpBoardStat(playerId,field,delta,gp){
+  if(!delta)return;
+  const boards=DB.get('tdmBoards',[]);let changed=false;
+  boards.forEach(b=>{
+    if(!(b.playerIds||[]).includes(playerId))return;
+    const entry=tdmBoardStatEntry(b,playerId,gp);
+    entry[field]=Math.max(0,(entry[field]||0)+delta);
+    changed=true;
+  });
+  if(changed)DB.set('tdmBoards',boards);
+}
+
 function h2hKey(id1,id2){return [id1,id2].sort().join('__');}
 function recordH2H(m){
   if(!m.aRoster||!m.bRoster)return;
@@ -3856,7 +3883,7 @@ function tdmSetPlayerKills(side,playerId){
   const key=side==='a'?'scoreA':'scoreB';
   m[key]=Math.max(0,(m[key]||0)+diff);
   const players=DB.get('players');const gp=players.find(x=>x.id===playerId||x.ign===p.ign);
-  if(gp){gp.tdmKills=Math.max(0,(gp.tdmKills||0)+diff);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)+diff);DB.set('players',players);}
+  if(gp){bumpBoardStat(gp.id,'kills',diff,gp);gp.tdmKills=Math.max(0,(gp.tdmKills||0)+diff);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)+diff);DB.set('players',players);}
   if(m.status==='live'&&(m.scoreA>=m.target||m.scoreB>=m.target)){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
     tdmFinishMatch(m,ms);
@@ -3876,7 +3903,7 @@ function addTdmKill(side,playerId){
   m.killLog.push({ign:p.ign,name:p.name,side,ts:new Date().toISOString()});
   // reflect onto the player's persistent stats too
   const players=DB.get('players');const gp=players.find(x=>x.id===playerId||x.ign===p.ign);
-  if(gp){gp.tdmKills=(gp.tdmKills||0)+1;gp.weeklyTdmKills=(gp.weeklyTdmKills||0)+1;DB.set('players',players);}
+  if(gp){bumpBoardStat(gp.id,'kills',1,gp);gp.tdmKills=(gp.tdmKills||0)+1;gp.weeklyTdmKills=(gp.weeklyTdmKills||0)+1;DB.set('players',players);}
   if(m.scoreA>=m.target||m.scoreB>=m.target){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
     tdmFinishMatch(m,ms);
@@ -3891,7 +3918,7 @@ function undoTdmKill(){
   const last=m.killLog.pop();
   const key=last.side==='a'?'scoreA':'scoreB';m[key]=Math.max(0,(m[key]||0)-1);
   const players=DB.get('players');const gp=players.find(x=>x.ign===last.ign);
-  if(gp){gp.tdmKills=Math.max(0,(gp.tdmKills||0)-1);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)-1);DB.set('players',players);}
+  if(gp){bumpBoardStat(gp.id,'kills',-1,gp);gp.tdmKills=Math.max(0,(gp.tdmKills||0)-1);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)-1);DB.set('players',players);}
   DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Last kill undone','','n-ok');
 }
 
@@ -4109,8 +4136,28 @@ function renderTdmLive(){
         <div style="margin-top:.7rem;text-align:left">${rosterBtns('b',m.bRoster)}</div>
       </div>
     </div>
-    ${ADM?`<div style="text-align:center;display:flex;gap:.5rem;justify-content:center"><button class="btn btn-ghost btn-sm" onclick="undoTdmKill()"><i class="fa-solid fa-rotate-left"></i> Undo Last Kill</button><button class="btn btn-ghost btn-sm" onclick="endTdmMatch()"><i class="fa-solid fa-flag-checkered"></i> End Match Early</button></div>`:''}
+    ${ADM?`<div style="text-align:center">
+      <div style="font-size:.68rem;color:var(--textD);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.4rem">Declare the winner of ${m.bo3?`Game ${m.gameNum}`:'this match'} — ${m.bo3?'the next game starts automatically unless this settles the series':'this records the win and closes it out'}</div>
+      <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="btn btn-accent btn-sm" onclick="declareTdmGameWinner('a')"><i class="fa-solid fa-trophy"></i> ${m.aName} Wins${m.bo3?` Game ${m.gameNum}`:''}</button>
+        <button class="btn btn-danger btn-sm" onclick="declareTdmGameWinner('b')"><i class="fa-solid fa-trophy"></i> ${m.bName} Wins${m.bo3?` Game ${m.gameNum}`:''}</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="undoTdmKill()"><i class="fa-solid fa-rotate-left"></i> Undo Last Kill</button>
+    </div>`:''}
   </div>`;
+}
+// Explicit "X wins this game" buttons — the old single "End Match Early" button left people
+// unsure whether it ended just this game or the whole BO3 series, especially before any kills
+// had been logged for Game 1. This is unambiguous either way.
+function declareTdmGameWinner(side){
+  if(!ADM)return;
+  const ms=DB.get('tdmMatches',[]);const m=ms.find(x=>x.status==='live');if(!m)return;
+  const winnerName=side==='a'?m.aName:m.bName;
+  if(!confirm(`${winnerName} wins ${m.bo3?`Game ${m.gameNum}`:'this match'}?`))return;
+  m.status='done';m.winner=winnerName;m.doneTs=new Date().toISOString();
+  tdmFinishMatch(m,ms);
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  notify(m.bo3&&!m.seriesDone?'Game ended':'Match ended',m.bo3&&!m.seriesDone?`${winnerName} takes this game — Game ${m.gameNum+1} is now live`:m.bo3?`${winnerName} wins the series!`:'','n-ok');
 }
 
 function renderTdmHistory(){
@@ -4258,6 +4305,7 @@ function renderOverlayLb(type,boardId){
   const rowsEl=document.getElementById('ovlb-rows');
   if(!rowsEl)return;
   let rows=[],statKey='pts',statLabel='PTS',title='Leaderboard',mode='single';
+  let customTdmBoard=null;
   if(type==='tdm'){
     eyebrow.textContent='TDM LEADERBOARD';
     mode='tdmMulti';
@@ -4268,6 +4316,8 @@ function renderOverlayLb(type,boardId){
       const pl=DB.get('players',[]);
       rows=b?(b.playerIds||[]).map(id=>pl.find(p=>p.id===id)).filter(Boolean):[];
       title=b?b.name:'Leaderboard';
+      customTdmBoard=b;
+      if(b)DB.set('tdmBoards',boards); // persist any first-touch stat seeding done via tdmBoardStatEntry below
     }
   }else if(type==='ranking'){
     eyebrow.textContent='RANKINGS';
@@ -4285,16 +4335,18 @@ function renderOverlayLb(type,boardId){
   const boardKey=type+':'+boardId;
   if(!rows.length){rowsEl.innerHTML='<div class="ovlb-empty">No standings yet</div>';OVLB_PREV_RANKS[boardKey]={};return;}
   if(mode==='tdmMulti'){
-    rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
+    rowsEl.innerHTML=rows.map((p,i)=>{
+      const st=customTdmBoard?tdmBoardStatEntry(customTdmBoard,p.id,p):{wins:p.tdmWins||0,kills:p.tdmKills||0};
+      return `<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
       <div class="ovlb-rank">${i+1}${ovlbRankArrow(boardKey,p.ign,i)}</div>
       <div class="ovlb-av">${(p.ign||'?')[0]}</div>
       <div class="ovlb-name"><div class="ovlb-ign">${esc(p.ign)}</div><div class="ovlb-team">${esc(p.team||'')}</div></div>
       <div class="ovlb-stat-group">
-        <div class="ovlb-stat"><div class="ovlb-stat-val">${p.tdmWins||0}</div><div class="ovlb-stat-lbl">Wins</div></div>
-        <div class="ovlb-stat"><div class="ovlb-stat-val">${p.tdmKills||0}</div><div class="ovlb-stat-lbl">Kills</div></div>
+        <div class="ovlb-stat"><div class="ovlb-stat-val">${st.wins||0}</div><div class="ovlb-stat-lbl">Wins</div></div>
+        <div class="ovlb-stat"><div class="ovlb-stat-val">${st.kills||0}</div><div class="ovlb-stat-lbl">Kills</div></div>
         <div class="ovlb-stat"><div class="ovlb-stat-val">${p.wins||0}</div><div class="ovlb-stat-lbl">T.Wins</div></div>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
   }else if(mode==='nameOnly'){
     rowsEl.innerHTML=rows.map((p,i)=>`<div class="ovlb-row ${i<3?'top3':''}" style="animation-delay:${i*60}ms">
       <div class="ovlb-rank">${i+1}${ovlbRankArrow(boardKey,p.ign,i)}</div>
@@ -4356,8 +4408,10 @@ function renderTdmBoards(){
         toolbar.innerHTML=`<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
           <input class="fi" style="flex:1;min-width:180px" id="tdm-board-name-${board.id}" value="${esc(board.name)}" onchange="renameTdmBoard('${board.id}',this.value)" placeholder="Board name"/>
           <input class="fi" style="flex:2;min-width:220px" id="tdm-board-search" placeholder="Search player to add..." oninput="tdmBoardSearchPlayers('${board.id}')" autocomplete="off"/>
+          <button class="btn btn-ghost btn-sm" onclick="clearTdmBoardStats('${board.id}')" title="Zero out Wins/Kills/Matches on THIS board only — the Main board and every player's real stats are untouched"><i class="fa-solid fa-broom"></i> Clear Stats (this board only)</button>
           <button class="btn btn-danger btn-sm" onclick="deleteTdmBoard('${board.id}')"><i class="fa-solid fa-trash"></i> Delete Board</button>
         </div>
+        <div style="font-size:.7rem;color:var(--textD);margin-top:.4rem">This board keeps its own Wins/Kills/Matches, seeded from real stats the first time each player's added, then updated live as games are played. Clearing it resets only this board — the Main board and everyone's real profile stats stay exactly as they are.</div>
         <div id="tdm-board-search-results" class="tdm-search-results" style="position:relative"></div>`;
       }
     }
@@ -4365,40 +4419,71 @@ function renderTdmBoards(){
   const body=document.getElementById('tdm-board-body');const empty=document.getElementById('tdm-board-empty');if(!body)return;
   const pl=DB.get('players',[]);
   let rows;
+  const isCustom=TDM_ACTIVE_BOARD!=='main';
+  const activeBoard=isCustom?boards.find(b=>b.id===TDM_ACTIVE_BOARD):null;
   if(TDM_ACTIVE_BOARD==='main'){
     rows=tdmMainBoardPlayers();
   }else{
-    const board=boards.find(b=>b.id===TDM_ACTIVE_BOARD);
-    rows=board?(board.playerIds||[]).map(id=>pl.find(p=>p.id===id)).filter(Boolean):[];
+    rows=activeBoard?(activeBoard.playerIds||[]).map(id=>pl.find(p=>p.id===id)).filter(Boolean):[];
   }
   if(!rows.length){body.innerHTML='';if(empty)empty.style.display='block';return;}
   if(empty)empty.style.display='none';
-  const isCustom=TDM_ACTIVE_BOARD!=='main';
-  body.innerHTML=rows.map((p,i)=>`<tr>
+  // For a custom board, Wins/Kills/Matches come from that board's OWN stats object (seeded once
+  // per player, then kept in sync by bumpBoardStat) — NOT the shared player record, so editing or
+  // clearing them here can never bleed into the Main board or the player's real profile stats.
+  body.innerHTML=rows.map((p,i)=>{
+    const statSrc=isCustom?tdmBoardStatEntry(activeBoard,p.id,p):p;
+    const wins=isCustom?(statSrc.wins||0):(p.tdmWins||0);
+    const kills=isCustom?(statSrc.kills||0):(p.tdmKills||0);
+    const matches=isCustom?(statSrc.matches||0):(p.tdmMatches||0);
+    if(isCustom)DB.set('tdmBoards',boards); // persist any first-touch seeding from tdmBoardStatEntry above
+    return `<tr>
     <td class="font-mono text-dim">#${i+1}</td>
     <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.ign}</div><div class="cell-sub">${p.name||''}</div></div></div></td>
     <td class="text-dim">${p.team||'—'}</td>
-    <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${p.tdmWins||0}" onchange="editTdmStat('${p.id}','tdmWins',this.value)" title="Edit wins"/>`:`<span class="chip chip-accent" style="font-weight:700">${p.tdmWins||0}</span>`}</td>
-    <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${p.tdmKills||0}" onchange="editTdmStat('${p.id}','tdmKills',this.value)" title="Edit kills"/>`:`<span class="text-dim font-mono">${p.tdmKills||0}</span>`}</td>
-    <td class="text-dim font-mono">${p.tdmMatches||0}</td>
+    <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${wins}" onchange="editTdmStat('${p.id}','wins',this.value)" title="Edit wins${isCustom?' (this board only)':''}"/>`:`<span class="chip chip-accent" style="font-weight:700">${wins}</span>`}</td>
+    <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${kills}" onchange="editTdmStat('${p.id}','kills',this.value)" title="Edit kills${isCustom?' (this board only)':''}"/>`:`<span class="text-dim font-mono">${kills}</span>`}</td>
+    <td class="text-dim font-mono">${matches}</td>
     <td class="admin-only" style="display:${ADM?'table-cell':'none'}"><div style="display:flex;gap:.25rem">
         ${isCustom?`<button class="btn btn-ghost btn-xs" title="Move up" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',-1)"><i class="fa-solid fa-arrow-up"></i></button>
         <button class="btn btn-ghost btn-xs" title="Move down" onclick="tdmBoardMove('${TDM_ACTIVE_BOARD}','${p.id}',1)"><i class="fa-solid fa-arrow-down"></i></button>
         <button class="btn btn-danger btn-xs" title="Remove from this board only" onclick="tdmBoardRemovePlayer('${TDM_ACTIVE_BOARD}','${p.id}')"><i class="fa-solid fa-xmark"></i></button>`:''}
         <button class="btn btn-danger btn-xs" title="Remove this player completely — deletes their whole profile, not just this board" onclick="fullyRemoveTdmPlayer('${p.id}')"><i class="fa-solid fa-user-slash"></i></button>
       </div></td>
-  </tr>`).join('');
+  </tr>`;}).join('');
+}
+// "Clear Stats" wipes only THIS board's own stats object back to 0 — Main board and every real
+// player record are completely untouched, so you can start a fresh weekly ranking from 0 without
+// losing anyone's lifetime TDM numbers.
+function clearTdmBoardStats(boardId){
+  if(!ADM)return;
+  const boards=DB.get('tdmBoards',[]);const b=boards.find(x=>x.id===boardId);if(!b)return;
+  if(!confirm(`Clear Wins/Kills/Matches on "${b.name}"? This only resets this board — the Main board and everyone's real stats are unaffected.`))return;
+  b.stats={};
+  (b.playerIds||[]).forEach(id=>{b.stats[id]={wins:0,kills:0,matches:0};});
+  DB.set('tdmBoards',boards);
+  logAdminAction('TDM board stats cleared',`"${b.name}" reset to 0 by ${CU?CU.name:'Admin'} — Main board untouched`);
+  renderTdmBoards();
+  notify('Board cleared!',`"${b.name}" is back to 0 — Main board is unaffected`,'n-ok');
 }
 // Wins/kills columns on the TDM board table are editable directly (not just view-only) — for
-// manual corrections when the auto-tally doesn't match what actually happened in-game. This
-// writes straight to the real player record, so it's reflected everywhere (Main board, custom
-// boards, overlays) — a board is just a curated view of real players, not a separate dataset.
+// manual corrections when the auto-tally doesn't match what actually happened in-game. On the
+// Main board this edits the real player record (the source of truth everywhere). On a custom
+// board it only edits THAT board's own stats object, so it can never bleed into Main.
 function editTdmStat(playerId,field,val){
   if(!ADM)return;
   const n=Math.max(0,parseInt(val)||0);
   const pl=DB.get('players',[]);const p=pl.find(x=>x.id===playerId);if(!p)return;
-  const old=p[field]||0;p[field]=n;DB.set('players',pl);
-  logAdminAction('TDM stat corrected',`${p.ign}'s ${field==='tdmWins'?'wins':'kills'} manually changed from ${old} to ${n} by ${CU?CU.name:'Admin'}`);
+  if(TDM_ACTIVE_BOARD==='main'){
+    const realField=field==='wins'?'tdmWins':field==='kills'?'tdmKills':field;
+    const old=p[realField]||0;p[realField]=n;DB.set('players',pl);
+    logAdminAction('TDM stat corrected',`${p.ign}'s ${field} manually changed from ${old} to ${n} by ${CU?CU.name:'Admin'} (Main board — real profile stat)`);
+  }else{
+    const boards=DB.get('tdmBoards',[]);const b=boards.find(x=>x.id===TDM_ACTIVE_BOARD);if(!b)return;
+    const entry=tdmBoardStatEntry(b,playerId,p);
+    const old=entry[field]||0;entry[field]=n;DB.set('tdmBoards',boards);
+    logAdminAction('TDM board stat corrected',`${p.ign}'s ${field} on "${b.name}" manually changed from ${old} to ${n} by ${CU?CU.name:'Admin'} (this board only)`);
+  }
   renderTdmBoards();
   notify('Updated','','n-ok',1200);
 }
