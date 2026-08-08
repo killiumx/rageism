@@ -519,7 +519,7 @@ tr:last-child td{border-bottom:none}
 .rank-3 td:first-child{border-left:2px solid #cd7f32}
 .cell-player{display:flex;align-items:center;gap:.65rem}
 .cell-av{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accentD),var(--accent));
-  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0}
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0;position:relative;overflow:hidden}
 .cell-name{font-weight:600;font-size:.87rem;cursor:pointer;transition:color .15s}
 .cell-name:hover{color:var(--accentL)}
 .cell-sub{font-size:.7rem;color:var(--textD)}
@@ -1101,6 +1101,13 @@ tr:last-child td{border-bottom:none}
           <div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Overview</span></div><div class="sh-sub">Season 01 · Current standings & activity</div></div>
         </div>
         <div id="dash-live-wrap"></div>
+        <div class="card mb3" style="background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(99,102,241,.1));border-color:rgba(239,68,68,.25);display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;cursor:pointer" onclick="showPage('tdm')">
+          <div style="display:flex;align-items:center;gap:.8rem">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--red);flex-shrink:0"><i class="fa-solid fa-skull-crossbones"></i></div>
+            <div><div style="font-weight:700;font-size:.95rem">Want to play TDM?</div><div style="font-size:.78rem;color:var(--textM)">Tap here — no team needed, just request a Best-of-3 and wait to get matched up.</div></div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();showPage('tdm')"><i class="fa-solid fa-hand"></i> Request a Match</button>
+        </div>
         <div class="g4 mb3">
           <div class="kpi" id="kpi-players">
             <div class="kpi-glow" style="background:var(--accent)"></div>
@@ -2006,6 +2013,7 @@ tr:last-child td{border-bottom:none}
         <div class="fg"><label class="fl">Team</label><input class="fi" id="es-team" list="ign-dl-teamnames"/></div>
         <div class="fg"><label class="fl">Region</label><input class="fi" id="es-region"/></div>
         <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows their flag)</span></label><select class="fi fsel" id="es-country"></select></div>
+        <div class="fg"><label class="fl">Profile Picture URL</label><input class="fi" id="es-avatar" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/pic.png"/></div>
       </div>
       <div>
         <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--textD);margin-bottom:.5rem">Stats (editable)</div>
@@ -2190,6 +2198,7 @@ tr:last-child td{border-bottom:none}
       <div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="ep-rk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
       <div class="fg"><label class="fl">Role</label><select class="fi fsel" id="ep-role"><option value="Fragger">Fragger</option><option value="IGL">IGL</option><option value="Support">Support</option><option value="Scout">Scout</option><option value="Flex">Flex</option></select></div>
       <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="ep-country"></select></div>
+      <div class="fg"><label class="fl">Profile Picture URL</label><input class="fi" id="ep-avatar" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/pic.png"/></div>
     </div>
     <div class="fg" style="margin-bottom:.8rem"><label class="fl">Bio</label><textarea class="fta" id="ep-bio" rows="2" placeholder="Tell the community about yourself..."></textarea></div>
     <div style="font-size:.72rem;font-weight:700;color:var(--textM);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Social Links</div>
@@ -2357,7 +2366,11 @@ async function completeDiscordLink(){
   } else {
     p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0, joinedAt:Date.now() };
     players.push(p);
-    fireWebhookEvent('playerRegistration',{title:'New Player Registered',color:5793266,fields:[
+    DB.set('players', players);
+    // DB.set() has to run BEFORE firing the webhook — fireWebhookEvent looks up the player's
+    // discordId by re-reading players from storage to build the @mention, and until this line ran
+    // that new player wasn't saved yet, so the tag would silently fail to resolve.
+    fireWebhookEvent('playerRegistration',{title:'🎉 New Player Registered!',description:`Welcome to the tournament, **${ign}**!`,color:5793266,fields:[
       {name:'IGN',value:ign,inline:true},
       {name:'Discord',value:window._dlsName||'—',inline:true}
     ]},ign);
@@ -2591,6 +2604,13 @@ function populateCountrySelect(id,selected){
 }
 // Prefer the player's own country flag; fall back to the broad region flag if they haven't set one.
 function playerFlag(p){return p.country?flagEmoji(p.country):regionFlag(p.region);}
+// Small avatar circle used in tables/leaderboards — shows the player's set profile picture if
+// they have one, otherwise falls back to the initial-letter circle exactly like before.
+function miniAvHTML(p,extraStyle=''){
+  const letter=p&&p.ign?p.ign[0].toUpperCase():'?';
+  if(p&&p.avatarUrl)return `<div class="cell-av" style="overflow:hidden;padding:0;${extraStyle}"><img src="${esc(p.avatarUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${letter}'"/></div>`;
+  return `<div class="cell-av" style="${extraStyle}">${letter}</div>`;
+}
 function countryName(code){const m=COUNTRIES.find(c=>c[0]===code);return m?m[1]:'';}
 const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
 // ── PUBG Esports Points System (PGC standard) ──
@@ -2904,7 +2924,7 @@ function anTeams(el){
   logs.forEach(l=>{
     const winners=l.entries.filter(e=>e.placement===1).map(e=>e.ign);
     teams.forEach(t=>{
-      const tEntries=l.entries.filter(e=>t.members.includes(e.ign));
+      const tEntries=l.entries.filter(e=>(t.members||[]).includes(e.ign));
       if(tEntries.length){
         tStats[t.name].matches++;
         tStats[t.name].kills+=tEntries.reduce((a,e)=>a+e.kills,0);
@@ -3617,7 +3637,7 @@ function renderDashboardData(){
     if(!pl.length){body.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--textD)">No players yet.</td></tr>';}
     else{const s=[...pl].sort((a,b)=>b.kills-a.kills).slice(0,5);const ic=['<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>','<i class="fa-solid fa-medal" style="color:#94a3b8"></i>','<i class="fa-solid fa-medal" style="color:#cd7f32"></i>'];
       body.innerHTML=s.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);
-        return `<tr class="rank-${i+1}"><td><span style="font-size:.95rem">${ic[i]||i+1}</span></td><td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.tag||''}</div></div></div></td><td><span class="chip chip-red">${p.kills}</span></td><td><span class="chip chip-accent">${kd}</span></td><td class="text-green font-mono">${p.wins}</td></tr>`;
+        return `<tr class="rank-${i+1}"><td><span style="font-size:.95rem">${ic[i]||i+1}</span></td><td><div class="cell-player">${miniAvHTML(p)}<div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.tag||''}</div></div></div></td><td><span class="chip chip-red">${p.kills}</span></td><td><span class="chip chip-accent">${kd}</span></td><td class="text-green font-mono">${p.wins}</td></tr>`;
       }).join('');
     }
   }
@@ -3635,7 +3655,7 @@ function renderAdminOverview(){
     if(!pl.length){body.innerHTML='<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--textD)">No players yet.</td></tr>';}
     else{const s=[...pl].sort((a,b)=>b.kills-a.kills).slice(0,5);const ic=['<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>','<i class="fa-solid fa-medal" style="color:#94a3b8"></i>','<i class="fa-solid fa-medal" style="color:#cd7f32"></i>'];
       body.innerHTML=s.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);
-        return `<tr><td><span style="font-size:.9rem">${ic[i]||i+1}</span></td><td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||'—'}</div></div></div></td><td><span class="chip chip-red">${p.kills}</span></td><td><span class="chip chip-accent">${kd}</span></td></tr>`;
+        return `<tr><td><span style="font-size:.9rem">${ic[i]||i+1}</span></td><td><div class="cell-player">${miniAvHTML(p)}<div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||'—'}</div></div></div></td><td><span class="chip chip-red">${p.kills}</span></td><td><span class="chip chip-accent">${kd}</span></td></tr>`;
       }).join('');
     }
   }
@@ -3755,7 +3775,7 @@ function renderReg(){
   if(!pl.length){body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--textD)">No players yet. Register above!</td></tr>';return;}
   body.innerHTML=pl.map((p,i)=>`<tr>
     <td><span class="font-mono text-muted" style="font-size:.8rem">${i+1}</span></td>
-    <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${p.name}</div></div></div></td>
+    <td><div class="cell-player">${miniAvHTML(p)}<div><div class="cell-name" onclick="openProfile('${p.id}')">${p.name}</div></div></div></td>
     <td><span class="chip chip-accent">${p.ign}</span></td>
     <td><span class="chip chip-disc">${p.discord||'—'}</span></td>
     <td>${p.team||'<span class="text-dim">—</span>'}</td>
@@ -3856,12 +3876,24 @@ function requestTdmQueue(){
   renderTdmQueue();
   notify('Request sent!','You\'re queued for a BO3 match — an admin will accept it soon.','n-ok');
 }
+// Cancelling shifts everyone else up one spot — this pings the queue so nobody's left wondering
+// why their position suddenly changed.
 function cancelTdmQueue(id){
   const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
   if(!ADM&&(!CU||CU.name!==q.playerIgn))return;
-  DB.set('tdmQueue',queue.filter(x=>x.id!==id));
+  const remaining=queue.filter(x=>x.id!==id);
+  DB.set('tdmQueue',remaining);
   renderTdmQueue();
   notify('Request cancelled','','n-ok');
+  const stillWaiting=remaining.filter(x=>x.status!=='matched').sort((a,b)=>{
+    if(a.status!==b.status)return a.status==='accepted'?-1:1;
+    return a.ts-b.ts;
+  });
+  if(stillWaiting.length){
+    fireWebhookEvent('queueReshuffled',{title:'🔄 BO3 Queue Reshuffled',description:`**${q.playerIgn}** left the queue — everyone moved up a spot.`,color:15105570,fields:[
+      {name:'Now Up Next',value:stillWaiting.map((x,i)=>`${i+1}. ${x.playerIgn}${x.status==='accepted'?' (accepted)':''}`).join('\n').slice(0,1000),inline:false}
+    ]},stillWaiting.map(x=>x.playerIgn));
+  }
 }
 function waitLabel(ts){
   const mins=Math.floor((Date.now()-ts)/60000);
@@ -3870,17 +3902,38 @@ function waitLabel(ts){
   const hrs=Math.floor(mins/60);
   return `${hrs}h ${mins%60}m waiting`;
 }
+// Sorted the same way tryAutoMatchTdmQueue() picks its next pair — accepted-first, then
+// longest-waiting first — so this ordering is exactly what determines who plays who next.
+function tdmQueueOrder(queue){
+  return [...queue].filter(q=>q.status!=='matched').sort((a,b)=>{
+    if(a.status!==b.status)return a.status==='accepted'?-1:1;
+    return a.ts-b.ts;
+  });
+}
 function renderTdmQueue(){
   const queue=DB.get('tdmQueue',[]);
+  const order=tdmQueueOrder(queue);
   const mineEl=document.getElementById('tdm-queue-my-request');
   if(mineEl){
     const mine=myQueueEntry(queue);
     if(!CU){
       mineEl.innerHTML=`<div class="text-dim" style="font-size:.8rem">Log in to request a BO3 slot — no team needed, anyone can queue up.</div>`;
     }else if(mine){
-      mineEl.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span class="chip ${mine.status==='accepted'?'chip-accent':'chip-neutral'}" style="font-size:.75rem"><i class="fa-solid fa-clock"></i> You — ${mine.status==='accepted'?'Accepted, waiting for an opponent':'Pending admin approval'} · ${waitLabel(mine.ts)}</span>
-        <button class="btn btn-ghost btn-xs" onclick="cancelTdmQueue('${mine.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
+      const pos=order.findIndex(x=>x.id===mine.id)+1;
+      const acceptedOthers=order.filter(x=>x.status==='accepted'&&x.id!==mine.id);
+      // Potential matchup preview: if I were accepted right now, who's next in line to face me?
+      let matchupLine='';
+      if(mine.status==='accepted'&&acceptedOthers.length){
+        matchupLine=`<div style="font-size:.78rem;color:var(--accentL);margin-top:.4rem"><i class="fa-solid fa-people-arrows"></i> Likely facing: <strong>${esc(acceptedOthers[0].playerIgn)}</strong> next</div>`;
+      }else if(mine.status==='pending'){
+        matchupLine=`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">Once accepted, you'll be matched against whoever's waited longest at that point.</div>`;
+      }
+      mineEl.innerHTML=`<div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span class="chip ${mine.status==='accepted'?'chip-accent':'chip-neutral'}" style="font-size:.75rem"><i class="fa-solid fa-clock"></i> You — #${pos} in queue · ${mine.status==='accepted'?'Accepted, waiting for an opponent':'Pending admin approval'} · ${waitLabel(mine.ts)}</span>
+          <button class="btn btn-ghost btn-xs" onclick="cancelTdmQueue('${mine.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
+        </div>
+        ${matchupLine}
       </div>`;
     }else{
       mineEl.innerHTML=`<button class="btn btn-accent btn-sm" onclick="requestTdmQueue()"><i class="fa-solid fa-hand"></i> Request a BO3 Match</button>`;
@@ -3892,17 +3945,16 @@ function renderTdmQueue(){
     if(ADM){
       // Smart queue: sorted longest-waiting first so it's obvious who should get matched/accepted
       // next — accepted requests bubble to the top since they're one step closer to a match.
-      const open=[...queue].filter(q=>q.status!=='matched').sort((a,b)=>{
-        if(a.status!==b.status)return a.status==='accepted'?-1:1;
-        return a.ts-b.ts;
-      });
-      adminEl.innerHTML=!open.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:open.map((q,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
-        <div style="font-size:.85rem"><span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span></div>
+      const acceptedList=order.filter(q=>q.status==='accepted');
+      adminEl.innerHTML=!order.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:order.map((q,i)=>{
+        const nextOpponent=q.status==='accepted'?acceptedList.find(x=>x.id!==q.id):null;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div style="font-size:.85rem"><span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span>${nextOpponent?`<span class="text-dim" style="font-size:.7rem"> · vs ${esc(nextOpponent.playerIgn)} next</span>`:''}</div>
         <div style="display:flex;gap:.3rem">
           ${q.status==='pending'?`<button class="btn btn-accent btn-xs" onclick="acceptTdmQueue('${q.id}')"><i class="fa-solid fa-check"></i> Accept</button>`:''}
           <button class="btn btn-danger btn-xs" onclick="cancelTdmQueue('${q.id}')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-      </div>`).join('');
+      </div>`;}).join('');
     }
   }
 }
@@ -3923,20 +3975,20 @@ function tryAutoMatchTdmQueue(){
   q1.status='matched';q2.status='matched';
   DB.set('tdmQueue',queue);
   const target=10;
-  createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,true,target);
+  createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,true,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
   logAdminAction('TDM match auto-created',`${q1.playerIgn} vs ${q2.playerIgn} auto-matched from the BO3 queue`);
   renderTdmLive();renderTdmHistory();updateTdmBadge();
   notify('Auto-matched!',`${q1.playerIgn} vs ${q2.playerIgn} — Best of 3 is live. Add teammates and edit the board as needed.`,'n-ok');
 }
 
 // that creates a live TDM match, pings the pre-match H2H history, and returns it.
-function createTdmMatchObj(aName,bName,aRoster,bRoster,bo3,target){
+function createTdmMatchObj(aName,bName,aRoster,bRoster,bo3,target,titleOverride){
   const ms=DB.get('tdmMatches',[]);
   const newMatch={id:'tdm'+Date.now(),aName,bName,aRoster:aRoster.slice(),bRoster:bRoster.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3,seriesId:bo3?('series'+Date.now()):null,gameNum:1};
   ms.push(newMatch);
   DB.set('tdmMatches',ms);
   const preH2H=tdmH2HWebhookFields(newMatch);
-  fireWebhookEvent('tdmMatchStart',{title:`⚔️ TDM Match Starting — ${aName} vs ${bName}`,color:15158332,fields:[
+  fireWebhookEvent('tdmMatchStart',{title:titleOverride||`⚔️ TDM Match Starting — ${aName} vs ${bName}`,color:15158332,fields:[
     {name:'Format',value:`First to ${target}${bo3?' · Best of 3':''}`,inline:true},
     ...(preH2H.length?preH2H:[{name:'🆚 History',value:'First time these players are facing off!',inline:false}])
   ]},[...newMatch.aRoster,...newMatch.bRoster].map(r=>r.ign));
@@ -3970,10 +4022,17 @@ function tdmSeriesRecord(seriesId,aName,bName){
 // team win and fires the TDM webhook. For a Best-of-3 series it checks whether the series is decided
 // yet (someone at 2 wins, or 3 games played) — if so it closes out the series and records ONE team win
 // for the series winner; otherwise it auto-starts the next game with the same rosters.
+function avatarUrlForIgn(ign){
+  const p=DB.get('players',[]).find(x=>x.ign===ign);
+  return p&&p.avatarUrl?p.avatarUrl:null;
+}
 function tdmFinishMatch(m,ms){
   recordH2H(m);
   const mvpSide=m.scoreA>=m.scoreB?m.aRoster:m.bRoster;
   let mvp=null;(mvpSide||[]).forEach(r=>{const kc=tdmPlayerKillCount(m,r.ign);if(!mvp||kc>mvp.kc)mvp={ign:r.ign,kc};});
+  // If the MVP has set a profile picture, use it as the embed thumbnail — makes the result post
+  // look like a real match report instead of plain text.
+  const mvpAvatar=mvp?avatarUrlForIgn(mvp.ign):null;
   if(!m.bo3){
     // NOTE: deliberately NOT touching team.wins here — that field is the scrims win counter, and
     // this was previously incrementing it on every TDM win too, silently polluting the scrims
@@ -3983,13 +4042,13 @@ function tdmFinishMatch(m,ms){
     const h2hFields=tdmH2HWebhookFields(m);
     const allIgns=[...m.aRoster,...m.bRoster].map(r=>r.ign);
     tdmApplyElo(m);
-    fireWebhookEvent('tdmResults',{title:`TDM Result — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
+    fireWebhookEvent('tdmResults',{title:`TDM Result — ${m.aName} vs ${m.bName}`,color:3447003,thumbnail:mvpAvatar?{url:mvpAvatar}:undefined,fields:[
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'Winner',value:m.winner,inline:true},
       {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true},
       ...h2hFields
     ]},allIgns);
-    fireWebhookEvent('teamWins',{title:`🏆 ${m.winner} wins the TDM!`,color:16766720,fields:[
+    fireWebhookEvent('teamWins',{title:`🏆 ${m.winner} wins the TDM!`,color:16766720,thumbnail:mvpAvatar?{url:mvpAvatar}:undefined,fields:[
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
     ]},mvp?mvp.ign:null);
@@ -4004,13 +4063,13 @@ function tdmFinishMatch(m,ms){
     tdmApplyElo(m);
     const h2hFieldsSeries=tdmH2HWebhookFields(m);
     const allIgnsSeries=[...m.aRoster,...m.bRoster].map(r=>r.ign);
-    fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,fields:[
+    fireWebhookEvent('tdmResults',{title:`TDM Series Result (Best of 3) — ${m.aName} vs ${m.bName}`,color:3447003,thumbnail:mvpAvatar?{url:mvpAvatar}:undefined,fields:[
       {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
       {name:'Final Game',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true},
       ...h2hFieldsSeries
     ]},allIgnsSeries);
-    fireWebhookEvent('teamWins',{title:`🏆 ${seriesWinner} wins the series!`,color:16766720,fields:[
+    fireWebhookEvent('teamWins',{title:`🏆 ${seriesWinner} wins the series!`,color:16766720,thumbnail:mvpAvatar?{url:mvpAvatar}:undefined,fields:[
       {name:'Series',value:`${seriesWinner} wins ${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)}`,inline:true},
       {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
     ]},mvp?mvp.ign:null);
@@ -4459,6 +4518,17 @@ function renderTdmLive(){
       </div>
       <button class="btn btn-ghost btn-sm" onclick="undoTdmKill()"><i class="fa-solid fa-rotate-left"></i> Undo Last Kill</button>
     </div>`:''}
+    ${tdmLiveH2HHTML(m)}
+  </div>`;
+}
+// Shows the same head-to-head history the Discord webhook sends, but right on the site — so
+// anyone watching the live match (not just people in the Discord) can see the rivalry too.
+function tdmLiveH2HHTML(m){
+  const fields=tdmH2HWebhookFields(m);
+  if(!fields.length)return '';
+  return `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+    <div style="font-size:.68rem;color:var(--textD);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.5rem;text-align:center"><i class="fa-solid fa-people-arrows"></i> Head-to-Head</div>
+    ${fields.map(f=>`<div style="text-align:center;font-size:.82rem;margin-bottom:.4rem"><strong>${esc(f.name.replace('🆚 ',''))}</strong><div style="color:var(--textM);font-size:.78rem;white-space:pre-line">${esc(f.value)}</div></div>`).join('')}
   </div>`;
 }
 // Explicit "X wins this game" buttons — the old single "End Match Early" button left people
@@ -4758,7 +4828,7 @@ function renderTdmBoards(){
     if(isCustom)DB.set('tdmBoards',boards); // persist any first-touch seeding from tdmBoardStatEntry above
     return `<tr>
     <td class="font-mono text-dim">#${i+1}</td>
-    <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.name||''}</div></div></div></td>
+    <td><div class="cell-player">${miniAvHTML(p)}<div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.name||''}</div></div></div></td>
     <td class="text-dim">${p.team||'—'}</td>
     <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${wins}" onchange="editTdmStat('${p.id}','wins',this.value)" title="Edit wins${isCustom?' (this board only)':''}"/>`:`<span class="chip chip-accent" style="font-weight:700">${wins}</span>`}</td>
     <td>${ADM?`<input type="number" min="0" class="fi" style="width:56px;padding:.25rem .4rem;font-family:'DM Mono',monospace;text-align:center" value="${kills}" onchange="editTdmStat('${p.id}','kills',this.value)" title="Edit kills${isCustom?' (this board only)':''}"/>`:`<span class="text-dim font-mono">${kills}</span>`}</td>
@@ -5518,7 +5588,8 @@ function saveEditLog(id){
 function profileAvHTML(p,size=72){
   const lvl=Math.floor((p.xp||0)/500)+1;
   const av=p.ign?p.ign[0].toUpperCase():'?';
-  return `<div class="profile-av" style="width:${size}px;height:${size}px;font-size:${size*0.45}px">${av}<div class="lvl-tag">LV${lvl}</div></div>`;
+  const img=p.avatarUrl?`<img src="${esc(p.avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;position:absolute;top:0;left:0" onerror="this.remove()"/>`:'';
+  return `<div class="profile-av" style="width:${size}px;height:${size}px;font-size:${size*0.45}px;overflow:hidden;position:relative">${av}${img}<div class="lvl-tag">LV${lvl}</div></div>`;
 }
 function socialURL(val,type){
   if(!val)return '#';
@@ -5670,13 +5741,6 @@ function buildProfileCardHTML(p,isOwn=false){
 
     <div class="prf-panel" id="prf-team">
       ${profileTeamHTML(p)}
-      ${isOwn&&!p.team?`<div style="margin-top:.8rem;padding:.7rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS)">
-        <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.5rem"><i class="fa-solid fa-paper-plane"></i> Request to Join a Team</div>
-        <div style="display:flex;gap:.4rem">
-          <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.8rem"><option value="">— Select Team —</option></select>
-          <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Send</button>
-        </div>
-      </div>`:''}
     </div>
 
     <div class="prf-panel" id="prf-history">
@@ -5744,6 +5808,7 @@ function setupEditMe(){
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
   set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
   populateCountrySelect('ep-country',p.country||'');
+  const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
   set('ep-xt',p.twitter||'');set('ep-ig',p.instagram||'');set('ep-wh',p.webhook||'');
 }
@@ -5758,7 +5823,7 @@ function saveEditPlayer(){
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
   p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;
-  p.rank=g('ep-rk')||p.rank;p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');
+  p.rank=g('ep-rk')||p.rank;p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
   p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
   p.twitter=g('ep-xt');p.instagram=g('ep-ig');p.webhook=g('ep-wh');
   DB.set('players',pl);
@@ -5778,6 +5843,7 @@ function openEditStats(id){
   set('es-id',p.id);set('es-name',p.name);set('es-ign',p.ign);set('es-uid',p.uid);
   set('es-discord',p.discord);set('es-team',p.team);set('es-region',p.region);
   populateCountrySelect('es-country',p.country||'');
+  const esav=document.getElementById('es-avatar');if(esav)esav.value=p.avatarUrl||'';
   set('es-kills',p.kills||0);set('es-deaths',p.deaths||0);set('es-wins',p.wins||0);
   set('es-damage',p.damage||0);set('es-points',p.points||0);set('es-gp',p.gamesPlayed||0);set('es-xp',p.xp||0);
   openModal('edit-stats-modal');
@@ -5792,7 +5858,7 @@ function saveEditStats(){
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
   p.name=v('es-name')||p.name;p.ign=newIgn||p.ign;p.uid=v('es-uid')||p.uid;
-  p.discord=newDiscord;p.team=v('es-team');p.region=v('es-region');p.country=v('es-country');
+  p.discord=newDiscord;p.team=v('es-team');p.region=v('es-region');p.country=v('es-country');p.avatarUrl=v('es-avatar');
   p.kills=Math.max(0,parseInt(v('es-kills'))||0);p.deaths=Math.max(0,parseInt(v('es-deaths'))||0);
   p.wins=Math.max(0,parseInt(v('es-wins'))||0);p.damage=Math.max(0,parseInt(v('es-damage'))||0);
   p.points=Math.max(0,parseInt(v('es-points'))||0);p.gamesPlayed=Math.max(0,parseInt(v('es-gp'))||0);
@@ -5808,6 +5874,7 @@ function openEditAdmin(id){
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
   set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
   populateCountrySelect('ep-country',p.country||'');
+  const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
   set('ep-xt',p.twitter||'');set('ep-ig',p.instagram||'');set('ep-wh',p.webhook||'');
   openModal('edit-player-modal');
@@ -6026,23 +6093,14 @@ function buildMyProfile(){
 
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem">
       <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.6rem"><i class="fa-solid fa-people-group"></i> Request to Join a Team</div>
-      <div style="display:flex;gap:.5rem">
-        <select class="fi fsel" id="profile-team-req" style="flex:1;font-size:.82rem">
-          <option value="">— Select Team —</option>
-        </select>
-        <button class="btn btn-accent btn-sm" onclick="requestJoinTeam()"><i class="fa-solid fa-paper-plane"></i> Request</button>
-      </div>
-      <div style="font-size:.7rem;color:var(--textD);margin-top:.3rem">Team managers and admins must approve your request.</div>
+      <input class="fi" id="profile-team-search" style="font-size:.82rem" placeholder="Type a team name to search..." oninput="filterProfileTeamSearch()" autocomplete="off"/>
+      <div id="profile-team-search-results" style="margin-top:.5rem;max-height:220px;overflow-y:auto"></div>
+      <div style="font-size:.7rem;color:var(--textD);margin-top:.5rem">Team managers and admins must approve your request.</div>
     </div>
   </div>`;
 
-  // Populate team join dropdown after render
-  setTimeout(()=>{
-    const sel=document.getElementById('profile-team-req');
-    if(sel){
-      const teams=DB.get('teams').filter(t=>t.approved&&!t.members.includes(p.ign));
-      sel.innerHTML='<option value="">— Select Team —</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-    }
+  // Populate the searchable team list after render
+  setTimeout(()=>{ PROFILE_TEAM_LIST=DB.get('teams').filter(t=>t.approved&&!(t.members||[]).includes(p.ign)); filterProfileTeamSearch();
   },0);
 }
 
@@ -6084,7 +6142,7 @@ function renderLB(){
   const ic=['<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>','<i class="fa-solid fa-medal" style="color:#94a3b8"></i>','<i class="fa-solid fa-medal" style="color:#cd7f32"></i>'];
   body.innerHTML=s.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(2);const lvl=Math.floor((p.xp||0)/500)+1;const games=(p.gamesPlayed||p.kills+p.deaths)||0;
     return `<tr class="rank-${i+1}"><td><span style="font-size:.9rem">${ic[i]||i+1}</span></td>
-    <td><div class="cell-player"><div class="cell-av">${p.ign[0]}</div><div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}${(p.curWinStreak||0)>=2?`<span class="chip" style="font-size:.56rem;background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.3);margin-left:.4rem" title="${p.curWinStreak} match win streak"><i class="fa-solid fa-fire"></i> ${p.curWinStreak}</span>`:''}${(p.curKillStreak||0)>=3?`<span class="chip" style="font-size:.56rem;background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);margin-left:.3rem" title="${p.curKillStreak} matches in a row with a kill"><i class="fa-solid fa-crosshairs"></i> ${p.curKillStreak}</span>`:''}</div><div class="cell-sub">${p.discord||''}</div></div></div></td>
+    <td><div class="cell-player">${miniAvHTML(p)}<div><div class="cell-name" onclick="openProfile('${p.id}')">${playerFlag(p)} ${p.ign}${(p.curWinStreak||0)>=2?`<span class="chip" style="font-size:.56rem;background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.3);margin-left:.4rem" title="${p.curWinStreak} match win streak"><i class="fa-solid fa-fire"></i> ${p.curWinStreak}</span>`:''}${(p.curKillStreak||0)>=3?`<span class="chip" style="font-size:.56rem;background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);margin-left:.3rem" title="${p.curKillStreak} matches in a row with a kill"><i class="fa-solid fa-crosshairs"></i> ${p.curKillStreak}</span>`:''}</div><div class="cell-sub">${p.discord||''}</div></div></div></td>
     <td class="text-muted" style="font-size:.83rem">${p.team||'—'}</td>
     <td><span class="chip chip-accent" style="font-weight:700">${p.points||0}</span></td>
     <td><span class="chip chip-red">${p.kills||0}</span></td><td class="text-dim">${p.deaths||0}</td>
@@ -6618,14 +6676,20 @@ function saveManageTeam(id){
 }
 
 // ═══ TEAM JOIN REQUESTS ═══
-function requestJoinTeam(){
-  if(!CU)return notify('Login required','','n-bad');
-  const sel=document.getElementById('profile-team-req');
-  if(!sel||!sel.value)return notify('Select a team','','n-bad');
-  applyToOpenTeam(sel.value);
+let PROFILE_TEAM_LIST=[];
+function filterProfileTeamSearch(){
+  const q=(document.getElementById('profile-team-search')?.value||'').trim().toLowerCase();
+  const el=document.getElementById('profile-team-search-results');if(!el)return;
+  const matches=(q?PROFILE_TEAM_LIST.filter(t=>t.name.toLowerCase().includes(q)):PROFILE_TEAM_LIST).slice(0,20);
+  if(!PROFILE_TEAM_LIST.length){el.innerHTML='<div class="text-dim" style="font-size:.78rem;padding:.4rem 0">No teams available to join right now.</div>';return;}
+  if(!matches.length){el.innerHTML=`<div class="text-dim" style="font-size:.78rem;padding:.4rem 0">No teams match "${esc(q)}".</div>`;return;}
+  el.innerHTML=matches.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.45rem .2rem;border-bottom:1px solid rgba(255,255,255,.05)">
+    <span style="font-size:.82rem">${t.name}${t.tag?` <span class="text-dim">[${t.tag}]</span>`:''}</span>
+    <button class="btn btn-accent btn-xs" onclick="applyToOpenTeam('${t.id}')"><i class="fa-solid fa-paper-plane"></i> Request</button>
+  </div>`).join('');
 }
-// Same request flow as requestJoinTeam(), but callable directly from a team card's "Apply"
-// button on the Teams browse page — no need to go find the dropdown on your own profile first.
+// Same request flow whether it's triggered from the searchable list on your profile or the
+// "Apply" button on a recruiting team's card on the Teams browse page.
 function applyToOpenTeam(teamId){
   if(!CU)return notify('Login required','','n-bad');
   const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return;
@@ -6634,6 +6698,9 @@ function applyToOpenTeam(teamId){
   requests.push({id:'jr'+Date.now(),ign:CU.ign,teamId,teamName:t.name,status:'pending',ts:new Date().toLocaleString()});
   DB.set('joinRequests',requests);
   notify(`Request sent to ${t.name}!`,'Awaiting approval','n-ok');
+  PROFILE_TEAM_LIST=PROFILE_TEAM_LIST.filter(x=>x.id!==teamId);
+  filterProfileTeamSearch();
+  renderTeams();
 }
 
 function renderJoinRequests(){
@@ -6654,7 +6721,7 @@ function resolveJoinRequest(id,approve){
   r.status=approve?'approved':'denied';
   if(approve){
     const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
-    if(t&&!t.members.includes(r.ign)){t.members.push(r.ign);DB.set('teams',teams);}
+    if(t){if(!t.members)t.members=[];if(!t.members.includes(r.ign)){t.members.push(r.ign);DB.set('teams',teams);}}
     const players=DB.get('players');const p=players.find(x=>x.ign===r.ign);
     if(p){p.team=r.teamName;DB.set('players',players);}
   }
@@ -6890,6 +6957,7 @@ const WEBHOOK_EVENTS={
   playerOfWeek:{label:'Player of the Week',icon:'fa-crown'},
   weeklyRecap:{label:'Weekly Recap',icon:'fa-calendar-week'},
   tdmMatchStart:{label:'TDM Match Starting (pre-match H2H)',icon:'fa-people-arrows',defaultScope:'all',tokens:'{mentions}'},
+  queueReshuffled:{label:'BO3 Queue Reshuffled',icon:'fa-arrows-rotate',defaultScope:'all',tokens:'{mentions}'},
   matchOfWeek:{label:'Match of the Week',icon:'fa-fire'},
   matchReminder:{label:'Match Starting Soon (30 min)',icon:'fa-bell',defaultScope:'all',tokens:'{match} {map} {date} {time} {mode} {mentions}'},
   playerReport:{label:'Player Report Filed',icon:'fa-flag',masterOnly:true},
@@ -7029,6 +7097,11 @@ function resetThemeColors(){
   const a=document.getElementById('cfg-color-a');if(a)a.value='#6366f1';
   const b=document.getElementById('cfg-color-b');if(b)b.value='#ef4444';
   notify('Theme reset to default','','n-ok');
+}
+function avInner(p){
+  const letter=esc(p.ign?p.ign[0].toUpperCase():'?');
+  if(!p.avatarUrl)return letter;
+  return `${letter}<img src="${esc(p.avatarUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.remove()"/>`;
 }
 function discordBotName(){return DB.get('cfg',{}).discordBotName||'𝐑𝐚𝐠𝐞𝐢𝐬𝐦 𝐄𝐬𝐩𝐨𝐫𝐭𝐬';}
 function saveDiscordBotName(){
