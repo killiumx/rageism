@@ -319,6 +319,22 @@ html[data-ovbg="transparent"]{
 #overlay-root .tdm-banner-ticker-item b{color:var(--ov-fg)}
 @media (max-width:480px){.ov-card-icon{width:44px;height:44px;font-size:1.15rem}.ov-card-content .tdm-banner-ticker-item{font-size:1rem}.ov-card-body{min-height:74px}}
 
+/* ── LIVE TDM SCOREBUG — small always-on score readout for OBS, separate from the ticker and
+   the widescreen leaderboard graphic. Stays hidden entirely whenever no TDM match is live. ── */
+#ovscore-root{display:none;position:fixed;top:3vh;left:50%;transform:translateX(-50%);z-index:99999;background:transparent;font-family:var(--font-main)}
+#ovscore-root.show{display:block}
+.ovscore-card{background:linear-gradient(135deg,var(--ov-bg1,rgba(10,10,20,.92)),var(--ov-bg2,rgba(20,10,30,.92)));backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:.7rem 1.4rem;box-shadow:0 10px 40px rgba(0,0,0,.4);text-align:center;min-width:340px}
+.ovscore-badge{font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ov-c1,#818cf8);margin-bottom:.3rem}
+.ovscore-row{display:flex;align-items:center;justify-content:center;gap:1.2rem}
+.ovscore-team{flex:1;min-width:0}
+.ovscore-name{font-weight:800;font-size:1rem;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovscore-team-b .ovscore-name{color:var(--ov-c2,#f87171)}
+.ovscore-mid{flex-shrink:0}
+.ovscore-nums{font-family:'DM Mono',monospace;font-weight:800;font-size:1.8rem;color:#fff;display:flex;align-items:center;gap:.5rem;line-height:1}
+.ovscore-dash{opacity:.4;font-size:1.2rem}
+.ovscore-target{font-size:.6rem;color:rgba(255,255,255,.5);margin-top:.1rem;text-transform:uppercase;letter-spacing:.5px}
+@media (max-width:480px){.ovscore-card{min-width:0;width:92vw;padding:.55rem 1rem}.ovscore-nums{font-size:1.4rem}.ovscore-name{font-size:.82rem}}
+
 /* ── LEADERBOARD BROADCAST OVERLAY — widescreen 16:9 standings graphic (OBS Browser Source) ──
    Independent of the TikTok ticker overlay above; used for tournament/TDM/PMGC-style broadcasts. */
 #ovlb-root{display:none;position:fixed;inset:0;z-index:99999;background:transparent;
@@ -958,6 +974,25 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- ═══════ LIVE TDM SCOREBUG OVERLAY (OBS, always-on score bug for the current live match) ═══════ -->
+<div id="ovscore-root">
+  <div class="ovscore-card" id="ovscore-card">
+    <div class="ovscore-badge" id="ovscore-badge"></div>
+    <div class="ovscore-row">
+      <div class="ovscore-team">
+        <div class="ovscore-name" id="ovscore-a-name">SQUAD A</div>
+      </div>
+      <div class="ovscore-mid">
+        <div class="ovscore-nums"><span id="ovscore-a-val">0</span><span class="ovscore-dash">—</span><span id="ovscore-b-val">0</span></div>
+        <div class="ovscore-target" id="ovscore-target">First to 10</div>
+      </div>
+      <div class="ovscore-team ovscore-team-b">
+        <div class="ovscore-name" id="ovscore-b-name">SQUAD B</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Supabase init overlay -->
 <div id="sb-init-overlay">
   <div class="sb-spinner"></div>
@@ -1090,6 +1125,7 @@ tr:last-child td{border-bottom:none}
         </div>
         <div class="pill-season">S01 · 2025</div>
         <div class="pill-live"><div class="live-dot"></div> Live</div>
+        <div id="topbar-queue-pill" style="display:none;align-items:center;gap:.4rem;background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.3);color:var(--accentL);font-size:.72rem;font-weight:700;padding:.3rem .7rem;border-radius:99px;cursor:pointer" onclick="showPage('tdm')"><i class="fa-solid fa-hourglass-half"></i> <span id="topbar-queue-text"></span></div>
       </div>
     </div>
 
@@ -1606,6 +1642,15 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><input class="fi" id="ovlb-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayLbLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ovlb-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
+            </div>
+            <div class="card mb2">
+              <div class="card-title"><i class="fa-solid fa-skull-crossbones"></i> Live TDM Scoreboard Overlay</div>
+              <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">
+                A small always-on score readout for whatever TDM match is live — squad names, live score, and the BO3 game number. Sits nicely in the corner of a stream the whole match instead of a full-screen graphic. Automatically hides itself when nothing's live.
+              </div>
+              <div class="fg"><input class="fi" id="ovscore-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
+              <button class="btn btn-ghost btn-fw" onclick="copyOverlayScoreLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ovscore-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
             </div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-list-ol"></i> Custom Ranking Boards</div>
@@ -3309,7 +3354,7 @@ function showPage(n){
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
-  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';onOvlbTypeChange();buildOverlayLbLink();}
+  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';const os=document.getElementById('ovscore-link');if(os)os.value=location.origin+location.pathname+'?overlay=score';onOvlbTypeChange();buildOverlayLbLink();}
 }
 
 // ═══ TICKER ═══
@@ -3910,7 +3955,22 @@ function tdmQueueOrder(queue){
     return a.ts-b.ts;
   });
 }
+// Keeps a small "You're #2 in queue" pill visible in the topbar on EVERY page, not just the TDM
+// page — so someone browsing the leaderboard or their profile still knows where they stand
+// without having to keep tabbing back to check.
+function updateTopbarQueuePill(){
+  const pill=document.getElementById('topbar-queue-pill');if(!pill)return;
+  if(!CU){pill.style.display='none';return;}
+  const queue=DB.get('tdmQueue',[]);
+  const mine=myQueueEntry(queue);
+  if(!mine){pill.style.display='none';return;}
+  const order=tdmQueueOrder(queue);
+  const pos=order.findIndex(x=>x.id===mine.id)+1;
+  document.getElementById('topbar-queue-text').textContent=mine.status==='accepted'?`#${pos} — waiting for opponent`:`#${pos} in BO3 queue`;
+  pill.style.display='flex';
+}
 function renderTdmQueue(){
+  updateTopbarQueuePill();
   const queue=DB.get('tdmQueue',[]);
   const order=tdmQueueOrder(queue);
   const mineEl=document.getElementById('tdm-queue-my-request');
@@ -4588,6 +4648,10 @@ function copyOverlayLbLink(){
   const el=document.getElementById('ovlb-link');if(!el||!el.value)return;
   try{navigator.clipboard.writeText(el.value);notify('Overlay link copied!','Paste it as a Browser Source in OBS.','n-ok');}catch{}
 }
+function copyOverlayScoreLink(){
+  const el=document.getElementById('ovscore-link');if(!el||!el.value)return;
+  try{navigator.clipboard.writeText(el.value);notify('Overlay link copied!','Paste it as a Browser Source in OBS.','n-ok');}catch{}
+}
 
 // ── Editable ticker text + TDM wins toggle (used by renderOverlay / tdmMiniLbItem) ──
 function saveOverlayText(){
@@ -4683,6 +4747,22 @@ function ovlbRankArrow(boardKey,rowKey,newRank){
   if(newRank<prevRank)return '<i class="fa-solid fa-caret-up ovlb-arrow ovlb-arrow-up"></i>';
   if(newRank>prevRank)return '<i class="fa-solid fa-caret-down ovlb-arrow ovlb-arrow-down"></i>';
   return '<i class="fa-solid fa-minus ovlb-arrow ovlb-arrow-same"></i>';
+}
+// Small always-on TDM scorebug — pulls straight off tdmGetLive(), same live match the on-site
+// admin view and the widescreen leaderboard graphic both read. Hides itself completely (instead
+// of showing stale 0-0) whenever there's no TDM match currently live.
+function renderOverlayScore(){
+  const root=document.getElementById('ovscore-root');if(!root)return;
+  const m=tdmGetLive();
+  if(!m){root.classList.remove('show');return;}
+  root.classList.add('show');
+  const badge=document.getElementById('ovscore-badge');
+  badge.textContent=m.bo3?`● LIVE · BEST OF 3 · GAME ${m.gameNum}/3`:'● LIVE';
+  document.getElementById('ovscore-a-name').textContent=(m.aName||'SQUAD A').toUpperCase();
+  document.getElementById('ovscore-b-name').textContent=(m.bName||'SQUAD B').toUpperCase();
+  document.getElementById('ovscore-a-val').textContent=m.scoreA||0;
+  document.getElementById('ovscore-b-val').textContent=m.scoreB||0;
+  document.getElementById('ovscore-target').textContent=`First to ${m.target}`;
 }
 function renderOverlayLb(type,boardId){
   const eyebrow=document.getElementById('ovlb-eyebrow');
@@ -6255,7 +6335,7 @@ function renderTeams(){
   if(!teams.length){g.innerHTML=`<div class="text-dim" style="padding:2rem;font-size:.85rem">No teams match your filters.</div>`;return;}
   g.innerHTML=teams.map(t=>`<div class="team-card">
     <div class="team-header" style="cursor:pointer" onclick="openTeamProfile('${t.id}')">
-      <div class="team-icon" style="background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'}"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="team-icon" style="background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'};overflow:hidden;padding:0">${t.logoUrl?`<img src="${esc(t.logoUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-shield-halved\\'></i>'"/>`:'<i class="fa-solid fa-shield-halved"></i>'}</div>
       <div style="flex:1"><div class="team-name-text" style="color:${t.color||'var(--accentL)'}">${t.name}</div><div class="team-tag">${t.tag||''} · ${t.map}</div></div>
       <span class="chip chip-green">${t.wins||0}W</span>
     </div>
@@ -6638,6 +6718,7 @@ function openManageTeam(id){
   <div class="fg"><label class="fl">Team Name</label><input class="fi" id="mt-name" value="${t.name}"/></div>
   <div class="frow"><div class="fg"><label class="fl">Tag</label><input class="fi" id="mt-tag" value="${t.tag||''}"/></div><div class="fg"><label class="fl">Captain IGN</label><input class="fi" id="mt-cap" value="${t.captain}" list="ign-dl"/></div></div>
   <div class="fg"><label class="fl">Team Color</label><input class="fi" id="mt-color" type="color" value="${t.color||'#6366f1'}"/></div>
+  <div class="fg"><label class="fl">Team Logo URL <span class="text-dim" style="font-weight:400">(optional)</span></label><input class="fi" id="mt-logo" value="${t.logoUrl||''}" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/logo.png"/></div>
   <div class="fg"><label class="fl">Manager IGN</label><input class="fi" id="mt-mgr" value="${t.manager||''}" list="ign-dl" placeholder="Assign a team manager (optional)"/></div>
   <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
     <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:${t.recruiting?'.5rem':'0'}"><input type="checkbox" id="mt-recruit" ${t.recruiting?'checked':''} onchange="document.getElementById('mt-roles-wrap').style.display=this.checked?'block':'none'" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> Looking for players (show as recruiting)</label>
@@ -6667,6 +6748,7 @@ function saveManageTeam(id){
   t.tag=document.getElementById('mt-tag')?.value||t.tag;
   t.captain=document.getElementById('mt-cap')?.value||t.captain;
   t.color=document.getElementById('mt-color')?.value||t.color;
+  t.logoUrl=document.getElementById('mt-logo')?.value||'';
   t.manager=document.getElementById('mt-mgr')?.value||'';
   t.recruiting=!!document.getElementById('mt-recruit')?.checked;
   t.recruitNote=document.getElementById('mt-roles')?.value.trim()||'';
@@ -7318,6 +7400,13 @@ window.addEventListener('DOMContentLoaded',async()=>{
       renderOverlayLb(type,board);
       setInterval(()=>renderOverlayLb(type,board),3000);
       window.addEventListener('storage',()=>renderOverlayLb(type,board));
+    }else if(overlayParams.get('overlay')==='score'){
+      // Small always-on TDM scorebug — same idea as the leaderboard graphic but built for
+      // sitting in the corner of a stream the whole match instead of a full-screen standings card.
+      document.getElementById('ovscore-root').classList.add('show');
+      renderOverlayScore();
+      setInterval(renderOverlayScore,2000);
+      window.addEventListener('storage',renderOverlayScore);
     }else{
       document.getElementById('overlay-root').classList.add('show');
       renderOverlay();
@@ -7340,6 +7429,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   // ── 2. Hide overlay and boot app ──
   sbHideOverlay();
   seed(); startCountdown(); populateCountrySelect('rc'); applyLogo();
+  updateTopbarQueuePill(); setInterval(updateTopbarQueuePill,15000);
   applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
   applyOverlayDesign();
   bootAppearance();
