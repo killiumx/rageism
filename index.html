@@ -319,21 +319,23 @@ html[data-ovbg="transparent"]{
 #overlay-root .tdm-banner-ticker-item b{color:var(--ov-fg)}
 @media (max-width:480px){.ov-card-icon{width:44px;height:44px;font-size:1.15rem}.ov-card-content .tdm-banner-ticker-item{font-size:1rem}.ov-card-body{min-height:74px}}
 
-/* ── LIVE TDM SCOREBUG — small always-on score readout for OBS, separate from the ticker and
-   the widescreen leaderboard graphic. Stays hidden entirely whenever no TDM match is live. ── */
-#ovscore-root{display:none;position:fixed;top:3vh;left:50%;transform:translateX(-50%);z-index:99999;background:transparent;font-family:var(--font-main)}
-#ovscore-root.show{display:block}
-.ovscore-card{background:linear-gradient(135deg,var(--ov-bg1,rgba(10,10,20,.92)),var(--ov-bg2,rgba(20,10,30,.92)));backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:.7rem 1.4rem;box-shadow:0 10px 40px rgba(0,0,0,.4);text-align:center;min-width:340px}
-.ovscore-badge{font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ov-c1,#818cf8);margin-bottom:.3rem}
-.ovscore-row{display:flex;align-items:center;justify-content:center;gap:1.2rem}
-.ovscore-team{flex:1;min-width:0}
-.ovscore-name{font-weight:800;font-size:1rem;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ovscore-team-b .ovscore-name{color:var(--ov-c2,#f87171)}
-.ovscore-mid{flex-shrink:0}
-.ovscore-nums{font-family:'DM Mono',monospace;font-weight:800;font-size:1.8rem;color:#fff;display:flex;align-items:center;gap:.5rem;line-height:1}
-.ovscore-dash{opacity:.4;font-size:1.2rem}
-.ovscore-target{font-size:.6rem;color:rgba(255,255,255,.5);margin-top:.1rem;text-transform:uppercase;letter-spacing:.5px}
-@media (max-width:480px){.ovscore-card{min-width:0;width:92vw;padding:.55rem 1rem}.ovscore-nums{font-size:1.4rem}.ovscore-name{font-size:.82rem}}
+/* ── LIVE TDM MATCH OVERLAY — widescreen 16:9 broadcast card (OBS Browser Source), mirroring
+   the admin TDM control view: squad names + roster either side of a big centered score. ── */
+#ovscore-root{display:none;position:fixed;inset:0;z-index:99999;background:transparent;font-family:var(--font-main);align-items:center;justify-content:center}
+#ovscore-root.show{display:flex}
+.ovscore-card{background:linear-gradient(135deg,var(--ov-bg1,rgba(10,10,20,.94)),var(--ov-bg2,rgba(20,10,30,.94)));backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:2.2rem 3rem;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;width:min(900px,88vw)}
+.ovscore-badge{font-size:.78rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--ov-c1,#818cf8);margin-bottom:1.4rem}
+.ovscore-row{display:flex;align-items:center;justify-content:center;gap:2.5rem}
+.ovscore-side{flex:1;min-width:0}
+.ovscore-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.6rem}
+.ovscore-side-b .ovscore-name{color:var(--ov-c2,#f87171)}
+.ovscore-roster{display:flex;flex-direction:column;gap:.3rem;align-items:center}
+.ovscore-roster-item{font-size:.9rem;color:rgba(255,255,255,.65);font-family:'DM Mono',monospace}
+.ovscore-mid{flex-shrink:0;padding:0 1rem}
+.ovscore-nums{font-family:'DM Mono',monospace;font-weight:800;font-size:4.2rem;color:#fff;display:flex;align-items:center;gap:1rem;line-height:1}
+.ovscore-dash{opacity:.35;font-size:2.4rem}
+.ovscore-target{font-size:.72rem;color:rgba(255,255,255,.5);margin-top:.4rem;text-transform:uppercase;letter-spacing:1px}
+@media (max-width:480px){.ovscore-card{width:94vw;padding:1.3rem 1.2rem}.ovscore-row{gap:1rem}.ovscore-nums{font-size:2.2rem}.ovscore-dash{font-size:1.3rem}.ovscore-name{font-size:1rem}.ovscore-roster-item{font-size:.68rem}.ovscore-badge{font-size:.62rem;margin-bottom:.8rem}}
 
 /* ── LEADERBOARD BROADCAST OVERLAY — widescreen 16:9 standings graphic (OBS Browser Source) ──
    Independent of the TikTok ticker overlay above; used for tournament/TDM/PMGC-style broadcasts. */
@@ -974,20 +976,23 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- ═══════ LIVE TDM SCOREBUG OVERLAY (OBS, always-on score bug for the current live match) ═══════ -->
+<!-- ═══════ LIVE TDM MATCH OVERLAY (OBS, widescreen 16:9 broadcast card — mirrors the admin
+     TDM control view: squad names, roster, big score, BO3 badge) ═══════ -->
 <div id="ovscore-root">
   <div class="ovscore-card" id="ovscore-card">
     <div class="ovscore-badge" id="ovscore-badge"></div>
     <div class="ovscore-row">
-      <div class="ovscore-team">
+      <div class="ovscore-side">
         <div class="ovscore-name" id="ovscore-a-name">SQUAD A</div>
+        <div class="ovscore-roster" id="ovscore-a-roster"></div>
       </div>
       <div class="ovscore-mid">
         <div class="ovscore-nums"><span id="ovscore-a-val">0</span><span class="ovscore-dash">—</span><span id="ovscore-b-val">0</span></div>
         <div class="ovscore-target" id="ovscore-target">First to 10</div>
       </div>
-      <div class="ovscore-team ovscore-team-b">
+      <div class="ovscore-side ovscore-side-b">
         <div class="ovscore-name" id="ovscore-b-name">SQUAD B</div>
+        <div class="ovscore-roster" id="ovscore-b-roster"></div>
       </div>
     </div>
   </div>
@@ -1644,9 +1649,9 @@ tr:last-child td{border-bottom:none}
               <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="window.open(document.getElementById('ovlb-link').value,'_blank')"><i class="fa-solid fa-up-right-from-square"></i> Preview Overlay</button>
             </div>
             <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-skull-crossbones"></i> Live TDM Scoreboard Overlay</div>
+              <div class="card-title"><i class="fa-solid fa-skull-crossbones"></i> Live TDM Match Overlay</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">
-                A small always-on score readout for whatever TDM match is live — squad names, live score, and the BO3 game number. Sits nicely in the corner of a stream the whole match instead of a full-screen graphic. Automatically hides itself when nothing's live.
+                A clean standings card sized for a <strong>widescreen 16:9 canvas</strong> — mirrors the live match view from the TDM control section: squad names, roster, big centered score, and the Best-of-3 game badge. Automatically hides itself the moment nothing's live.
               </div>
               <div class="fg"><input class="fi" id="ovscore-link" readonly style="font-size:.75rem;font-family:'DM Mono',monospace"/></div>
               <button class="btn btn-ghost btn-fw" onclick="copyOverlayScoreLink()"><i class="fa-solid fa-copy"></i> Copy Overlay Link</button>
@@ -3477,7 +3482,7 @@ function maybeAutoPostPotw(topPlayer,kind='scrims'){
     {name:'Player',value:topPlayer.ign,inline:true},
     {name:'Kills',value:String(kills),inline:true},
     {name:'Wins',value:String(wins),inline:true}
-  ]});
+  ]},topPlayer.ign);
 }
 function weeklyPotwPlayer(){
   const pl=DB.get('players',[]);
@@ -3497,7 +3502,7 @@ function postPlayerOfWeekNow(){
   if(!top)return notify('No players yet','','n-bad');
   fireWebhookEvent('playerOfWeek',{title:'👑 Player of the Week',color:16766720,fields:[
     {name:'Player',value:top.ign,inline:true},{name:'Kills',value:String(top.weeklyKills||top.kills||0),inline:true},{name:'Wins',value:String(top.weeklyWins||top.wins||0),inline:true}
-  ]});
+  ]},top.ign);
   notify('Posted!','Player of the Week sent to any subscribed Discord channel','n-ok');
 }
 function postTdmPlayerOfWeekNow(){
@@ -3506,7 +3511,7 @@ function postTdmPlayerOfWeekNow(){
   if(!top)return notify('No TDM stats yet','','n-bad');
   fireWebhookEvent('playerOfWeek',{title:'👑 TDM Player of the Week',color:16766720,fields:[
     {name:'Player',value:top.ign,inline:true},{name:'Kills',value:String(top.weeklyTdmKills||top.tdmKills||0),inline:true},{name:'Wins',value:String(top.weeklyTdmWins||top.tdmWins||0),inline:true}
-  ]});
+  ]},top.ign);
   notify('Posted!','TDM Player of the Week sent to any subscribed Discord channel','n-ok');
 }
 // ═══ Match of the Week — the closest-scored recent match, scrims and TDM tracked separately ═══
@@ -3527,6 +3532,14 @@ function weeklyMatchOfWeekTdm(){
   ms.forEach(m=>{const gap=Math.abs((m.scoreA||0)-(m.scoreB||0));if(gap<bestGap){bestGap=gap;best=m;}});
   return best;
 }
+// Pulls captain (+ manager, if set) IGNs for a list of team names — used so Match of the Week can
+// actually @tag someone instead of just naming the team with nobody pinged.
+function teamRepIgns(teamNames){
+  const teams=DB.get('teams',[]);
+  const igns=[];
+  teamNames.forEach(name=>{const t=teams.find(x=>x.name===name);if(t){if(t.captain)igns.push(t.captain);if(t.manager)igns.push(t.manager);}});
+  return igns;
+}
 function postMatchOfWeekNow(){
   if(!ADM)return;
   const s=weeklyMatchOfWeekScrims();
@@ -3535,7 +3548,7 @@ function postMatchOfWeekNow(){
   fireWebhookEvent('matchOfWeek',{title:`🔥 Match of the Week — ${s.matchName}`,color:15105570,fields:[
     {name:'Top 2',value:`${sorted[0]?.teamName||'—'} (${sorted[0]?.totalPts||0}pts) vs ${sorted[1]?.teamName||'—'} (${sorted[1]?.totalPts||0}pts)`,inline:false},
     {name:'Margin',value:`${s.gap} point${s.gap===1?'':'s'}`,inline:true}
-  ]});
+  ]},teamRepIgns([sorted[0]?.teamName,sorted[1]?.teamName].filter(Boolean)));
   notify('Posted!','Match of the Week sent','n-ok');
 }
 function postTdmMatchOfWeekNow(){
@@ -3544,7 +3557,7 @@ function postTdmMatchOfWeekNow(){
   if(!m)return notify('No recent TDM matches','','n-bad');
   fireWebhookEvent('matchOfWeek',{title:`🔥 TDM Match of the Week — ${m.aName} vs ${m.bName}`,color:15105570,fields:[
     {name:'Final Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},{name:'Winner',value:m.seriesDone?m.seriesWinner:m.winner,inline:true}
-  ]});
+  ]},[...(m.aRoster||[]),...(m.bRoster||[])].map(r=>r.ign));
   notify('Posted!','TDM Match of the Week sent','n-ok');
 }
 function maybeAutoPostMatchOfWeek(){
@@ -3557,12 +3570,12 @@ function maybeAutoPostMatchOfWeek(){
     fireWebhookEvent('matchOfWeek',{title:`🔥 Match of the Week — ${s.matchName}`,color:15105570,fields:[
       {name:'Top 2',value:`${sorted[0]?.teamName||'—'} (${sorted[0]?.totalPts||0}pts) vs ${sorted[1]?.teamName||'—'} (${sorted[1]?.totalPts||0}pts)`,inline:false},
       {name:'Margin',value:`${s.gap} point${s.gap===1?'':'s'}`,inline:true}
-    ]});
+    ]},teamRepIgns([sorted[0]?.teamName,sorted[1]?.teamName].filter(Boolean)));
   }
   const t=weeklyMatchOfWeekTdm();
   if(t)fireWebhookEvent('matchOfWeek',{title:`🔥 TDM Match of the Week — ${t.aName} vs ${t.bName}`,color:15105570,fields:[
     {name:'Final Score',value:`${t.scoreA} – ${t.scoreB}`,inline:true},{name:'Winner',value:t.seriesDone?t.seriesWinner:t.winner,inline:true}
-  ]});
+  ]},[...(t.aRoster||[]),...(t.bRoster||[])].map(r=>r.ign));
 }
 // Weekly recap — built from the most recently logged matches (not a strict calendar week, since
 // log timestamps are locale strings rather than sortable dates). "Closest Match" stands in for
@@ -4763,6 +4776,9 @@ function renderOverlayScore(){
   document.getElementById('ovscore-a-val').textContent=m.scoreA||0;
   document.getElementById('ovscore-b-val').textContent=m.scoreB||0;
   document.getElementById('ovscore-target').textContent=`First to ${m.target}`;
+  const rosterHTML=roster=>(roster||[]).map(r=>`<div class="ovscore-roster-item">${esc(r.ign)}</div>`).join('');
+  document.getElementById('ovscore-a-roster').innerHTML=rosterHTML(m.aRoster);
+  document.getElementById('ovscore-b-roster').innerHTML=rosterHTML(m.bRoster);
 }
 function renderOverlayLb(type,boardId){
   const eyebrow=document.getElementById('ovlb-eyebrow');
@@ -5548,11 +5564,12 @@ function submitResults(){
     ]},topFragger?topFragger.ign:null);
     if(logEntry.winnerTeam){
       const wSummary=logEntry.matchSummary.find(s=>s.teamName===logEntry.winnerTeam);
+      const winTeamObj=DB.get('teams',[]).find(t=>t.name===logEntry.winnerTeam);
       fireWebhookEvent('teamWins',{title:`🏆 ${logEntry.winnerTeam} takes the win!`,color:16766720,fields:[
         {name:'Match',value:logEntry.matchName||logEntry.matchId,inline:true},
         {name:'Map',value:logEntry.map||'—',inline:true},
         {name:'Team Kills',value:String(wSummary?wSummary.kills:0),inline:true}
-      ]},logEntry.winnerIGN||null);
+      ]},winTeamObj?teamMentionIgns(winTeamObj):(logEntry.winnerIGN?[logEntry.winnerIGN]:[]));
     }
   }
   const topTeam=matchSummary.sort((a,b)=>b.totalPts-a.totalPts)[0];
