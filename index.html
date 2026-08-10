@@ -175,6 +175,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   width:36px;height:36px;border-radius:var(--rS);align-items:center;justify-content:center;font-size:1rem;cursor:pointer;flex-shrink:0}
 #mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19;opacity:0;pointer-events:none;transition:opacity .25s}
 #mobile-backdrop.show{opacity:1;pointer-events:all}
+/* ── Bottom nav bar (phones only) — the single biggest "this feels like an app" signal on
+   mobile: 5 always-visible thumb-reachable tabs instead of every navigation going through the
+   hamburger drawer. Hamburger/sidebar stays available for everything else. ── */
+#bottom-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:18;
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:.35rem .3rem calc(.35rem + env(safe-area-inset-bottom,0px));
+  align-items:stretch;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,.2)}
+.bn-item{flex:1;background:none;border:none;color:var(--textD);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.2rem;padding:.4rem .1rem;cursor:pointer;
+  font-family:var(--font-main);border-radius:var(--rS);transition:color .15s}
+.bn-item i{font-size:1.05rem}
+.bn-item span{font-size:.6rem;font-weight:600;letter-spacing:.2px}
+.bn-item.active{color:var(--accentL)}
+.bn-item-cta{color:var(--red)}
+.bn-item-cta.active{color:var(--red)}
 .sb-logo{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
 .sb-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accentD),var(--accent));
   border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
@@ -842,6 +857,8 @@ tr:last-child td{border-bottom:none}
   #app{position:relative;overflow:hidden}
   .mobile-menu-btn{display:flex}
   #mobile-backdrop{display:block}
+  #bottom-nav{display:flex}
+  .main-content{padding-bottom:64px}
 
   .sidebar{
     position:fixed;top:0;left:0;bottom:0;width:78vw;max-width:300px;
@@ -885,7 +902,16 @@ tr:last-child td{border-bottom:none}
 
   .btn{font-size:.85rem}
   input,select,textarea{font-size:16px} /* prevents iOS auto-zoom on focus */
+
+  .mobile-bottom-nav{display:flex}
+  .main-content{padding-bottom:64px} /* clears the bottom nav so the last bit of content isn't hidden behind it */
 }
+
+/* ── Mobile bottom nav — hidden by default (desktop), shown only in the ≤760px block above ── */
+.mobile-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:18;background:var(--bg2);border-top:1px solid var(--border);padding:.35rem .2rem calc(.35rem + env(safe-area-inset-bottom,0px));justify-content:space-around;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,.2)}
+.mbn-item{display:flex;flex-direction:column;align-items:center;gap:.2rem;background:none;border:none;color:var(--textD);font-family:var(--font-main);font-size:.6rem;font-weight:600;padding:.3rem .5rem;cursor:pointer;flex:1;transition:color .15s}
+.mbn-item i{font-size:1.05rem}
+.mbn-item.active{color:var(--accentL)}
 
 @media(max-width:700px){
   #app{flex-direction:column}
@@ -1117,8 +1143,25 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Mobile-only bottom nav — the 5 most-used pages, always one tap away regardless of where you are -->
+  <div class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <button class="mbn-item active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button class="mbn-item" data-page="matches" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i><span>Matches</span></button>
+    <button class="mbn-item" data-page="tdm" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i><span>TDM</span></button>
+    <button class="mbn-item" data-page="leaderboard" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i><span>Ranks</span></button>
+    <button class="mbn-item" data-page="profile" onclick="showPage('profile')"><i class="fa-solid fa-id-card"></i><span>Profile</span></button>
+  </div>
+
   <div class="main-content">
     <div class="ticker-wrap"><div class="ticker-track" id="ticker"></div></div>
+
+    <nav id="bottom-nav">
+      <button class="bn-item active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fa-solid fa-house"></i><span>Home</span></button>
+      <button class="bn-item" data-page="matches" onclick="showPage('matches')"><i class="fa-solid fa-calendar-days"></i><span>Matches</span></button>
+      <button class="bn-item bn-item-cta" data-page="tdm" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i><span>TDM</span></button>
+      <button class="bn-item" data-page="leaderboard" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i><span>Ranks</span></button>
+      <button class="bn-item" data-page="profile" onclick="showPage('profile')"><i class="fa-solid fa-id-card"></i><span>Profile</span></button>
+    </nav>
 
     <div class="topbar">
       <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="openSidebar()" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
@@ -1709,8 +1752,8 @@ tr:last-child td{border-bottom:none}
           <div class="card">
             <div class="card-title"><i class="fa-solid fa-user-plus"></i> Individual Registration</div>
             <div class="frow"><div class="fg"><label class="fl">Real Name</label><input class="fi" id="rn" placeholder="John Doe"/></div><div class="fg"><label class="fl">IGN (used as your login username)</label><input class="fi" id="ri" placeholder="RAGEISM_001"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Discord</label><input class="fi" id="rd" placeholder="user#0001"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
+            <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
+            <div class="fg" id="rd-linked-note" style="font-size:.72rem;color:var(--textD);background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .7rem"><i class="fa-brands fa-discord" style="color:#5865F2"></i> Linked to your Discord account automatically — that's what lets match results and Player of the Week actually @mention you.</div>
             <div class="frow"><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div><div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="rc"></select></div></div>
             <div class="frow"><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="rrk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div><div class="fg"></div></div>
             <div class="frow"><div class="fg"><label class="fl">Role</label><select class="fi fsel" id="rro"><option>Fragger</option><option>Support</option><option>Sniper</option><option>IGL</option><option>Entry Fragger</option><option>Flanker</option></select></div><div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="rpl"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div></div>
@@ -2360,6 +2403,7 @@ async function checkDiscordSession(){
       const rr = resolveRole(session.user.id, p.ign);
       ADM = rr.isAdmin;
       CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: discordName, discAvatar: discordAvatar, authId: session.user.id, isMaster: rr.isMaster };
+      window._myDiscordId = discordId; window._myDiscordName = discordName; // cached so any later form (e.g. the extended Sign Up profile) can attach the REAL Discord identity instead of a free-typed username
       finishLogin();
       return true;
     }
@@ -2439,6 +2483,7 @@ async function completeDiscordLink(){
   const rr = resolveRole(session.user.id, ign);
   ADM = rr.isAdmin;
   CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: window._dlsName, discAvatar: window._dlsAvatar, authId: session.user.id, isMaster: rr.isMaster };
+  window._myDiscordId = discordId; window._myDiscordName = window._dlsName;
   finishLogin();
 }
 
@@ -3339,6 +3384,7 @@ function showPage(n){
   const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('active');
   document.querySelectorAll('.sb-item').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+n+"'"))b.classList.add('active');});
   const tt=document.getElementById('topbar-title');if(tt)tt.textContent=PAGE_TITLES[n]||n;
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.page===n));
   if(n==='leaderboard')renderLB();if(n==='teams')renderTeams();if(n==='matches')renderMatches();
   if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderPolls();renderSugs();}if(n==='clips')renderClips();
   if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
@@ -3745,16 +3791,17 @@ function renderAdminOverview(){
 async function regPlayer(){
   const n=v('rn'),ig=v('ri'),uid=v('ru');if(!n||!ig||!uid)return notify('Missing fields','Name, IGN & UID required','n-bad');
   const pl=DB.get('players');if(pl.find(p=>p.ign===ig))return notify('IGN taken','','n-bad');if(pl.find(p=>p.uid===uid))return notify('UID exists','','n-bad');
-  const discord=v('rd');
-  if(discord){
-    const dupe=findDiscordOwner(discord,null,null);
-    if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
-  }
-  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,region:v('rr'),country:v('rc'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0,joinedAt:Date.now()};
+  // Discord is no longer a free-typed field — the site only has one sign-in path (Discord OAuth),
+  // so by the time anyone can reach this page they're already authenticated, and their REAL Discord
+  // identity (cached at login as window._myDiscordId/_myDiscordName) is what gets attached here.
+  // That's what actually makes @mentions in match results / Player of the Week work for them.
+  const discord=window._myDiscordName||'';
+  const discordId=window._myDiscordId||'';
+  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,discordId,region:v('rr'),country:v('rc'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0,joinedAt:Date.now()};
   // If this is the currently signed-in Discord user filling out their full profile, keep them linked to their account
   if(CU&&CU.authId&&CU.ign&&CU.ign.toLowerCase()===ig.toLowerCase())entry.authId=CU.authId;
   pl.push(entry);
-  DB.set('players',pl);['rn','ri','ru','rt','rd','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  DB.set('players',pl);['rn','ri','ru','rt','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderReg();updateStats();buildTicker();refreshDLs();notify('Registered!',`${ig} joined the arena`,'n-ok');
   fireWebhookEvent('playerRegistration',{title:'New Player Registered',color:5793266,fields:[
     {name:'IGN',value:ig,inline:true},
