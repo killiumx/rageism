@@ -1835,8 +1835,8 @@ tr:last-child td{border-bottom:none}
         <div id="tdm-banner-wrap"></div>
         <div id="tdm-live-wrap"></div>
         <div class="card mb2" style="margin-top:1.2rem">
-          <div class="card-title"><i class="fa-solid fa-people-arrows"></i> BO3 Match Queue</div>
-          <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Anyone can request a Best-of-3 slot below — no team required. Once an admin accepts two requests, whoever's been waiting longest gets automatically matched up first — an admin can still add teammates, edit the board, and adjust the match afterward.</div>
+          <div class="card-title"><i class="fa-solid fa-people-arrows"></i> Match Queue</div>
+          <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Anyone can request a slot below — no team required, no need to be first to join. Choose Best-of-3 or a quick single-round 1v1. Once an admin accepts two requests in the same queue, whoever's been waiting longest gets automatically matched up first — an admin can still add teammates, edit the board, and adjust the match afterward.</div>
           <div id="tdm-queue-my-request"></div>
           <div id="tdm-queue-admin-list" class="admin-only" style="display:none;margin-top:.8rem"></div>
         </div>
@@ -3969,23 +3969,28 @@ function tdmQuickFill(side){
 // teammates, etc. all still work exactly the same on the resulting match). ═══
 function myQueueEntry(queue){
   if(!CU)return null;
-  return queue.find(q=>q.playerIgn===CU.name&&q.status!=='matched');
+  // NOTE: keyed off CU.ign (the actual roster IGN), not CU.name (which is the player's Discord
+  // display name when set — name and ign are often different strings). Queueing under CU.name used
+  // to silently break the @mention on the eventual TDM result post, since the webhook mention lookup
+  // matches players by their `ign` field, not their Discord display name.
+  return queue.find(q=>q.playerIgn===CU.ign&&q.status!=='matched');
 }
-function requestTdmQueue(){
+function requestTdmQueue(mode){
   if(!CU)return notify('Login required','','n-bad');
+  mode=mode==='single'?'single':'bo3';
   const queue=DB.get('tdmQueue',[]);
   if(myQueueEntry(queue))return notify('Already in queue','You already have a pending or accepted request.','n-bad');
-  const pl=DB.get('players',[]);const me=pl.find(p=>p.ign===CU.name)||pl.find(p=>p.name===CU.name);
-  queue.push({id:'tq'+Date.now(),playerId:me?me.id:'guest-'+CU.name,playerIgn:CU.name,roster:[{id:me?me.id:'guest-'+CU.name,ign:CU.name}],status:'pending',ts:Date.now()});
+  const pl=DB.get('players',[]);const me=pl.find(p=>p.ign===CU.ign);
+  queue.push({id:'tq'+Date.now(),playerId:me?me.id:'guest-'+CU.ign,playerIgn:CU.ign,roster:[{id:me?me.id:'guest-'+CU.ign,ign:CU.ign}],status:'pending',mode,ts:Date.now()});
   DB.set('tdmQueue',queue);
   renderTdmQueue();
-  notify('Request sent!','You\'re queued for a BO3 match — an admin will accept it soon.','n-ok');
+  notify('Request sent!',mode==='single'?'You\'re queued for a 1v1 (single round) match — an admin will accept it soon.':'You\'re queued for a BO3 match — an admin will accept it soon.','n-ok');
 }
 // Cancelling shifts everyone else up one spot — this pings the queue so nobody's left wondering
 // why their position suddenly changed.
 function cancelTdmQueue(id){
   const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
-  if(!ADM&&(!CU||CU.name!==q.playerIgn))return;
+  if(!ADM&&(!CU||CU.ign!==q.playerIgn))return;
   const remaining=queue.filter(x=>x.id!==id);
   DB.set('tdmQueue',remaining);
   renderTdmQueue();
@@ -4026,7 +4031,8 @@ function updateTopbarQueuePill(){
   if(!mine){pill.style.display='none';return;}
   const order=tdmQueueOrder(queue);
   const pos=order.findIndex(x=>x.id===mine.id)+1;
-  document.getElementById('topbar-queue-text').textContent=mine.status==='accepted'?`#${pos} — waiting for opponent`:`#${pos} in BO3 queue`;
+  const modeLabel=(mine.mode||'bo3')==='single'?'1v1 queue':'BO3 queue';
+  document.getElementById('topbar-queue-text').textContent=mine.status==='accepted'?`#${pos} — waiting for opponent`:`#${pos} in ${modeLabel}`;
   pill.style.display='flex';
 }
 function renderTdmQueue(){
@@ -4037,26 +4043,31 @@ function renderTdmQueue(){
   if(mineEl){
     const mine=myQueueEntry(queue);
     if(!CU){
-      mineEl.innerHTML=`<div class="text-dim" style="font-size:.8rem">Log in to request a BO3 slot — no team needed, anyone can queue up.</div>`;
+      mineEl.innerHTML=`<div class="text-dim" style="font-size:.8rem">Log in to request a slot — no team needed, anyone can queue up.</div>`;
     }else if(mine){
       const pos=order.findIndex(x=>x.id===mine.id)+1;
-      const acceptedOthers=order.filter(x=>x.status==='accepted'&&x.id!==mine.id);
+      const mineMode=mine.mode||'bo3';
+      // Only same-mode accepted requests are actually eligible to be matched against me.
+      const acceptedOthers=order.filter(x=>x.status==='accepted'&&x.id!==mine.id&&(x.mode||'bo3')===mineMode);
       // Potential matchup preview: if I were accepted right now, who's next in line to face me?
       let matchupLine='';
       if(mine.status==='accepted'&&acceptedOthers.length){
         matchupLine=`<div style="font-size:.78rem;color:var(--accentL);margin-top:.4rem"><i class="fa-solid fa-people-arrows"></i> Likely facing: <strong>${esc(acceptedOthers[0].playerIgn)}</strong> next</div>`;
       }else if(mine.status==='pending'){
-        matchupLine=`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">Once accepted, you'll be matched against whoever's waited longest at that point.</div>`;
+        matchupLine=`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">Once accepted, you'll be matched against whoever's waited longest in the same queue at that point.</div>`;
       }
       mineEl.innerHTML=`<div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span class="chip ${mine.status==='accepted'?'chip-accent':'chip-neutral'}" style="font-size:.75rem"><i class="fa-solid fa-clock"></i> You — #${pos} in queue · ${mine.status==='accepted'?'Accepted, waiting for an opponent':'Pending admin approval'} · ${waitLabel(mine.ts)}</span>
+          <span class="chip ${mine.status==='accepted'?'chip-accent':'chip-neutral'}" style="font-size:.75rem"><i class="fa-solid fa-clock"></i> You — #${pos} in ${mineMode==='single'?'1v1':'BO3'} queue · ${mine.status==='accepted'?'Accepted, waiting for an opponent':'Pending admin approval'} · ${waitLabel(mine.ts)}</span>
           <button class="btn btn-ghost btn-xs" onclick="cancelTdmQueue('${mine.id}')"><i class="fa-solid fa-xmark"></i> Cancel</button>
         </div>
         ${matchupLine}
       </div>`;
     }else{
-      mineEl.innerHTML=`<button class="btn btn-accent btn-sm" onclick="requestTdmQueue()"><i class="fa-solid fa-hand"></i> Request a BO3 Match</button>`;
+      mineEl.innerHTML=`<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-accent btn-sm" onclick="requestTdmQueue('bo3')"><i class="fa-solid fa-hand"></i> Request a BO3 Match</button>
+        <button class="btn btn-ghost btn-sm" onclick="requestTdmQueue('single')"><i class="fa-solid fa-hand"></i> Request a 1v1 Match</button>
+      </div>`;
     }
   }
   const adminEl=document.getElementById('tdm-queue-admin-list');
@@ -4067,9 +4078,10 @@ function renderTdmQueue(){
       // next — accepted requests bubble to the top since they're one step closer to a match.
       const acceptedList=order.filter(q=>q.status==='accepted');
       adminEl.innerHTML=!order.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:order.map((q,i)=>{
-        const nextOpponent=q.status==='accepted'?acceptedList.find(x=>x.id!==q.id):null;
+        const qMode=q.mode||'bo3';
+        const nextOpponent=q.status==='accepted'?acceptedList.find(x=>x.id!==q.id&&(x.mode||'bo3')===qMode):null;
         return `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
-        <div style="font-size:.85rem"><span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span>${nextOpponent?`<span class="text-dim" style="font-size:.7rem"> · vs ${esc(nextOpponent.playerIgn)} next</span>`:''}</div>
+        <div style="font-size:.85rem"><span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="chip" style="font-size:.65rem">${qMode==='single'?'1v1':'BO3'}</span> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span>${nextOpponent?`<span class="text-dim" style="font-size:.7rem"> · vs ${esc(nextOpponent.playerIgn)} next</span>`:''}</div>
         <div style="display:flex;gap:.3rem">
           ${q.status==='pending'?`<button class="btn btn-accent btn-xs" onclick="acceptTdmQueue('${q.id}')"><i class="fa-solid fa-check"></i> Accept</button>`:''}
           <button class="btn btn-danger btn-xs" onclick="cancelTdmQueue('${q.id}')"><i class="fa-solid fa-xmark"></i></button>
@@ -4090,15 +4102,21 @@ function tryAutoMatchTdmQueue(){
   if(tdmGetLive())return; // don't auto-start a new match over a live one — they'll stay queued until it's free
   const queue=DB.get('tdmQueue',[]);
   const accepted=queue.filter(q=>q.status==='accepted').sort((a,b)=>a.ts-b.ts); // longest-waiting pair goes first
-  if(accepted.length<2)return;
-  const [q1,q2]=accepted;
+  // Only pair requests of the same mode — someone who asked for a quick 1v1 shouldn't get dragged
+  // into a Best-of-3 (and vice versa). Within each mode, longest-waiting pair still goes first.
+  let q1=null,q2=null;
+  for(const mode of ['bo3','single']){
+    const pool=accepted.filter(q=>(q.mode||'bo3')===mode);
+    if(pool.length>=2){[q1,q2]=pool;break;}
+  }
+  if(!q1||!q2)return;
   q1.status='matched';q2.status='matched';
   DB.set('tdmQueue',queue);
-  const target=10;
-  createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,true,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
-  logAdminAction('TDM match auto-created',`${q1.playerIgn} vs ${q2.playerIgn} auto-matched from the BO3 queue`);
+  const target=10,bo3=(q1.mode||'bo3')==='bo3';
+  createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
+  logAdminAction('TDM match auto-created',`${q1.playerIgn} vs ${q2.playerIgn} auto-matched from the ${bo3?'BO3':'1v1'} queue`);
   renderTdmLive();renderTdmHistory();updateTdmBadge();
-  notify('Auto-matched!',`${q1.playerIgn} vs ${q2.playerIgn} — Best of 3 is live. Add teammates and edit the board as needed.`,'n-ok');
+  notify('Auto-matched!',`${q1.playerIgn} vs ${q2.playerIgn} — ${bo3?'Best of 3':'a single round'} is live. Add teammates and edit the board as needed.`,'n-ok');
 }
 
 // that creates a live TDM match, pings the pre-match H2H history, and returns it.
