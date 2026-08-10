@@ -1841,6 +1841,23 @@ tr:last-child td{border-bottom:none}
           <div id="tdm-queue-admin-list" class="admin-only" style="display:none;margin-top:.8rem"></div>
         </div>
 
+        <div class="card mb2" id="tdm-tourney-card" style="margin-top:1.2rem">
+          <div class="card-title"><i class="fa-solid fa-sitemap"></i> TDM Tournaments</div>
+          <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Request a slot in an upcoming TDM tournament — an admin approves requests, then shuffles the field and generates the bracket. Early rounds are straight knockout (single round); Quarterfinal onward is Best of 3.</div>
+          <div class="admin-only" id="tdm-tourney-create" style="display:none;margin-bottom:1rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.8rem">
+            <div class="g2">
+              <div class="fg"><label class="fl">Tournament Name</label><input class="fi" id="tt-name" placeholder="e.g. Saturday TDM Knockout"/></div>
+              <div class="fg"><label class="fl">Max Players</label><input class="fi" id="tt-max" type="number" value="8" min="2"/></div>
+            </div>
+            <div class="g2">
+              <div class="fg"><label class="fl">Date</label><input class="fi" id="tt-date" type="date"/></div>
+              <div class="fg"><label class="fl">Time</label><input class="fi" id="tt-time" type="time"/></div>
+            </div>
+            <button class="btn btn-accent btn-sm" onclick="createTdmTournament()"><i class="fa-solid fa-plus"></i> Create Tournament</button>
+          </div>
+          <div id="tdm-tourney-list"></div>
+        </div>
+
         <div class="divider-line"></div>
         <div class="sh-row"><div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">History</span></div></div></div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Squad A</th><th>Score</th><th>Squad B</th><th>Winner</th><th>Date</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="tdm-history-body"></tbody></table></div></div>
@@ -2331,7 +2348,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue','tdmTournaments','tdmTournamentRequests'];
 let SB_OK = false, SB_WRITES = 0;
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
@@ -4120,9 +4137,9 @@ function tryAutoMatchTdmQueue(){
 }
 
 // that creates a live TDM match, pings the pre-match H2H history, and returns it.
-function createTdmMatchObj(aName,bName,aRoster,bRoster,bo3,target,titleOverride){
+function createTdmMatchObj(aName,bName,aRoster,bRoster,bo3,target,titleOverride,tRef){
   const ms=DB.get('tdmMatches',[]);
-  const newMatch={id:'tdm'+Date.now(),aName,bName,aRoster:aRoster.slice(),bRoster:bRoster.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3,seriesId:bo3?('series'+Date.now()):null,gameNum:1};
+  const newMatch={id:'tdm'+Date.now(),aName,bName,aRoster:aRoster.slice(),bRoster:bRoster.slice(),scoreA:0,scoreB:0,target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3,seriesId:bo3?('series'+Date.now()):null,gameNum:1,tRef:tRef||null};
   ms.push(newMatch);
   DB.set('tdmMatches',ms);
   const preH2H=tdmH2HWebhookFields(newMatch);
@@ -4190,6 +4207,7 @@ function tdmFinishMatch(m,ms){
       {name:'Score',value:`${m.scoreA} – ${m.scoreB}`,inline:true},
       {name:'MVP',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
     ]},mvp?mvp.ign:null);
+    if(m.tRef)advanceTournamentBracket(m.tRef,m.winner,m);
     return;
   }
   const rec=tdmSeriesRecord(m.seriesId,m.aName,m.bName);
@@ -4212,11 +4230,285 @@ function tdmFinishMatch(m,ms){
       {name:'MVP (final game)',value:mvp?`${mvp.ign} (${mvp.kc}K)`:'—',inline:true}
     ]},mvp?mvp.ign:null);
     notify('Series complete!',`${seriesWinner} wins the Best of 3 (${Math.max(rec.winsA,rec.winsB)}-${Math.min(rec.winsA,rec.winsB)})`,'n-ok');
+    if(m.tRef)advanceTournamentBracket(m.tRef,seriesWinner,m);
   } else {
-    const next={id:'tdm'+Date.now(),aName:m.aName,bName:m.bName,aRoster:m.aRoster.slice(),bRoster:m.bRoster.slice(),scoreA:0,scoreB:0,target:m.target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3:true,seriesId:m.seriesId,gameNum:m.gameNum+1};
+    const next={id:'tdm'+Date.now(),aName:m.aName,bName:m.bName,aRoster:m.aRoster.slice(),bRoster:m.bRoster.slice(),scoreA:0,scoreB:0,target:m.target,status:'live',winner:'',killLog:[],ts:new Date().toISOString(),bo3:true,seriesId:m.seriesId,gameNum:m.gameNum+1,tRef:m.tRef||null};
     ms.push(next);
     notify(`Game ${m.gameNum} complete`,`${m.winner} takes it. Series ${rec.winsA}-${rec.winsB} — starting Game ${next.gameNum}`,'n-ok');
   }
+}
+
+// ═══ TDM TOURNAMENTS — players request a slot (no auto-join, admin approves each one), an admin
+// shuffles the approved field and generates a single-elimination bracket, then starts each bracket
+// match into a real live TDM match. Winners auto-advance to the next round. Every round before the
+// Quarterfinal is a single knockout round; Quarterfinal through Final are Best of 3. Non-power-of-two
+// fields get byes in round 1 that auto-advance immediately. ═══
+const TDM_TOURNEY_STATUSES=['reg_open','reg_pending','reg_closed','upcoming','live','ended'];
+const TDM_TOURNEY_STATUS_LABEL={reg_open:'Registration Open',reg_pending:'Registration Pending',reg_closed:'Registration Closed',upcoming:'Upcoming',live:'Live',ended:'Ended'};
+function createTdmTournament(){
+  if(!ADM)return notify('Admins only','','n-bad');
+  const name=(v('tt-name')||'').trim();if(!name)return notify('Name required','','n-bad');
+  const maxPlayers=Math.max(2,parseInt(v('tt-max'))||8);
+  const date=v('tt-date')||'',time=v('tt-time')||'';
+  const list=DB.get('tdmTournaments',[]);
+  list.push({id:'tt'+Date.now(),name,maxPlayers,date,time,status:'reg_open',participants:[],bracket:null,createdAt:Date.now()});
+  DB.set('tdmTournaments',list);
+  ['tt-name','tt-date','tt-time'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const maxEl=document.getElementById('tt-max');if(maxEl)maxEl.value='8';
+  logAdminAction('TDM tournament created',`"${name}" created by ${CU?CU.name:'Admin'}`);
+  renderTdmTournaments();
+  notify('Tournament created!','Registration is open — players can now request a slot','n-ok');
+}
+function cycleTdmTournamentStatus(id){
+  if(!ADM)return;
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===id);if(!t)return;
+  const i=TDM_TOURNEY_STATUSES.indexOf(t.status);
+  t.status=TDM_TOURNEY_STATUSES[(i+1)%TDM_TOURNEY_STATUSES.length];
+  DB.set('tdmTournaments',list);
+  logAdminAction('TDM tournament status changed',`"${t.name}" → ${TDM_TOURNEY_STATUS_LABEL[t.status]} by ${CU?CU.name:'Admin'}`);
+  renderTdmTournaments();
+  notify(`Status → ${TDM_TOURNEY_STATUS_LABEL[t.status]}`,'','n-ok');
+}
+function deleteTdmTournament(id){
+  if(!ADM)return;
+  if(!confirm('Delete this tournament? This cannot be undone.'))return;
+  let list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===id);
+  list=list.filter(x=>x.id!==id);
+  DB.set('tdmTournaments',list);
+  DB.set('tdmTournamentRequests',DB.get('tdmTournamentRequests',[]).filter(r=>r.tournamentId!==id));
+  logAdminAction('TDM tournament deleted',`"${t?t.name:id}" deleted by ${CU?CU.name:'Admin'}`);
+  renderTdmTournaments();
+  notify('Tournament deleted','','n-ok');
+}
+function tdmTournamentMyRequest(tid){
+  if(!CU)return null;
+  return DB.get('tdmTournamentRequests',[]).find(r=>r.tournamentId===tid&&r.ign===CU.ign&&r.status==='pending');
+}
+function tdmTournamentIsIn(t){
+  return !!(CU&&(t.participants||[]).some(p=>p.ign===CU.ign));
+}
+function requestJoinTdmTournament(tid){
+  if(!CU)return notify('Login required','Sign in to request a tournament slot','n-bad');
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tid);if(!t)return;
+  if(t.status!=='reg_open')return notify('Registration not open',`This tournament is currently: ${TDM_TOURNEY_STATUS_LABEL[t.status]||t.status}`,'n-bad');
+  if(tdmTournamentIsIn(t))return notify('Already registered','You\'re already in this tournament','n-bad');
+  if(tdmTournamentMyRequest(tid))return notify('Already requested','Waiting on admin approval','n-bad');
+  if((t.participants||[]).length>=t.maxPlayers)return notify('Tournament full','','n-bad');
+  const reqs=DB.get('tdmTournamentRequests',[]);
+  const pl=DB.get('players',[]);const me=pl.find(p=>p.ign===CU.ign);
+  reqs.push({id:'ttr'+Date.now(),tournamentId:tid,tournamentName:t.name,ign:CU.ign,playerId:me?me.id:null,status:'pending',ts:new Date().toLocaleString()});
+  DB.set('tdmTournamentRequests',reqs);
+  fireWebhookEvent('tdmTournamentSignupRequest',{title:'📋 New TDM Tournament Signup Request',color:3900151,fields:[
+    {name:'Tournament',value:t.name,inline:true},{name:'Player',value:CU.ign,inline:true}
+  ]},null,{tournament:t.name,player:CU.ign});
+  renderTdmTournaments();
+  notify('Request sent!','Awaiting admin approval','n-ok');
+}
+function resolveTdmTournamentRequest(id,approve){
+  if(!ADM)return;
+  const reqs=DB.get('tdmTournamentRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===r.tournamentId);
+  if(approve&&t){
+    t.participants=t.participants||[];
+    if(t.participants.length>=t.maxPlayers){
+      notify('Tournament full','Deny this request or raise Max Players first','n-bad');return;
+    }
+    if(!t.participants.some(p=>p.ign===r.ign))t.participants.push({id:r.playerId,ign:r.ign,ts:Date.now()});
+    DB.set('tdmTournaments',list);
+  }
+  r.status=approve?'approved':'denied';
+  DB.set('tdmTournamentRequests',reqs);
+  logAdminAction(approve?'TDM tournament signup approved':'TDM tournament signup denied',`${r.ign} ${approve?'was added to':'was turned away from'} "${r.tournamentName}" by ${CU?CU.name:'Admin'}`);
+  if(approve){
+    fireWebhookEvent('tdmTournamentSignupAccepted',{title:'✅ TDM Tournament Slot Confirmed',color:3066993,fields:[
+      {name:'Tournament',value:r.tournamentName,inline:true},{name:'Player',value:r.ign,inline:true}
+    ]},[r.ign],{tournament:r.tournamentName,player:r.ign});
+  }else{
+    fireWebhookEvent('tdmTournamentSignupDenied',{title:'TDM Tournament Slot Request Denied',color:15158332,fields:[
+      {name:'Tournament',value:r.tournamentName,inline:true},{name:'Player',value:r.ign,inline:true}
+    ]},[r.ign],{tournament:r.tournamentName,player:r.ign});
+  }
+  renderTdmTournaments();
+  notify(approve?'Approved!':'Denied','','n-ok');
+}
+// Cascades any bye advances forward through the bracket — a player who drew a bye in round 1 might
+// find their round-2 opponent is ALSO a bye winner, so this keeps resolving until nothing changes.
+function tdmResolveByes(t){
+  let changed=true;
+  while(changed){
+    changed=false;
+    for(let r=0;r<t.bracket.rounds.length-1;r++){
+      const rd=t.bracket.rounds[r],nextRd=t.bracket.rounds[r+1];
+      rd.matches.forEach((bm,i)=>{
+        if(bm.status==='bye'&&bm.winner){
+          const nm=Math.floor(i/2),slot=i%2===0?'a':'b';
+          const roster=bm.winner===bm.a?bm.aRoster:bm.bRoster;
+          if(nextRd.matches[nm][slot]!==bm.winner){
+            nextRd.matches[nm][slot]=bm.winner;
+            nextRd.matches[nm][slot+'Roster']=roster;
+            changed=true;
+          }
+        }
+      });
+    }
+  }
+}
+function tdmRoundName(sizeAtStartOfRound){
+  if(sizeAtStartOfRound===2)return 'Final';
+  if(sizeAtStartOfRound===4)return 'Semifinal';
+  if(sizeAtStartOfRound===8)return 'Quarterfinal';
+  return 'Round of '+sizeAtStartOfRound;
+}
+function generateBracketForTournament(id){
+  if(!ADM)return;
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===id);if(!t)return;
+  const entrants=t.participants||[];
+  if(entrants.length<2)return notify('Need at least 2 players','Approve more signup requests first','n-bad');
+  const shuffled=[...entrants].sort(()=>Math.random()-0.5); // the "shuffle" so match-ups aren't just signup order
+  let size=1;while(size<shuffled.length)size*=2;
+  while(shuffled.length<size)shuffled.push(null); // null = BYE slot
+  const sizes=[];let s=size;while(s>1){sizes.push(s);s/=2;}
+  const rounds=sizes.map(sz=>{const name=tdmRoundName(sz);return {name,bo3:['Quarterfinal','Semifinal','Final'].includes(name),matches:[]};});
+  for(let i=0;i<size;i+=2){
+    const p1=shuffled[i],p2=shuffled[i+1];
+    const isBye=!p1||!p2;
+    rounds[0].matches.push({
+      a:p1?p1.ign:null,b:p2?p2.ign:null,
+      aRoster:p1?[{id:p1.id,ign:p1.ign}]:null,bRoster:p2?[{id:p2.id,ign:p2.ign}]:null,
+      status:isBye?'bye':'pending',scoreA:0,scoreB:0,
+      winner:isBye?((p1?p1.ign:p2.ign)||''):'',tdmMatchId:null
+    });
+  }
+  for(let r=1;r<rounds.length;r++){
+    const cnt=rounds[r-1].matches.length/2;
+    for(let i=0;i<cnt;i++)rounds[r].matches.push({a:null,b:null,aRoster:null,bRoster:null,status:'pending',scoreA:0,scoreB:0,winner:'',tdmMatchId:null});
+  }
+  t.bracket={rounds};
+  if(t.status==='reg_open'||t.status==='reg_pending')t.status='reg_closed';
+  tdmResolveByes(t);
+  DB.set('tdmTournaments',list);
+  logAdminAction('TDM tournament bracket generated',`Bracket for "${t.name}" generated with ${entrants.length} players by ${CU?CU.name:'Admin'}`);
+  fireWebhookEvent('tdmTournamentBracketReady',{title:`🗂️ Bracket is set — ${t.name}`,color:3900151,description:`${entrants.length} players · ${rounds.length} round${rounds.length>1?'s':''}. First round: ${rounds[0].name}${rounds[0].bo3?' (Best of 3)':' (single round)'}.`});
+  renderTdmTournaments();
+  notify('Bracket generated!','Shuffled and seeded — open a match to start it','n-ok');
+}
+function regenerateTdmBracket(id){
+  if(!ADM)return;
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===id);
+  if(t&&t.bracket&&!confirm('Re-shuffle and regenerate the bracket? Any bracket progress will be cleared.'))return;
+  generateBracketForTournament(id);
+}
+function startBracketMatch(tid,roundIdx,matchIdx){
+  if(!ADM)return;
+  if(tdmGetLive())return notify('A match is already live','Finish or end it before starting another.','n-bad');
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tid);if(!t||!t.bracket)return;
+  const rd=t.bracket.rounds[roundIdx];const bm=rd&&rd.matches[matchIdx];
+  if(!bm||bm.status!=='pending'||!bm.aRoster||!bm.bRoster)return;
+  const newMatch=createTdmMatchObj(bm.a,bm.b,bm.aRoster,bm.bRoster,rd.bo3,10,`⚔️ ${t.name} — ${rd.name} — ${bm.a} vs ${bm.b}`,{tournamentId:tid,roundIdx,matchIdx});
+  bm.status='live';bm.tdmMatchId=newMatch.id;
+  if(t.status!=='live'){t.status='live';}
+  DB.set('tdmTournaments',list);
+  renderTdmLive();renderTdmHistory();updateTdmBadge();
+  notify('Bracket match started!',`${bm.a} vs ${bm.b} · ${rd.name}${rd.bo3?' (Best of 3)':''}`,'n-ok');
+}
+// Called from tdmFinishMatch once a bracket-linked match (or its whole BO3 series) is fully decided —
+// records the result on that bracket slot and slots the winner into the next round.
+function advanceTournamentBracket(tRef,winnerName,m){
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tRef.tournamentId);if(!t||!t.bracket)return;
+  const rd=t.bracket.rounds[tRef.roundIdx];const bm=rd&&rd.matches[tRef.matchIdx];if(!bm)return;
+  bm.status='done';bm.scoreA=m.scoreA;bm.scoreB=m.scoreB;bm.winner=winnerName;
+  const nextRd=t.bracket.rounds[tRef.roundIdx+1];
+  if(nextRd){
+    const nm=Math.floor(tRef.matchIdx/2),slot=tRef.matchIdx%2===0?'a':'b';
+    const roster=winnerName===bm.a?bm.aRoster:bm.bRoster;
+    nextRd.matches[nm][slot]=winnerName;
+    nextRd.matches[nm][slot+'Roster']=roster;
+    tdmResolveByes(t);
+  }else{
+    t.status='ended';
+    fireWebhookEvent('tdmTournamentWinner',{title:`🏆 ${winnerName} wins ${t.name}!`,color:16766720,fields:[
+      {name:'Tournament',value:t.name,inline:true},{name:'Champion',value:winnerName,inline:true}
+    ]},[winnerName],{tournament:t.name,player:winnerName});
+  }
+  DB.set('tdmTournaments',list);
+  renderTdmTournaments();
+}
+// Clears a match back to pending — lets an admin fix a mis-click or re-seed a bracket slot without
+// having to blow away and regenerate the whole bracket (the old generic Bracket editor could only
+// ever add matches, never remove one).
+function deleteTdmBracketMatch(tid,roundIdx,matchIdx){
+  if(!ADM)return;
+  const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tid);if(!t||!t.bracket)return;
+  const bm=t.bracket.rounds[roundIdx]&&t.bracket.rounds[roundIdx].matches[matchIdx];if(!bm||bm.status==='bye')return;
+  bm.status='pending';bm.scoreA=0;bm.scoreB=0;bm.winner='';bm.tdmMatchId=null;
+  DB.set('tdmTournaments',list);
+  renderTdmTournaments();
+  notify('Bracket match cleared','','n-ok');
+}
+function renderTdmTournaments(){
+  const wrap=document.getElementById('tdm-tourney-list');if(!wrap)return;
+  const createBox=document.getElementById('tdm-tourney-create');
+  if(createBox)createBox.style.display=ADM?'block':'none';
+  const list=DB.get('tdmTournaments',[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+  if(!list.length){wrap.innerHTML='<div class="text-dim" style="font-size:.82rem">No TDM tournaments yet.</div>';return;}
+  const reqs=DB.get('tdmTournamentRequests',[]);
+  const scMap={reg_open:'chip-accent',reg_pending:'chip-neutral',reg_closed:'chip-neutral',upcoming:'chip-blue',live:'chip-red',ended:'chip-green'};
+  wrap.innerHTML=list.map(t=>{
+    const pending=reqs.filter(r=>r.tournamentId===t.id&&r.status==='pending');
+    const myReq=tdmTournamentMyRequest(t.id);
+    const amIn=tdmTournamentIsIn(t);
+    let joinBtn;
+    if(!CU)joinBtn='<span class="text-dim" style="font-size:.75rem">Log in to request a slot</span>';
+    else if(amIn)joinBtn='<span class="chip chip-accent" style="font-size:.72rem"><i class="fa-solid fa-check"></i> You\'re in</span>';
+    else if(myReq)joinBtn='<span class="chip chip-neutral" style="font-size:.72rem">Request pending</span>';
+    else if(t.status==='reg_open')joinBtn=`<button class="btn btn-accent btn-xs" onclick="requestJoinTdmTournament('${t.id}')"><i class="fa-solid fa-hand"></i> Request to Join</button>`;
+    else joinBtn='<span class="text-dim" style="font-size:.72rem">Registration not open</span>';
+    return `<div class="card" style="margin-bottom:.8rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+        <div>
+          <div style="font-weight:700">${esc(t.name)} <span class="chip ${scMap[t.status]||'chip-neutral'}" style="font-size:.65rem;${ADM?'cursor:pointer':''}"${ADM?` onclick="cycleTdmTournamentStatus('${t.id}')" title="Click to cycle status"`:''}>${TDM_TOURNEY_STATUS_LABEL[t.status]||t.status}</span></div>
+          <div class="text-dim" style="font-size:.75rem">${t.date||'TBD'} ${t.time||''} · ${(t.participants||[]).length}/${t.maxPlayers} players</div>
+        </div>
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+          ${joinBtn}
+          ${ADM?`<button class="btn btn-ghost btn-xs" onclick="regenerateTdmBracket('${t.id}')" title="Shuffle & (re)generate bracket"><i class="fa-solid fa-shuffle"></i> ${t.bracket?'Re-shuffle':'Generate'} Bracket</button>`:''}
+          ${ADM?`<button class="btn btn-danger btn-xs" onclick="deleteTdmTournament('${t.id}')"><i class="fa-solid fa-trash"></i></button>`:''}
+        </div>
+      </div>
+      ${ADM&&pending.length?`<div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:.72rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem">Pending Requests (${pending.length})</div>
+        ${pending.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0"><span style="font-size:.82rem">${esc(r.ign)}</span><div style="display:flex;gap:.3rem"><button class="btn btn-success btn-xs" onclick="resolveTdmTournamentRequest('${r.id}',true)"><i class="fa-solid fa-check"></i></button><button class="btn btn-danger btn-xs" onclick="resolveTdmTournamentRequest('${r.id}',false)"><i class="fa-solid fa-xmark"></i></button></div></div>`).join('')}
+      </div>`:''}
+      ${t.bracket?renderTdmBracketHtml(t):''}
+    </div>`;
+  }).join('');
+}
+function renderTdmBracketHtml(t){
+  return `<div style="margin-top:.8rem;padding-top:.8rem;border-top:1px solid rgba(255,255,255,.06);overflow-x:auto">
+    <div style="display:flex;gap:1rem;min-width:min-content">
+      ${t.bracket.rounds.map((rd,ri)=>`<div style="min-width:180px">
+        <div style="font-size:.72rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">${rd.name}${rd.bo3?' · BO3':''}</div>
+        ${rd.matches.map((bm,mi)=>{
+          const canStart=ADM&&bm.status==='pending'&&bm.aRoster&&bm.bRoster;
+          const showScore=bm.status==='live'||bm.status==='done';
+          const rowsHtml=bm.status==='bye'
+            ?`<div style="font-size:.72rem;color:var(--textD)">${esc(bm.a||bm.b||'BYE')} — bye</div>`
+            :`<div style="font-size:.8rem;display:flex;justify-content:space-between;gap:.4rem"><span style="${bm.winner&&bm.winner===bm.a?'font-weight:700;color:var(--accentL)':''}">${bm.a?esc(bm.a):'—'}</span>${showScore?`<span class="text-dim">${bm.scoreA}</span>`:''}</div>
+              <div style="font-size:.8rem;display:flex;justify-content:space-between;gap:.4rem"><span style="${bm.winner&&bm.winner===bm.b?'font-weight:700;color:var(--accentL)':''}">${bm.b?esc(bm.b):'—'}</span>${showScore?`<span class="text-dim">${bm.scoreB}</span>`:''}</div>`;
+          return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .6rem;margin-bottom:.6rem">
+            ${rowsHtml}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.35rem">
+              <span class="text-dim" style="font-size:.65rem">${bm.status==='live'?'🔴 live':bm.status==='done'?'done':bm.status==='bye'?'':'pending'}</span>
+              <div style="display:flex;gap:.3rem">
+                ${canStart?`<button class="btn btn-accent btn-xs" onclick="startBracketMatch('${t.id}',${ri},${mi})" title="Start this match"><i class="fa-solid fa-play"></i></button>`:''}
+                ${ADM&&bm.status==='done'?`<button class="btn btn-ghost btn-xs" title="Clear this result" onclick="deleteTdmBracketMatch('${t.id}',${ri},${mi})"><i class="fa-solid fa-rotate-left"></i></button>`:''}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`).join('')}
+    </div>
+  </div>`;
 }
 
 // Bumps tdmMatches for every participant and tdmWins for the winning roster only.
@@ -4614,6 +4906,7 @@ function showTdmTickerItem(i){
 
 function renderTdmLive(){
   renderTdmQueue();
+  renderTdmTournaments();
   const wrap=document.getElementById('tdm-live-wrap');if(!wrap)return;
   renderTdmBanner();
   const m=tdmGetLive();
@@ -6390,12 +6683,15 @@ function renderBktAdmin(){
         <option value="${m.a||''}">${m.a||'Team A'}</option>
         <option value="${m.b||''}">${m.b||'Team B'}</option>
       </select>
+      <button class="btn btn-danger btn-xs" style="grid-column:1/-1" onclick="deleteBracketMatch('${r.k}',${i})"><i class="fa-solid fa-trash"></i> Delete Match</button>
     </div>`).join('')}
     <button class="btn btn-ghost btn-xs" onclick="addBracketMatch('${r.k}')"><i class="fa-solid fa-plus"></i> Add Match</button>
   </div>`).join('')+`<button class="btn btn-accent btn-fw" onclick="saveBracket()"><i class="fa-solid fa-floppy-disk"></i> Save Bracket</button>`;
   setTimeout(()=>{rounds.forEach(r=>{(b[r.k]||[]).forEach((m,i)=>{const s=document.getElementById(`ba-${r.k}-${i}-w`);if(s&&m.winner)s.value=m.winner;});});},50);
 }
 function addBracketMatch(k){const b=DB.get('bracket',{qf:[],sf:[],final:[]});b[k]=b[k]||[];b[k].push({a:'',b:'',sa:0,sb:0,winner:''});DB.set('bracket',b);renderBktAdmin();}
+// Previously the editor could only ever grow (Add Match) with no way to remove a mistaken entry.
+function deleteBracketMatch(k,i){const b=DB.get('bracket',{qf:[],sf:[],final:[]});b[k]=b[k]||[];b[k].splice(i,1);DB.set('bracket',b);renderBktAdmin();renderBkt();notify('Match removed','Remember to Save Bracket','n-ok');}
 function saveBracket(){const b=DB.get('bracket',{qf:[],sf:[],final:[]});['qf','sf','final'].forEach(rk=>{(b[rk]||[]).forEach((_,i)=>{const g=id=>document.getElementById(id)?.value||'';b[rk][i]={a:g(`ba-${rk}-${i}-a`),b:g(`ba-${rk}-${i}-b`),sa:parseInt(g(`ba-${rk}-${i}-sa`))||0,sb:parseInt(g(`ba-${rk}-${i}-sb`))||0,winner:g(`ba-${rk}-${i}-w`)};});});DB.set('bracket',b);renderBkt();notify('Bracket saved!','','n-ok');}
 
 // ═══ TEAMS ═══
@@ -7124,6 +7420,11 @@ const WEBHOOK_EVENTS={
   queueReshuffled:{label:'BO3 Queue Reshuffled',icon:'fa-arrows-rotate',defaultScope:'all',tokens:'{mentions}'},
   matchOfWeek:{label:'Match of the Week',icon:'fa-fire'},
   matchReminder:{label:'Match Starting Soon (30 min)',icon:'fa-bell',defaultScope:'all',tokens:'{match} {map} {date} {time} {mode} {mentions}'},
+  tdmTournamentSignupRequest:{label:'TDM Tournament Signup Requests',icon:'fa-clipboard-list',defaultScope:'none',tokens:'{tournament} {player}'},
+  tdmTournamentSignupAccepted:{label:'TDM Tournament Signup Accepted',icon:'fa-calendar-check',defaultScope:'all',tokens:'{tournament} {player} {mentions}'},
+  tdmTournamentSignupDenied:{label:'TDM Tournament Signup Denied',icon:'fa-calendar-xmark',defaultScope:'captain',tokens:'{tournament} {player} {mentions}'},
+  tdmTournamentBracketReady:{label:'TDM Tournament Bracket Ready',icon:'fa-sitemap'},
+  tdmTournamentWinner:{label:'TDM Tournament Winner',icon:'fa-trophy',defaultScope:'all',tokens:'{tournament} {player} {mentions}'},
   playerReport:{label:'Player Report Filed',icon:'fa-flag',masterOnly:true},
   auditLog:{label:'Admin Activity Log',icon:'fa-shield-halved',masterOnly:true}
 };
