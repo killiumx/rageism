@@ -905,12 +905,6 @@ tr:last-child td{border-bottom:none}
 
   .mobile-bottom-nav{display:flex}
   .main-content{padding-bottom:64px} /* clears the bottom nav so the last bit of content isn't hidden behind it */
-
-  /* The theme bubble is fixed at bottom:22px everywhere — on mobile that's the same spot the bottom
-     nav bar occupies, so it was sitting on top of (and blocking) the Profile nav item. Push it up
-     above the nav bar (nav height + safe-area inset + a little breathing room). */
-  #theme-bubble{bottom:calc(64px + env(safe-area-inset-bottom,0px) + 14px)}
-  #theme-panel{bottom:calc(64px + env(safe-area-inset-bottom,0px) + 78px)}
 }
 
 /* ── Mobile bottom nav — hidden by default (desktop), shown only in the ≤760px block above ── */
@@ -950,6 +944,16 @@ tr:last-child td{border-bottom:none}
   border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadowL);padding:1rem;
   opacity:0;transform:translateY(12px) scale(.96);pointer-events:none;transition:all .18s ease}
 #theme-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+
+/* Must come AFTER the base #theme-bubble/#theme-panel rules above — same specificity (single ID
+   selector), so whichever is later in the stylesheet wins the cascade when both apply. Placing this
+   earlier (as before) meant the unconditional base `bottom:22px` always won on mobile too, silently
+   undoing the fix. On mobile the bottom nav bar occupies that same bottom-right corner, so the bubble
+   needs to sit above it (nav height + safe-area inset + a little breathing room) instead of on top of it. */
+@media(max-width:760px){
+  #theme-bubble{bottom:calc(64px + env(safe-area-inset-bottom,0px) + 14px)}
+  #theme-panel{bottom:calc(64px + env(safe-area-inset-bottom,0px) + 78px)}
+}
 .tp-title{font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;margin-bottom:.15rem;color:var(--text)}
 .tp-sub{font-size:.7rem;color:var(--textM);margin-bottom:.8rem}
 .tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
