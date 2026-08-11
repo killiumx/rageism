@@ -4168,9 +4168,17 @@ function startTdm(){
 
 // Tally completed games in a Best-of-3 series by squad name (squads are assumed to keep the same
 // names/sides across all games in a series).
-function tdmSeriesRecord(seriesId,aName,bName){
-  const done=DB.get('tdmMatches',[]).filter(m=>m.seriesId===seriesId&&m.status==='done');
-  return {winsA:done.filter(m=>m.winner===aName).length,winsB:done.filter(m=>m.winner===bName).length,gamesPlayed:done.length};
+// IMPORTANT: takes the live in-memory `ms` array, not a fresh DB.get('tdmMatches'). tdmFinishMatch
+// runs mid-way through addTdmKill/tdmSetPlayerKills, BEFORE their trailing DB.set('tdmMatches',ms) —
+// so the game that JUST finished only exists as a status:'done' change on the in-memory object at
+// that point, not yet in the persisted store. Reading from DB here was silently missing that game
+// every time, undercounting the series by exactly one win. In a real 3-game sweep that meant the
+// 2-win threshold never tripped off games 1+2 (so an unnecessary Game 3 got auto-started even
+// though the series was already won), and the FINAL series result — read off games 1+2 only —
+// under-reported the true 3-0 as "2-0", silently dropping the decisive game from the score.
+function tdmSeriesRecord(ms,seriesId,aName,bName){
+  const done=ms.filter(x=>x.seriesId===seriesId&&x.status==='done');
+  return {winsA:done.filter(x=>x.winner===aName).length,winsB:done.filter(x=>x.winner===bName).length,gamesPlayed:done.length};
 }
 
 // Called right after a TDM game is marked 'done'. For a normal (non-bo3) match this just records the
@@ -4210,7 +4218,7 @@ function tdmFinishMatch(m,ms){
     if(m.tRef)advanceTournamentBracket(m.tRef,m.winner,m);
     return;
   }
-  const rec=tdmSeriesRecord(m.seriesId,m.aName,m.bName);
+  const rec=tdmSeriesRecord(ms,m.seriesId,m.aName,m.bName);
   if(rec.winsA>=2||rec.winsB>=2||m.gameNum>=3){
     const seriesWinner=rec.winsA>rec.winsB?m.aName:(rec.winsB>rec.winsA?m.bName:m.winner);
     m.seriesDone=true;m.seriesWinner=seriesWinner;
@@ -4912,7 +4920,7 @@ function renderTdmLive(){
   const m=tdmGetLive();
   if(!m){wrap.innerHTML=`<div class="card" style="text-align:center;padding:2.5rem;color:var(--textD)"><i class="fa-solid fa-skull-crossbones" style="font-size:1.6rem;margin-bottom:.6rem;display:block"></i>No TDM match is live right now.</div>`;return;}
   const pctA=Math.min(100,(m.scoreA/m.target)*100),pctB=Math.min(100,(m.scoreB/m.target)*100);
-  const seriesRec=m.bo3?tdmSeriesRecord(m.seriesId,m.aName,m.bName):null;
+  const seriesRec=m.bo3?tdmSeriesRecord(DB.get('tdmMatches',[]),m.seriesId,m.aName,m.bName):null;
   const rosterBtns=(side,roster)=>roster.map(p=>{
     const kc=tdmPlayerKillCount(m,p.ign);
     return `<div class="tdm-roster-row" style="justify-content:space-between;flex-wrap:wrap">
@@ -7526,8 +7534,22 @@ function fireWebhookEvent(event,embed,mentionIgns,vars){
       const tv={...(vars||{}),mentions:mentionStr};
       content=w.customMsg.replace(/\{(\w+)\}/g,(m,k)=>tv[k]!==undefined&&tv[k]!==''?tv[k]:'');
     }
-    try{fetch(w.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:discordBotName(),content,embeds:[embed]})});}
-    catch(e){console.warn('Webhook error:',e);}
+    // Previously this never checked the response — a rejected payload (Discord 400s on things like
+    // an empty embed field value, or a >6000-char embed) failed completely silently, so a webhook
+    // could just stop posting with zero indication why. Now failures get logged so they're actually
+    // diagnosable instead of just "the message never showed up."
+    fetch(w.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:discordBotName(),content,embeds:[embed]})})
+      .then(async r=>{
+        if(!r.ok){
+          const body=await r.text().catch(()=>'');
+          console.error(`Webhook "${w.name}" (${event}) rejected by Discord: ${r.status} ${body}`);
+          logAdminAction('Webhook delivery failed',`"${w.name}" (${event}) — Discord returned ${r.status}${body?': '+body.slice(0,300):''}`);
+        }
+      })
+      .catch(e=>{
+        console.warn('Webhook error:',e);
+        logAdminAction('Webhook delivery failed',`"${w.name}" (${event}) — network error: ${e&&e.message||e}`);
+      });
   });
 }
 function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
