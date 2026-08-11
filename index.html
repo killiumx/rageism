@@ -905,6 +905,12 @@ tr:last-child td{border-bottom:none}
 
   .mobile-bottom-nav{display:flex}
   .main-content{padding-bottom:64px} /* clears the bottom nav so the last bit of content isn't hidden behind it */
+
+  /* The theme bubble is fixed at bottom:22px everywhere — on mobile that's the same spot the bottom
+     nav bar occupies, so it was sitting on top of (and blocking) the Profile nav item. Push it up
+     above the nav bar (nav height + safe-area inset + a little breathing room). */
+  #theme-bubble{bottom:calc(64px + env(safe-area-inset-bottom,0px) + 14px)}
+  #theme-panel{bottom:calc(64px + env(safe-area-inset-bottom,0px) + 78px)}
 }
 
 /* ── Mobile bottom nav — hidden by default (desktop), shown only in the ≤760px block above ── */
