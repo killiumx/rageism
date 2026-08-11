@@ -1847,6 +1847,12 @@ tr:last-child td{border-bottom:none}
         <div class="card mb2" style="margin-top:1.2rem">
           <div class="card-title"><i class="fa-solid fa-people-arrows"></i> Match Queue</div>
           <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Anyone can request a slot below — no team required, no need to be first to join. Choose Best-of-3 or a quick single-round 1v1. Once an admin accepts two requests in the same queue, whoever's been waiting longest gets automatically matched up first — an admin can still add teammates, edit the board, and adjust the match afterward.</div>
+          <div style="align-items:center;gap:.5rem;margin-bottom:.8rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .7rem;display:none" id="tdm-queue-target-row">
+            <label class="fl" style="margin:0;white-space:nowrap">Auto-match default: First to</label>
+            <input class="fi" id="tdm-queue-target" type="number" min="1" style="width:70px" value="10"/>
+            <button class="btn btn-ghost btn-xs" onclick="saveTdmDefaultTarget()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            <span class="text-dim" style="font-size:.7rem">Applies to matches auto-created by the queue and tournament brackets — both BO3 and single-round.</span>
+          </div>
           <div id="tdm-queue-my-request"></div>
           <div id="tdm-queue-admin-list" class="admin-only" style="display:none;margin-top:.8rem"></div>
         </div>
@@ -3994,6 +4000,14 @@ function tdmQuickFill(side){
 // the two who've been waiting longest auto-pair into a live BO3 match the moment there are 2
 // accepted. Admin retains full control afterward (board edits, kill corrections, adding
 // teammates, etc. all still work exactly the same on the resulting match). ═══
+// Auto-created matches (queue auto-match + tournament bracket "Start Match") previously always
+// hardcoded "First to 10" with no way for an admin to change it — this makes that configurable.
+function saveTdmDefaultTarget(){
+  if(!ADM)return;
+  const n=Math.max(1,parseInt(v('tdm-queue-target'))||10);
+  DB.set('tdmDefaultTarget',n);
+  notify('Default saved!',`Auto-created matches (queue + bracket) will now play First to ${n}`,'n-ok');
+}
 function myQueueEntry(queue){
   if(!CU)return null;
   // NOTE: keyed off CU.ign (the actual roster IGN), not CU.name (which is the player's Discord
@@ -4066,6 +4080,12 @@ function renderTdmQueue(){
   updateTopbarQueuePill();
   const queue=DB.get('tdmQueue',[]);
   const order=tdmQueueOrder(queue);
+  const targetRow=document.getElementById('tdm-queue-target-row');
+  if(targetRow){
+    targetRow.style.display=ADM?'flex':'none';
+    const tEl=document.getElementById('tdm-queue-target');
+    if(tEl&&document.activeElement!==tEl)tEl.value=DB.get('tdmDefaultTarget',10);
+  }
   const mineEl=document.getElementById('tdm-queue-my-request');
   if(mineEl){
     const mine=myQueueEntry(queue);
@@ -4139,7 +4159,7 @@ function tryAutoMatchTdmQueue(){
   if(!q1||!q2)return;
   q1.status='matched';q2.status='matched';
   DB.set('tdmQueue',queue);
-  const target=10,bo3=(q1.mode||'bo3')==='bo3';
+  const target=DB.get('tdmDefaultTarget',10),bo3=(q1.mode||'bo3')==='bo3';
   createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
   logAdminAction('TDM match auto-created',`${q1.playerIgn} vs ${q2.playerIgn} auto-matched from the ${bo3?'BO3':'1v1'} queue`);
   renderTdmLive();renderTdmHistory();updateTdmBadge();
@@ -4422,7 +4442,7 @@ function startBracketMatch(tid,roundIdx,matchIdx){
   const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tid);if(!t||!t.bracket)return;
   const rd=t.bracket.rounds[roundIdx];const bm=rd&&rd.matches[matchIdx];
   if(!bm||bm.status!=='pending'||!bm.aRoster||!bm.bRoster)return;
-  const newMatch=createTdmMatchObj(bm.a,bm.b,bm.aRoster,bm.bRoster,rd.bo3,10,`⚔️ ${t.name} — ${rd.name} — ${bm.a} vs ${bm.b}`,{tournamentId:tid,roundIdx,matchIdx});
+  const newMatch=createTdmMatchObj(bm.a,bm.b,bm.aRoster,bm.bRoster,rd.bo3,DB.get('tdmDefaultTarget',10),`⚔️ ${t.name} — ${rd.name} — ${bm.a} vs ${bm.b}`,{tournamentId:tid,roundIdx,matchIdx});
   bm.status='live';bm.tdmMatchId=newMatch.id;
   if(t.status!=='live'){t.status='live';}
   DB.set('tdmTournaments',list);
