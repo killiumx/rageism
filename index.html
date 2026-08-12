@@ -2383,6 +2383,7 @@ const SB_HEADERS = {
 const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue','tdmTournaments','tdmTournamentRequests'];
 let SB_OK = false, SB_WRITES = 0, SB_CONFLICTS = 0;
 let SB_LAST_CONFLICT = null;
+let SB_LAST_WRITE_DIAG = null;
 // Read-only network log of this tab's own Supabase REST calls — method, path, status, timing.
 // Deliberately never logs query strings, request/response bodies, or header values (those carry
 // the anon key and other players' data), so this is safe to show in the Debug Panel.
@@ -2643,7 +2644,8 @@ function renderDebugSync(){
     pend.innerHTML=`
       <div><strong>Writes sent this session:</strong> ${SB_WRITES}</div>
       <div><strong>Conflicts (all retries exhausted):</strong> ${SB_CONFLICTS}${SB_LAST_CONFLICT?` <span style="color:var(--textD)">— last on "${esc(SB_LAST_CONFLICT.key)}" at ${SB_LAST_CONFLICT.t}</span>`:''}</div>
-      <div><strong>Keys with an in-flight/queued write:</strong> ${pendingKeys.length?pendingKeys.map(esc).join(', '):'none'}</div>`;
+      <div><strong>Keys with an in-flight/queued write:</strong> ${pendingKeys.length?pendingKeys.map(esc).join(', '):'none'}</div>
+      ${SB_LAST_WRITE_DIAG?`<div style="margin-top:.3rem;padding:.5rem;background:var(--bg3);border-radius:6px;border-left:2px solid var(--amber)"><strong>Last failed write:</strong> ${esc(SB_LAST_WRITE_DIAG.step)} on "${esc(SB_LAST_WRITE_DIAG.key)}" → HTTP ${esc(String(SB_LAST_WRITE_DIAG.status))} at ${SB_LAST_WRITE_DIAG.t}<br><span style="color:var(--textD);font-size:.75rem">${esc(SB_LAST_WRITE_DIAG.detail||'')}</span></div>`:''}`;
   }
   const log=document.getElementById('debug-req-log');
   if(log){
@@ -2711,6 +2713,7 @@ function copyDebugInfo(){
     sbWrites:SB_WRITES,
     sbConflicts:SB_CONFLICTS,
     lastConflict:SB_LAST_CONFLICT,
+    lastWriteDiag:SB_LAST_WRITE_DIAG,
     recentRequests:SB_REQ_LOG.slice(-15),
     localStorageKeys:storageKeys,
     ua:navigator.userAgent,
@@ -2851,7 +2854,7 @@ async function sbAtomicUpdate(key, mutate, maxAttempts=6){
   }
   SB_CONFLICTS++;
   SB_LAST_CONFLICT={key,t:new Date().toLocaleTimeString()};
-  notify('Please try again','Someone else updated this at the same moment — refresh and retry','n-bad');
+  notify('Please try again',ADM?'Someone else updated this at the same moment — refresh and retry. If this keeps happening, check Debug → Sync Activity for the exact reason.':'Someone else updated this at the same moment — refresh and retry','n-bad');
   return null;
 }
 // Conditional write: PATCH only succeeds (returns a row) if updated_at still matches what we read.
@@ -2868,8 +2871,22 @@ function sbConditionalWrite(key,val,expectedUpdatedAt,rowExists){
           headers:{...SB_HEADERS,'Prefer':'return=representation'},
           body:JSON.stringify({value:val})
         });
-        if(!res.ok)return false;
+        if(!res.ok){
+          const bodyTxt=await res.text().catch(()=>'');
+          SB_LAST_WRITE_DIAG={key,step:'PATCH',status:res.status,detail:bodyTxt.slice(0,200),t:new Date().toLocaleTimeString()};
+          console.warn('[RAGEISM] sbConditionalWrite PATCH failed for "'+key+'": HTTP '+res.status+(bodyTxt?' — '+bodyTxt.slice(0,200):''));
+          return false;
+        }
         const rows=await res.json();
+        if(rows.length===0){
+          // A real conflict (updated_at moved) looks IDENTICAL over the wire to a Row-Level
+          // Security policy silently filtering the row out of the UPDATE's visibility — both come
+          // back as HTTP 200 with an empty array. If this repeats on every single attempt (not
+          // just occasionally under real concurrency), it's very likely RLS blocking UPDATE for
+          // this role, not an actual conflict — check Debug Panel → Sync Activity, and Supabase →
+          // Authentication → Policies for kv_store.
+          SB_LAST_WRITE_DIAG={key,step:'PATCH',status:res.status,detail:'0 rows matched — either a real concurrent write, or RLS is filtering this row out of UPDATE for the current role',t:new Date().toLocaleTimeString()};
+        }
         return rows.length>0;
       }else{
         const res=await fetch(SB_REST,{
@@ -2877,11 +2894,23 @@ function sbConditionalWrite(key,val,expectedUpdatedAt,rowExists){
           headers:{...SB_HEADERS,'Prefer':'resolution=ignore-duplicates,return=representation'},
           body:JSON.stringify([{key,value:val}])
         });
-        if(!res.ok)return false;
+        if(!res.ok){
+          const bodyTxt=await res.text().catch(()=>'');
+          SB_LAST_WRITE_DIAG={key,step:'INSERT',status:res.status,detail:bodyTxt.slice(0,200),t:new Date().toLocaleTimeString()};
+          console.warn('[RAGEISM] sbConditionalWrite INSERT failed for "'+key+'": HTTP '+res.status+(bodyTxt?' — '+bodyTxt.slice(0,200):''));
+          return false;
+        }
         const rows=await res.json();
+        if(rows.length===0){
+          SB_LAST_WRITE_DIAG={key,step:'INSERT',status:res.status,detail:'0 rows returned — a row already existed (someone else created it first), or RLS blocked the insert',t:new Date().toLocaleTimeString()};
+        }
         return rows.length>0; // empty = a row already existed (someone else created it first) -> conflict, retry
       }
-    }catch(e){ console.warn('[RAGEISM] sbConditionalWrite failed:',e.message); return false; }
+    }catch(e){
+      SB_LAST_WRITE_DIAG={key,step:'network',status:'ERR',detail:e.message,t:new Date().toLocaleTimeString()};
+      console.warn('[RAGEISM] sbConditionalWrite failed:',e.message);
+      return false;
+    }
   };
   const prev=_sbWriteQueue[key]||Promise.resolve();
   const chained=prev.then(run,run);
