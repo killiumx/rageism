@@ -4093,6 +4093,19 @@ function tdmQueueOrder(queue){
     return a.ts-b.ts;
   });
 }
+// Predicts who's paired with who if everyone currently in the queue gets accepted in the order
+// they're sitting in right now — consecutive same-mode entries pair up (1st & 2nd, 3rd & 4th...),
+// exactly mirroring how tryAutoMatchTdmQueue() actually pairs people. Returns a Map of id -> the
+// entry they're predicted to face. This is a genuine prediction, not a guess — it's the same
+// ordering logic the real auto-matcher runs, so "likely facing X" is trustworthy.
+function tdmQueuePredictedPairs(queue){
+  const map=new Map();
+  ['bo3','single'].forEach(mode=>{
+    const pool=tdmQueueOrder(queue).filter(q=>(q.mode||'bo3')===mode);
+    for(let i=0;i+1<pool.length;i+=2){map.set(pool[i].id,pool[i+1]);map.set(pool[i+1].id,pool[i]);}
+  });
+  return map;
+}
 // Keeps a small "You're #2 in queue" pill visible in the topbar on EVERY page, not just the TDM
 // page — so someone browsing the leaderboard or their profile still knows where they stand
 // without having to keep tabbing back to check.
@@ -4108,10 +4121,43 @@ function updateTopbarQueuePill(){
   document.getElementById('topbar-queue-text').textContent=mine.status==='accepted'?`#${pos} — waiting for opponent`:`#${pos} in ${modeLabel}`;
   pill.style.display='flex';
 }
+// Admin's manual-match selection — pick any 2 requests (same mode) and pair them directly,
+// bypassing the wait-time order. Capped at 2: picking a 3rd swaps out the oldest pick.
+let _tdmQueueSelection=[];
+function toggleQueueSelect(id){
+  if(!ADM)return;
+  const i=_tdmQueueSelection.indexOf(id);
+  if(i>=0)_tdmQueueSelection.splice(i,1);
+  else{
+    if(_tdmQueueSelection.length>=2)_tdmQueueSelection.shift();
+    _tdmQueueSelection.push(id);
+  }
+  renderTdmQueue();
+}
+async function manualMatchTdmQueue(){
+  if(!ADM)return;
+  if(_tdmQueueSelection.length!==2)return notify('Pick exactly 2','Select two requests to pair them together','n-bad');
+  if(tdmGetLive())return notify('A match is already live','Finish or end it before starting another.','n-bad');
+  await sbRefreshKey('tdmQueue');
+  const queue=DB.get('tdmQueue',[]);
+  const q1=queue.find(x=>x.id===_tdmQueueSelection[0]),q2=queue.find(x=>x.id===_tdmQueueSelection[1]);
+  if(!q1||!q2||q1.status==='matched'||q2.status==='matched'){_tdmQueueSelection=[];renderTdmQueue();return notify('Selection expired','One of those requests changed — pick again','n-bad');}
+  const mode1=q1.mode||'bo3',mode2=q2.mode||'bo3';
+  if(mode1!==mode2)return notify('Mode mismatch','Can only pair two requests from the same queue — both BO3 or both 1v1','n-bad');
+  q1.status='matched';q2.status='matched';
+  DB.set('tdmQueue',queue);
+  const target=DB.get('tdmDefaultTarget',10),bo3=mode1==='bo3';
+  createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
+  logAdminAction('TDM match manually matched',`${q1.playerIgn} vs ${q2.playerIgn} manually paired from the ${bo3?'BO3':'1v1'} queue by ${CU?CU.name:'Admin'} (overriding wait-time order)`);
+  _tdmQueueSelection=[];
+  renderTdmLive();renderTdmHistory();updateTdmBadge();renderTdmQueue();
+  notify('Match started!',`${q1.playerIgn} vs ${q2.playerIgn} — manually matched`,'n-ok');
+}
 function renderTdmQueue(){
   updateTopbarQueuePill();
   const queue=DB.get('tdmQueue',[]);
   const order=tdmQueueOrder(queue);
+  const predicted=tdmQueuePredictedPairs(queue);
   const targetRow=document.getElementById('tdm-queue-target-row');
   if(targetRow){
     targetRow.style.display=ADM?'flex':'none';
@@ -4126,14 +4172,16 @@ function renderTdmQueue(){
     }else if(mine){
       const pos=order.findIndex(x=>x.id===mine.id)+1;
       const mineMode=mine.mode||'bo3';
-      // Only same-mode accepted requests are actually eligible to be matched against me.
-      const acceptedOthers=order.filter(x=>x.status==='accepted'&&x.id!==mine.id&&(x.mode||'bo3')===mineMode);
-      // Potential matchup preview: if I were accepted right now, who's next in line to face me?
+      const facing=predicted.get(mine.id);
+      // Potential matchup preview: based on the SAME pairing order the auto-matcher actually uses,
+      // not just "whoever's accepted" — so this holds even while you're still pending.
       let matchupLine='';
-      if(mine.status==='accepted'&&acceptedOthers.length){
-        matchupLine=`<div style="font-size:.78rem;color:var(--accentL);margin-top:.4rem"><i class="fa-solid fa-people-arrows"></i> Likely facing: <strong>${esc(acceptedOthers[0].playerIgn)}</strong> next</div>`;
+      if(facing){
+        matchupLine=`<div style="font-size:.78rem;color:var(--accentL);margin-top:.4rem"><i class="fa-solid fa-people-arrows"></i> Likely facing: <strong>${esc(facing.playerIgn)}</strong>${facing.status==='pending'?' (once you\'re both accepted)':''}</div>`;
       }else if(mine.status==='pending'){
-        matchupLine=`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">Once accepted, you'll be matched against whoever's waited longest in the same queue at that point.</div>`;
+        matchupLine=`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">No one else is up next in this queue yet — you'll be matched against whoever queues up next.</div>`;
+      }else{
+        matchupLine=`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">Waiting on another accepted request in the same queue to pair against.</div>`;
       }
       mineEl.innerHTML=`<div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
@@ -4153,19 +4201,31 @@ function renderTdmQueue(){
   if(adminEl){
     adminEl.style.display=ADM?'block':'none';
     if(ADM){
+      // Clear out any selection that no longer exists in the queue (e.g. it just got auto-matched).
+      _tdmQueueSelection=_tdmQueueSelection.filter(id=>order.some(q=>q.id===id));
+      const selMode=_tdmQueueSelection.length?( (order.find(q=>q.id===_tdmQueueSelection[0])||{}).mode||'bo3'):null;
       // Smart queue: sorted longest-waiting first so it's obvious who should get matched/accepted
       // next — accepted requests bubble to the top since they're one step closer to a match.
-      const acceptedList=order.filter(q=>q.status==='accepted');
-      adminEl.innerHTML=!order.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:order.map((q,i)=>{
+      adminEl.innerHTML=(!order.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:`
+      <div style="font-size:.7rem;color:var(--textD);margin-bottom:.5rem"><i class="fa-solid fa-hand-pointer"></i> Tick any two requests below to pair them together manually — skips the normal wait-time order.</div>
+      ${order.map((q,i)=>{
         const qMode=q.mode||'bo3';
-        const nextOpponent=q.status==='accepted'?acceptedList.find(x=>x.id!==q.id&&(x.mode||'bo3')===qMode):null;
-        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)">
-        <div style="font-size:.85rem"><span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="chip" style="font-size:.65rem">${qMode==='single'?'1v1':'BO3'}</span> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span>${nextOpponent?`<span class="text-dim" style="font-size:.7rem"> · vs ${esc(nextOpponent.playerIgn)} next</span>`:''}</div>
+        const facing=predicted.get(q.id);
+        const selected=_tdmQueueSelection.includes(q.id);
+        const selectDisabled=!selected&&_tdmQueueSelection.length>=2;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);${selected?'background:rgba(124,92,255,.06);border-radius:6px;padding-left:.3rem':''}">
+        <div style="font-size:.85rem;display:flex;align-items:center;gap:.4rem">
+          <input type="checkbox" ${selected?'checked':''} ${selectDisabled?'disabled':''} onclick="toggleQueueSelect('${q.id}')" title="Select for manual match" style="cursor:pointer"/>
+          <span class="text-dim font-mono" style="font-size:.72rem">#${i+1}</span> <strong>${esc(q.playerIgn)}</strong> <span class="chip" style="font-size:.65rem">${qMode==='single'?'1v1':'BO3'}</span> <span class="${q.status==='accepted'?'chip chip-accent':'text-dim'}" style="font-size:.72rem;${q.status==='accepted'?'padding:.1rem .4rem':''}">${q.status==='accepted'?'accepted — waiting for opponent':'pending'}</span> <span class="text-dim" style="font-size:.7rem">· ${waitLabel(q.ts)}</span>${facing?`<span class="text-dim" style="font-size:.7rem"> · likely vs ${esc(facing.playerIgn)}</span>`:''}
+        </div>
         <div style="display:flex;gap:.3rem">
           ${q.status==='pending'?`<button class="btn btn-accent btn-xs" onclick="acceptTdmQueue('${q.id}')"><i class="fa-solid fa-check"></i> Accept</button>`:''}
           <button class="btn btn-danger btn-xs" onclick="cancelTdmQueue('${q.id}')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-      </div>`;}).join('');
+      </div>`;}).join('')}
+      ${_tdmQueueSelection.length===2?`<button class="btn btn-accent btn-sm" style="margin-top:.6rem" onclick="manualMatchTdmQueue()"><i class="fa-solid fa-bolt"></i> Match These Two Now</button>`
+        :_tdmQueueSelection.length===1?`<div style="font-size:.72rem;color:var(--textD);margin-top:.4rem">Pick one more ${selMode==='single'?'1v1':'BO3'} request to pair with — only same-queue requests are selectable together.</div>`:''}
+      `);
     }
   }
 }
@@ -7139,7 +7199,7 @@ function renderAPlayers(){
   const pl=q?all.filter(p=>[p.ign,p.name,p.uid,p.discord,p.team,p.region].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))):all;
   if(!all.length){body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players registered yet.</td></tr>';return;}
   if(!pl.length){body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players match "${q}".</td></tr>`;return;}
-  body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span></td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Edit stats & profile" onclick="openEditStats('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-ghost btn-xs" title="View profile" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-danger btn-xs" title="Delete player" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');
+  body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span>${!p.discordId?` <span class="chip chip-red" style="font-size:.6rem" title="Never signed in with Discord (or was added before Discord login existed) — can never be @mentioned in webhook results until they sign in with Discord at least once"><i class="fa-solid fa-triangle-exclamation"></i> not linked</span>`:''}</td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Edit stats & profile" onclick="openEditStats('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-ghost btn-xs" title="View profile" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-danger btn-xs" title="Delete player" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');
 }
 
 function renderATeams(){
@@ -7591,7 +7651,20 @@ function fireWebhookEvent(event,embed,mentionIgns,vars){
   if(!hooks.length)return;
   const igns=Array.isArray(mentionIgns)?mentionIgns:(mentionIgns?[mentionIgns]:[]);
   const players=DB.get('players');
-  const mentionFor=ign=>{const p=players.find(x=>x.ign===ign);return p&&p.discordId?`<@${p.discordId}>`:null;};
+  // Always pairs the raw <@id> mention with the readable name, e.g. "<@123456> (hammi0040_43101)".
+  // A raw mention can still render as "Unknown User" in Discord if that account isn't a member of
+  // the server the webhook posts into (Discord can only resolve mentions for people actually in that
+  // server — there's no way around that from a webhook, since webhooks can't check server membership;
+  // only a real bot with a secret bot token can, and a bot token can never safely live in a public,
+  // client-side page). This can't fix the ping itself, but it means the message never just says
+  // "Unknown User" with zero context — the actual player name is always right there next to it.
+  // Previously a missing discordId silently DROPPED that player from the mention line entirely with
+  // no trace; now it falls back to just their plain IGN so nobody goes unmentioned in text form.
+  const mentionFor=ign=>{
+    const p=players.find(x=>x.ign===ign);
+    const tag=p&&p.discordId?`<@${p.discordId}>`:null;
+    return tag?`${tag} (${ign})`:ign;
+  };
   hooks.forEach(w=>{
     const scope=w.mentionScope||'all';
     let useIgns=scope==='none'?[]:scope==='captain'?igns.slice(0,1):igns;
