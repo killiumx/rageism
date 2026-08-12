@@ -4203,11 +4203,16 @@ async function cancelTdmQueue(id){
 // it — just grew forever. This drops matched entries once they're a day old (using matchedAt if
 // present, falling back to ts for older entries saved before matchedAt existed).
 const TDM_QUEUE_MATCHED_TTL_MS=24*60*60*1000;
-function pruneMatchedTdmQueue(){
-  const queue=DB.get('tdmQueue',[]);
+// Was: DB.get(...) + DB.set(...) — a plain optimistic overwrite of the WHOLE row with no
+// updated_at check. That's exactly the class of bug sbAtomicUpdate exists to prevent: this ran
+// on every page load, so a tab that booted with even a slightly stale local snapshot (e.g. a
+// slow/failed sbLoad) would silently push that stale queue back to Supabase, resurrecting entries
+// someone had just cancelled/accepted elsewhere. Routed through sbAtomicUpdate so it reads fresh,
+// mutates, and only commits if nobody else changed the row in between (retrying against fresh
+// data otherwise) — the same protection every other queue mutation already uses.
+async function pruneMatchedTdmQueue(){
   const cutoff=Date.now()-TDM_QUEUE_MATCHED_TTL_MS;
-  const kept=queue.filter(q=>q.status!=='matched'||(q.matchedAt||q.ts)>cutoff);
-  if(kept.length!==queue.length)DB.set('tdmQueue',kept);
+  await sbAtomicUpdate('tdmQueue',queue=>queue.filter(q=>q.status!=='matched'||(q.matchedAt||q.ts)>cutoff));
 }
 function waitLabel(ts){
   const mins=Math.floor((Date.now()-ts)/60000);
@@ -4344,7 +4349,10 @@ function renderTdmQueue(){
       // Smart queue: sorted longest-waiting first so it's obvious who should get matched/accepted
       // next — accepted requests bubble to the top since they're one step closer to a match.
       adminEl.innerHTML=(!order.length?`<div class="text-dim" style="font-size:.8rem">No pending requests.</div>`:`
-      <div style="font-size:.7rem;color:var(--textD);margin-bottom:.5rem"><i class="fa-solid fa-hand-pointer"></i> Tick any two requests below to pair them together manually — skips the normal wait-time order.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+        <div style="font-size:.7rem;color:var(--textD)"><i class="fa-solid fa-hand-pointer"></i> Tick any two requests below to pair them together manually — skips the normal wait-time order.</div>
+        <button class="btn btn-danger btn-xs" onclick="clearTdmQueue()"><i class="fa-solid fa-broom"></i> Clear Queue</button>
+      </div>
       ${order.map((q,i)=>{
         const qMode=q.mode||'bo3';
         const facing=predicted.get(q.id);
@@ -4387,6 +4395,23 @@ async function acceptTdmQueue(id){
 // Finds (but doesn't yet commit) the next pair to auto-match from an in-memory queue snapshot, and
 // marks them 'matched' on that same snapshot so the caller's single write includes the pairing.
 // Only runs if no match is currently live.
+// Admin-only: wipe every entry out of the queue in one shot (pending, accepted, and matched
+// alike) instead of clicking the per-row ✕ one at a time. Goes through sbAtomicUpdate like every
+// other queue write, so it can't itself cause the "came back after a while" bug.
+async function clearTdmQueue(){
+  if(!ADM)return;
+  const queue=DB.get('tdmQueue',[]);
+  if(!queue.length)return notify('Queue already empty','','n-ok');
+  if(!confirm(`Clear the entire queue? This removes all ${queue.length} request(s) — pending and accepted. This can't be undone.`))return;
+  return guardedAction('clearTdmQueue',async()=>{
+    const result=await sbAtomicUpdate('tdmQueue',()=>[]);
+    if(result===null)return; // conflict after retries, sbAtomicUpdate already notified
+    _tdmQueueSelection=[];
+    renderTdmQueue();
+    notify('Queue cleared',`Removed ${queue.length} request(s).`,'n-ok');
+    logAdminAction('TDM queue cleared',`${CU?CU.name:'Admin'} cleared the entire TDM queue (${queue.length} request(s))`);
+  });
+}
 function tryFindQueuePair(queue){
   if(tdmGetLive())return null; // don't auto-start a new match over a live one — they'll stay queued until it's free
   const accepted=queue.filter(q=>q.status==='accepted').sort((a,b)=>a.ts-b.ts); // longest-waiting pair goes first
