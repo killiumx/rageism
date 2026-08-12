@@ -2732,6 +2732,12 @@ function sbSubscribeQueueRealtime(){
 async function sbRefreshKey(key){
   if(!SB_OK) return;
   try{
+    // Wait for any write to THIS key that's still in flight to finish landing before pulling
+    // "the freshest" copy — otherwise a fast second action (e.g. Accept, then Accept again, or
+    // Accept then Cancel) can read a not-yet-committed snapshot from the server and stomp the
+    // first action's change right back to its old value. This is what caused an entry to show
+    // "accepted" for a moment and then silently flip back to "pending" on its own.
+    await (_sbWriteQueue[key] || Promise.resolve());
     const res = await fetch(SB_REST + '?select=value&key=eq.' + encodeURIComponent(key), { method:'GET', headers: SB_HEADERS });
     if(!res.ok) return;
     const rows = await res.json();
