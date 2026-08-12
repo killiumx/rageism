@@ -2094,7 +2094,7 @@ tr:last-child td{border-bottom:none}
 
       <!-- ░ DEBUG PANEL (admin/master only) ░ -->
       <div class="page" id="page-debug">
-        <div class="sh-row mb2"><div class="sh"><div class="sh-title">Debug <span style="color:var(--accentL)">Panel</span></div><div class="sh-sub">Connection health and environment info — not visible to regular players</div></div></div>
+        <div class="sh-row mb2"><div class="sh"><div class="sh-title">Debug <span style="color:var(--accentL)">Panel</span></div><div class="sh-sub">Connection health, sync activity, storage, and security notes — not visible to regular players</div></div></div>
         <div class="g2">
           <div class="card mb2">
             <div class="card-title"><i class="fa-solid fa-signal"></i> Connection Status</div>
@@ -2110,6 +2110,22 @@ tr:last-child td{border-bottom:none}
             <div class="card-title"><i class="fa-solid fa-user-shield"></i> Session Info</div>
             <div id="debug-session-info" style="font-size:.83rem;color:var(--textM);display:flex;flex-direction:column;gap:.4rem"></div>
           </div>
+        </div>
+        <div class="card mb2">
+          <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Security Checks</div>
+          <div style="font-size:.78rem;color:var(--textM);margin-bottom:.6rem">What actually protects your data, vs. what's just UI convenience. Read this before assuming the "Admin" toggle alone keeps the database safe.</div>
+          <div id="debug-security-checks" style="display:flex;flex-direction:column;gap:.5rem"></div>
+        </div>
+        <div class="card mb2">
+          <div class="card-title"><i class="fa-solid fa-arrows-rotate"></i> Sync Activity</div>
+          <div id="debug-sync-summary" style="font-size:.83rem;color:var(--textM);display:flex;flex-direction:column;gap:.3rem;margin-bottom:.6rem"></div>
+          <div style="font-size:.72rem;color:var(--textD);margin-bottom:.4rem">Last 15 requests this tab made to Supabase (method / path / status / timing only — never bodies or keys):</div>
+          <div id="debug-req-log" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem;font-family:'DM Mono',monospace;font-size:.72rem"></div>
+        </div>
+        <div class="card mb2">
+          <div class="card-title"><i class="fa-solid fa-database"></i> Local Storage</div>
+          <div style="font-size:.78rem;color:var(--textM);margin-bottom:.6rem">Every collection cached in this browser, and how big it's gotten.</div>
+          <div id="debug-storage-list" style="display:flex;flex-direction:column;gap:.15rem;max-height:220px;overflow-y:auto"></div>
         </div>
         <div class="card mb2">
           <div class="card-title"><i class="fa-solid fa-bug"></i> Recent Client Warnings</div>
@@ -2365,7 +2381,40 @@ const SB_HEADERS = {
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
 const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue','tdmTournaments','tdmTournamentRequests'];
-let SB_OK = false, SB_WRITES = 0;
+let SB_OK = false, SB_WRITES = 0, SB_CONFLICTS = 0;
+let SB_LAST_CONFLICT = null;
+// Read-only network log of this tab's own Supabase REST calls — method, path, status, timing.
+// Deliberately never logs query strings, request/response bodies, or header values (those carry
+// the anon key and other players' data), so this is safe to show in the Debug Panel.
+const SB_REQ_LOG=[];
+const SB_REQ_LOG_MAX=60;
+(function instrumentSupabaseFetch(){
+  const origFetch=window.fetch.bind(window);
+  window.fetch=async function(url,opts){
+    const isSb=typeof url==='string'&&url.indexOf(SUPABASE_URL)===0;
+    if(!isSb)return origFetch(url,opts);
+    const method=(opts&&opts.method)||'GET';
+    const path=url.slice(SUPABASE_URL.length).split('?')[0];
+    const t0=performance.now();
+    try{
+      const res=await origFetch(url,opts);
+      SB_REQ_LOG.push({t:new Date().toLocaleTimeString(),method,path,status:res.status,ms:Math.round(performance.now()-t0)});
+      if(SB_REQ_LOG.length>SB_REQ_LOG_MAX)SB_REQ_LOG.shift();
+      if(document.getElementById('page-debug')?.classList.contains('active'))renderDebugSync();
+      return res;
+    }catch(e){
+      SB_REQ_LOG.push({t:new Date().toLocaleTimeString(),method,path,status:'ERR',ms:Math.round(performance.now()-t0)});
+      if(SB_REQ_LOG.length>SB_REQ_LOG_MAX)SB_REQ_LOG.shift();
+      if(document.getElementById('page-debug')?.classList.contains('active'))renderDebugSync();
+      throw e;
+    }
+  };
+})();
+// Which path granted the current admin session, purely for the Debug Panel — 'discord' means a
+// live, server-verified Discord OAuth session; 'local-restore' means this tab just re-read a
+// previously-saved local flag without re-checking auth this boot. Both are normal, but it's useful
+// to see which one you're on when troubleshooting an access issue.
+let SESSION_SOURCE='none';
 
 // ═══ SUPABASE AUTH — Discord OAuth login ═══
 // window.supabase is the UMD library global; our client instance is named sbAuth to avoid clashing with it.
@@ -2435,6 +2484,7 @@ async function checkDiscordSession(){
       }
       const rr = resolveRole(session.user.id, p.ign);
       ADM = rr.isAdmin;
+      SESSION_SOURCE='discord';
       CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: discordName, discAvatar: discordAvatar, authId: session.user.id, isMaster: rr.isMaster };
       window._myDiscordId = discordId; window._myDiscordName = discordName; // cached so any later form (e.g. the extended Sign Up profile) can attach the REAL Discord identity instead of a free-typed username
       finishLogin();
@@ -2574,11 +2624,74 @@ function renderDebugPage(){
     si.innerHTML=`
       <div><strong>Signed in as:</strong> ${CU?CU.name:'—'} (${CU?CU.ign:'—'})</div>
       <div><strong>Role:</strong> ${CU&&CU.isMaster?'Master':(CU&&ADM?'Admin':'Player')}</div>
+      <div><strong>Session source:</strong> ${SESSION_SOURCE==='discord'?'Discord OAuth (verified this load)':SESSION_SOURCE==='local-restore'?'Restored from this browser — not re-verified this load':'—'}</div>
       <div><strong>Color theme:</strong> ${localStorage.getItem('rge5_userTheme')||'site default ('+((DB.get('cfg',{}).siteTheme)||'light')+')'}</div>
       <div><strong>Site font:</strong> ${(DB.get('cfg',{}).siteFont)||'dmsans'}</div>
       <div><strong>Browser:</strong> ${navigator.userAgent}</div>`;
   }
   renderDebugLog();
+  renderDebugSync();
+  renderDebugStorage();
+  renderDebugSecurity();
+}
+// Sync Activity: pending write-queue keys, conflict count, and the last ~15 Supabase requests
+// this tab has actually made (method/path/status/timing only — no bodies, no header/token values).
+function renderDebugSync(){
+  const pend=document.getElementById('debug-sync-summary');
+  if(pend){
+    const pendingKeys=Object.keys(_sbWriteQueue||{});
+    pend.innerHTML=`
+      <div><strong>Writes sent this session:</strong> ${SB_WRITES}</div>
+      <div><strong>Conflicts (all retries exhausted):</strong> ${SB_CONFLICTS}${SB_LAST_CONFLICT?` <span style="color:var(--textD)">— last on "${esc(SB_LAST_CONFLICT.key)}" at ${SB_LAST_CONFLICT.t}</span>`:''}</div>
+      <div><strong>Keys with an in-flight/queued write:</strong> ${pendingKeys.length?pendingKeys.map(esc).join(', '):'none'}</div>`;
+  }
+  const log=document.getElementById('debug-req-log');
+  if(log){
+    const rows=SB_REQ_LOG.slice(-15).reverse();
+    log.innerHTML=rows.length?rows.map(r=>`<div style="display:flex;gap:.5rem;padding:.25rem .5rem;background:var(--bg3);border-radius:6px;border-left:2px solid ${r.status==='ERR'||r.status>=400?'var(--red)':'var(--green)'}"><span style="color:var(--textD);min-width:70px">${r.t}</span><span style="min-width:46px;font-weight:700">${r.method}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.path)}</span><span style="color:var(--textD)">${r.status} · ${r.ms}ms</span></div>`).join(''):'<div style="color:var(--textD);padding:.3rem .5rem">No Supabase requests logged yet this session.</div>';
+  }
+}
+// Local Storage: every rge5_* key this browser is holding, with its approximate size — useful for
+// spotting a collection that's ballooned (e.g. the tdmQueue-never-pruned bug) or gone missing.
+function renderDebugStorage(){
+  const el=document.getElementById('debug-storage-list');
+  if(!el)return;
+  const rows=[];
+  let total=0;
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k||!k.startsWith('rge5_'))continue;
+    const v=localStorage.getItem(k)||'';
+    const bytes=new Blob([v]).size;
+    total+=bytes;
+    let count='';
+    try{ const parsed=JSON.parse(v); if(Array.isArray(parsed))count=` (${parsed.length} item${parsed.length===1?'':'s'})`; }catch{}
+    rows.push({k:k.slice(5),bytes,count});
+  }
+  rows.sort((a,b)=>b.bytes-a.bytes);
+  const fmt=b=>b<1024?b+' B':(b/1024).toFixed(1)+' KB';
+  el.innerHTML=`<div style="font-size:.72rem;color:var(--textD);margin-bottom:.4rem">${rows.length} key(s) · ${fmt(total)} total</div>`+
+    rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:.5rem;padding:.2rem .5rem;font-family:'DM Mono',monospace;font-size:.72rem"><span>${esc(r.k)}${r.count}</span><span style="color:var(--textD)">${fmt(r.bytes)}</span></div>`).join('');
+}
+// Security Checks: this is a no-backend, anon-key architecture — the ADM flag only hides/shows UI
+// in THIS browser tab, it grants no real permission by itself. Whatever actually stops a random
+// visitor from writing to the database has to live in Supabase's Row-Level Security policies,
+// since the anon key embedded in this page is public by design (anyone can read it from "view
+// source"). This card states that plainly rather than trying to silently "test" it by writing to
+// the live table, which would just be poking a production database from client code.
+function renderDebugSecurity(){
+  const el=document.getElementById('debug-security-checks');
+  if(!el)return;
+  const items=[
+    {ok:null,label:'Anon key is public by design',detail:'The Supabase anon/public key in this page\'s source is meant to be visible — that\'s normal. It does NOT need to be kept secret. Never put the service_role/secret key here.'},
+    {ok:SESSION_SOURCE!=='local-restore',label:'Admin session verification',detail:SESSION_SOURCE==='local-restore'?'This tab is currently trusting a saved local flag for admin access rather than a freshly-checked Discord session. That\'s expected on a quick reload, but it\'s a client-side convenience only — it grants no actual database permission.':'Admin access this load came from a live, server-checked Discord session.'},
+    {ok:false,label:'Row-Level Security on kv_store must do the real enforcement',detail:'Every admin/master check in this app (the ADM flag) only controls what buttons render in the browser. It cannot stop someone from calling the Supabase REST API directly with the public anon key and writing to any row. The only real protection is Supabase\'s Row-Level Security (RLS) policies on the kv_store and adminRoles data. Verify in Supabase → Authentication → Policies that INSERT/UPDATE/DELETE require an authenticated user with an admin/master role — do not rely on this app\'s UI gating alone.'},
+    {ok:false,label:'adminRoles is itself just a row in kv_store',detail:'Role assignments (who is admin/master) are stored as regular data, not a separate privileged system. If RLS allows any authenticated (or anonymous) writer to update the adminRoles row, a visitor could grant themselves admin directly via the API. Lock down writes to adminRoles specifically, not just to the app UI.'},
+  ];
+  el.innerHTML=items.map(it=>`<div style="display:flex;gap:.6rem;padding:.55rem .6rem;background:var(--bg3);border-radius:var(--rS);border-left:3px solid ${it.ok===true?'var(--green)':it.ok===false?'var(--amber)':'var(--blue)'}">
+    <i class="fa-solid ${it.ok===true?'fa-circle-check':it.ok===false?'fa-triangle-exclamation':'fa-circle-info'}" style="color:${it.ok===true?'var(--green)':it.ok===false?'var(--amber)':'var(--blue)'};margin-top:.15rem"></i>
+    <div><div style="font-weight:700;font-size:.83rem">${it.label}</div><div style="font-size:.76rem;color:var(--textM);margin-top:.15rem">${it.detail}</div></div>
+  </div>`).join('');
 }
 async function debugTestConnection(){
   notify('Testing connection...','','n-info',1500);
@@ -2587,7 +2700,23 @@ async function debugTestConnection(){
   renderDebugPage();
 }
 function copyDebugInfo(){
-  const info={theme:resolveActiveTheme(),font:(DB.get('cfg',{}).siteFont)||'dmsans',role:CU&&CU.isMaster?'master':(ADM?'admin':'player'),sbStatus:SB_LAST_MSG,ua:navigator.userAgent,time:new Date().toISOString(),recentWarnings:DEBUG_LOG.slice(-10)};
+  const storageKeys=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('rge5_'))storageKeys.push(k.slice(5));}
+  const info={
+    theme:resolveActiveTheme(),
+    font:(DB.get('cfg',{}).siteFont)||'dmsans',
+    role:CU&&CU.isMaster?'master':(ADM?'admin':'player'),
+    sessionSource:SESSION_SOURCE,
+    sbStatus:SB_LAST_MSG,
+    sbWrites:SB_WRITES,
+    sbConflicts:SB_CONFLICTS,
+    lastConflict:SB_LAST_CONFLICT,
+    recentRequests:SB_REQ_LOG.slice(-15),
+    localStorageKeys:storageKeys,
+    ua:navigator.userAgent,
+    time:new Date().toISOString(),
+    recentWarnings:DEBUG_LOG.slice(-10)
+  };
   const txt=JSON.stringify(info,null,2);
   if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>notify('Copied!','Debug info copied to clipboard','n-ok')).catch(()=>notify('Copy failed','Select and copy manually','n-bad'));
 }
@@ -2720,6 +2849,8 @@ async function sbAtomicUpdate(key, mutate, maxAttempts=6){
     }
     // Someone else saved this key between our read and our write — loop and retry against fresh data.
   }
+  SB_CONFLICTS++;
+  SB_LAST_CONFLICT={key,t:new Date().toLocaleTimeString()};
   notify('Please try again','Someone else updated this at the same moment — refresh and retry','n-bad');
   return null;
 }
@@ -8224,7 +8355,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   if(!hadDiscordSession){
     const cu = DB.get('cu5', null);
     if(cu && cu.name){
-      CU=cu; ADM=DB.get('adm5',false);
+      CU=cu; ADM=DB.get('adm5',false); SESSION_SOURCE=ADM?'local-restore':'none';
       document.getElementById('ls').style.display='none';
       document.getElementById('app').classList.add('show');
       updateSidebar();
