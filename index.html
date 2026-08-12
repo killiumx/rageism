@@ -2697,7 +2697,35 @@ async function sbWriteNow(key, val){
     console.warn('[RAGEISM] sbWrite error for key "' + key + '":', e.message);
   }
 }
-// Pulls just ONE key fresh from Supabase and overwrites the local cached copy with it. Used right
+// Live sync for the TDM queue + tournaments. Root-cause note: this app has NO push-based sync
+// anywhere else — every screen only re-reads data on ITS OWN explicit actions (or a full page
+// reload). So if Player A cancels their queue request from their phone, an admin's laptop that's
+// just sitting on the TDM page has literally no way to find out — it'll keep showing the old
+// (pre-cancel) list until the admin does something that happens to trigger a re-fetch. From the
+// admin's point of view that looks exactly like "I cancelled it and it came back" even though
+// their own cancel action worked fine — they were just looking at a screen nobody told about it.
+// This subscribes to live database changes and pushes them into every open tab within ~milliseconds
+// of the write landing, instead of only ever refreshing on that tab's own actions.
+// REQUIRES: Realtime replication enabled for the `kv_store` table in the Supabase dashboard
+// (Database → Replication → toggle it on for that table). If it's off, this silently does nothing —
+// no error, just no live updates — so if pushes aren't showing up, check that setting first.
+function sbSubscribeQueueRealtime(){
+  if(!SB_OK || !sbAuth) return;
+  const watched=['tdmQueue','tdmTournaments','tdmTournamentRequests'];
+  try{
+    sbAuth.channel('rge5-tdm-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:'kv_store'},payload=>{
+        const row=payload.new||payload.old;
+        if(!row||!watched.includes(row.key))return;
+        if(payload.eventType==='DELETE')localStorage.removeItem('rge5_'+row.key);
+        else localStorage.setItem('rge5_'+row.key,JSON.stringify(row.value));
+        // Both no-op safely if the TDM page isn't the one currently on screen — they just
+        // re-read from the now-updated localStorage and bail via their own element null-checks.
+        renderTdmQueue();renderTdmTournaments();
+      })
+      .subscribe();
+  }catch(e){ console.warn('[RAGEISM] Realtime subscribe failed:', e.message); }
+}
 // before acting on shared, contended state (the TDM queue, tournament signups) so an admin/player
 // on a device that's been sitting idle for a while doesn't read-modify-write a STALE snapshot and
 // silently stomp changes someone else made on another device in the meantime.
@@ -7966,6 +7994,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const sbReady = await sbInit();
   if(sbReady){
     await sbLoad();
+    sbSubscribeQueueRealtime(); // push live TDM queue/tournament changes into this tab instead of leaving it stale until the next reload
   } else {
     sbInitMsg('Server unavailable — using local data');
     await new Promise(r=>setTimeout(r,600));
