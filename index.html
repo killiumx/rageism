@@ -2747,6 +2747,17 @@ async function sbRefreshKey(key){
   }
 }
 
+// Guards admin approve/accept/deny actions against being run twice for the same target — e.g. a
+// fast double-click, or a laggy connection making someone click "Approve" again while the first
+// click is still awaiting sbRefreshKey/sbWrite. Each action is keyed by name+id, so different
+// requests can still be actioned in parallel; only the exact same click gets deduped.
+const _actionLock=new Set();
+async function guardedAction(key,fn){
+  if(_actionLock.has(key))return;
+  _actionLock.add(key);
+  try{ await fn(); } finally{ _actionLock.delete(key); }
+}
+
 // ═══ DB (localStorage + Supabase mirror) ═══
 const DB={
   get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem('rge5_'+k))??d}catch{return d}},
@@ -4095,22 +4106,35 @@ async function requestTdmQueue(mode){
 // Cancelling shifts everyone else up one spot — this pings the queue so nobody's left wondering
 // why their position suddenly changed.
 async function cancelTdmQueue(id){
-  await sbRefreshKey('tdmQueue');
-  const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
-  if(!ADM&&(!CU||CU.ign!==q.playerIgn))return;
-  const remaining=queue.filter(x=>x.id!==id);
-  DB.set('tdmQueue',remaining);
-  renderTdmQueue();
-  notify('Request cancelled','','n-ok');
-  const stillWaiting=remaining.filter(x=>x.status!=='matched').sort((a,b)=>{
-    if(a.status!==b.status)return a.status==='accepted'?-1:1;
-    return a.ts-b.ts;
+  return guardedAction('cancelTdmQueue:'+id,async()=>{
+    await sbRefreshKey('tdmQueue');
+    const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
+    if(!ADM&&(!CU||CU.ign!==q.playerIgn))return;
+    const remaining=queue.filter(x=>x.id!==id);
+    DB.set('tdmQueue',remaining);
+    renderTdmQueue();
+    notify('Request cancelled','','n-ok');
+    const stillWaiting=remaining.filter(x=>x.status!=='matched').sort((a,b)=>{
+      if(a.status!==b.status)return a.status==='accepted'?-1:1;
+      return a.ts-b.ts;
+    });
+    if(stillWaiting.length){
+      fireWebhookEvent('queueReshuffled',{title:'🔄 BO3 Queue Reshuffled',description:`**${q.playerIgn}** left the queue — everyone moved up a spot.`,color:15105570,fields:[
+        {name:'Now Up Next',value:stillWaiting.map((x,i)=>`${i+1}. ${x.playerIgn}${x.status==='accepted'?' (accepted)':''}`).join('\n').slice(0,1000),inline:false}
+      ]},stillWaiting.map(x=>x.playerIgn));
+    }
   });
-  if(stillWaiting.length){
-    fireWebhookEvent('queueReshuffled',{title:'🔄 BO3 Queue Reshuffled',description:`**${q.playerIgn}** left the queue — everyone moved up a spot.`,color:15105570,fields:[
-      {name:'Now Up Next',value:stillWaiting.map((x,i)=>`${i+1}. ${x.playerIgn}${x.status==='accepted'?' (accepted)':''}`).join('\n').slice(0,1000),inline:false}
-    ]},stillWaiting.map(x=>x.playerIgn));
-  }
+}
+// Matched entries are filtered out of every queue view already (tdmQueueOrder skips status
+// 'matched') but were never actually deleted, so the tdmQueue array — and the Supabase row behind
+// it — just grew forever. This drops matched entries once they're a day old (using matchedAt if
+// present, falling back to ts for older entries saved before matchedAt existed).
+const TDM_QUEUE_MATCHED_TTL_MS=24*60*60*1000;
+function pruneMatchedTdmQueue(){
+  const queue=DB.get('tdmQueue',[]);
+  const cutoff=Date.now()-TDM_QUEUE_MATCHED_TTL_MS;
+  const kept=queue.filter(q=>q.status!=='matched'||(q.matchedAt||q.ts)>cutoff);
+  if(kept.length!==queue.length)DB.set('tdmQueue',kept);
 }
 function waitLabel(ts){
   const mins=Math.floor((Date.now()-ts)/60000);
@@ -4178,7 +4202,7 @@ async function manualMatchTdmQueue(){
   if(!q1||!q2||q1.status==='matched'||q2.status==='matched'){_tdmQueueSelection=[];renderTdmQueue();return notify('Selection expired','One of those requests changed — pick again','n-bad');}
   const mode1=q1.mode||'bo3',mode2=q2.mode||'bo3';
   if(mode1!==mode2)return notify('Mode mismatch','Can only pair two requests from the same queue — both BO3 or both 1v1','n-bad');
-  q1.status='matched';q2.status='matched';
+  q1.status='matched';q2.status='matched';q1.matchedAt=Date.now();q2.matchedAt=Date.now();
   DB.set('tdmQueue',queue);
   const target=DB.get('tdmDefaultTarget',10),bo3=mode1==='bo3';
   createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
@@ -4265,12 +4289,14 @@ function renderTdmQueue(){
 }
 async function acceptTdmQueue(id){
   if(!ADM)return;
-  await sbRefreshKey('tdmQueue');
-  const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
-  q.status='accepted';DB.set('tdmQueue',queue);
-  logAdminAction('TDM queue request accepted',`${q.playerIgn} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
-  tryAutoMatchTdmQueue();
-  renderTdmQueue();
+  return guardedAction('acceptTdmQueue:'+id,async()=>{
+    await sbRefreshKey('tdmQueue');
+    const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
+    q.status='accepted';DB.set('tdmQueue',queue);
+    logAdminAction('TDM queue request accepted',`${q.playerIgn} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
+    tryAutoMatchTdmQueue();
+    renderTdmQueue();
+  });
 }
 function tryAutoMatchTdmQueue(){
   if(tdmGetLive())return; // don't auto-start a new match over a live one — they'll stay queued until it's free
@@ -4284,7 +4310,7 @@ function tryAutoMatchTdmQueue(){
     if(pool.length>=2){[q1,q2]=pool;break;}
   }
   if(!q1||!q2)return;
-  q1.status='matched';q2.status='matched';
+  q1.status='matched';q2.status='matched';q1.matchedAt=Date.now();q2.matchedAt=Date.now();
   DB.set('tdmQueue',queue);
   const target=DB.get('tdmDefaultTarget',10),bo3=(q1.mode||'bo3')==='bo3';
   createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
@@ -5598,10 +5624,13 @@ function renderPlayerReports(){
 }
 function resolvePlayerReport(id){
   if(!ADM)return;
-  const reports=DB.get('playerReports',[]);const r=reports.find(x=>x.id===id);if(!r)return;
-  r.status='resolved';DB.set('playerReports',reports);
-  renderPlayerReports();updatePendingBadges();
-  notify('Report dismissed','','n-ok');
+  guardedAction('resolvePlayerReport:'+id,async()=>{
+    await sbRefreshKey('playerReports');
+    const reports=DB.get('playerReports',[]);const r=reports.find(x=>x.id===id);if(!r)return;
+    r.status='resolved';DB.set('playerReports',reports);
+    renderPlayerReports();updatePendingBadges();
+    notify('Report dismissed','','n-ok');
+  });
 }
 
 // ═══ Shareable Stat Card — canvas-rendered PNG, no external libraries needed ═══
@@ -6582,26 +6611,33 @@ function renderTransferRequests(){
 }
 function approveTransfer(id){
   if(!ADM)return notify('Admins only','','n-bad');
-  const reqs=DB.get('transferRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
-  const pl=DB.get('players');const from=pl.find(p=>p.id===r.fromId),to=pl.find(p=>p.id===r.toId);
-  if(from&&to){
-    to.kills=(to.kills||0)+(from.kills||0);to.deaths=(to.deaths||0)+(from.deaths||0);
-    to.wins=(to.wins||0)+(from.wins||0);to.damage=(to.damage||0)+(from.damage||0);
-    to.xp=(to.xp||0)+(from.xp||0);to.points=(to.points||0)+(from.points||0);
-    to.gamesPlayed=(to.gamesPlayed||0)+(from.gamesPlayed||0);
-    from.kills=0;from.deaths=0;from.wins=0;from.damage=0;from.xp=0;from.points=0;from.gamesPlayed=0;from.statsTransferredTo=to.ign;
-    DB.set('players',pl);
-  }
-  r.status='approved';DB.set('transferRequests',reqs);
-  renderTransferRequests();updatePendingBadges();renderAPlayers();updateStats();buildTicker();refreshDLs();buildMyProfile();
-  notify('Transfer approved',`${r.fromIgn}'s stats moved to ${r.toIgn}`,'n-ok');
+  guardedAction('approveTransfer:'+id,async()=>{
+    await sbRefreshKey('transferRequests');
+    const reqs=DB.get('transferRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
+    await sbRefreshKey('players');
+    const pl=DB.get('players');const from=pl.find(p=>p.id===r.fromId),to=pl.find(p=>p.id===r.toId);
+    if(from&&to){
+      to.kills=(to.kills||0)+(from.kills||0);to.deaths=(to.deaths||0)+(from.deaths||0);
+      to.wins=(to.wins||0)+(from.wins||0);to.damage=(to.damage||0)+(from.damage||0);
+      to.xp=(to.xp||0)+(from.xp||0);to.points=(to.points||0)+(from.points||0);
+      to.gamesPlayed=(to.gamesPlayed||0)+(from.gamesPlayed||0);
+      from.kills=0;from.deaths=0;from.wins=0;from.damage=0;from.xp=0;from.points=0;from.gamesPlayed=0;from.statsTransferredTo=to.ign;
+      DB.set('players',pl);
+    }
+    r.status='approved';DB.set('transferRequests',reqs);
+    renderTransferRequests();updatePendingBadges();renderAPlayers();updateStats();buildTicker();refreshDLs();buildMyProfile();
+    notify('Transfer approved',`${r.fromIgn}'s stats moved to ${r.toIgn}`,'n-ok');
+  });
 }
 function denyTransfer(id){
   if(!ADM)return notify('Admins only','','n-bad');
-  const reqs=DB.get('transferRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
-  r.status='denied';DB.set('transferRequests',reqs);
-  renderTransferRequests();updatePendingBadges();buildMyProfile();
-  notify('Transfer denied','','n-info');
+  guardedAction('denyTransfer:'+id,async()=>{
+    await sbRefreshKey('transferRequests');
+    const reqs=DB.get('transferRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
+    r.status='denied';DB.set('transferRequests',reqs);
+    renderTransferRequests();updatePendingBadges();buildMyProfile();
+    notify('Transfer denied','','n-info');
+  });
 }
 
 function buildMyProfile(){
@@ -7248,13 +7284,16 @@ function renderATeams(){
   </td></tr>`).join('');}
 
 function approveTeam(id){
-  const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
-  t.approved=true;DB.set('teams',teams);renderATeams();renderTeams();logAdminAction('Team approved',`${t.name} was approved`);notify(`${t.name} approved!`,'','n-ok');
-  fireWebhookEvent('teamApproved',{title:'Team Approved ✅',color:3066993,fields:[
-    {name:'Team',value:`${t.name}${t.tag?' ['+t.tag+']':''}`,inline:true},
-    {name:'Captain',value:t.captain||'—',inline:true},
-    {name:'Roster',value:(t.members||[]).join(', ')||'—',inline:false}
-  ]},teamMentionIgns(t),{team:t.name});
+  guardedAction('approveTeam:'+id,async()=>{
+    await sbRefreshKey('teams');
+    const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
+    t.approved=true;DB.set('teams',teams);renderATeams();renderTeams();logAdminAction('Team approved',`${t.name} was approved`);notify(`${t.name} approved!`,'','n-ok');
+    fireWebhookEvent('teamApproved',{title:'Team Approved ✅',color:3066993,fields:[
+      {name:'Team',value:`${t.name}${t.tag?' ['+t.tag+']':''}`,inline:true},
+      {name:'Captain',value:t.captain||'—',inline:true},
+      {name:'Roster',value:(t.members||[]).join(', ')||'—',inline:false}
+    ]},teamMentionIgns(t),{team:t.name});
+  });
 }
 
 function openManageTeam(id){
@@ -7346,16 +7385,20 @@ function renderJoinRequests(){
 }
 
 function resolveJoinRequest(id,approve){
-  const requests=DB.get('joinRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
-  r.status=approve?'approved':'denied';
-  if(approve){
-    const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
-    if(t){if(!t.members)t.members=[];if(!t.members.includes(r.ign)){t.members.push(r.ign);DB.set('teams',teams);}}
-    const players=DB.get('players');const p=players.find(x=>x.ign===r.ign);
-    if(p){p.team=r.teamName;DB.set('players',players);}
-  }
-  DB.set('joinRequests',requests);renderJoinRequests();notify(approve?'Request approved!':'Request denied','','n-ok');
-  renderATeams();renderTeams();
+  guardedAction('resolveJoinRequest:'+id,async()=>{
+    await sbRefreshKey('joinRequests');
+    const requests=DB.get('joinRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
+    r.status=approve?'approved':'denied';
+    if(approve){
+      await sbRefreshKey('teams');
+      const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
+      if(t){if(!t.members)t.members=[];if(!t.members.includes(r.ign)){t.members.push(r.ign);DB.set('teams',teams);}}
+      const players=DB.get('players');const p=players.find(x=>x.ign===r.ign);
+      if(p){p.team=r.teamName;DB.set('players',players);}
+    }
+    DB.set('joinRequests',requests);renderJoinRequests();notify(approve?'Request approved!':'Request denied','','n-ok');
+    renderATeams();renderTeams();
+  });
 }
 
 // ═══ TEAM REGISTRATION PENDING ═══
@@ -7509,34 +7552,38 @@ function renderMatchSignupRequests(){
   </div>`).join('');
 }
 function resolveMatchSignupRequest(id,approve){
-  const requests=DB.get('matchRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
-  const ms=DB.get('matches');const m=ms.find(x=>x.id===r.matchId);
-  const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
-  if(approve&&m){
-    m.teams=m.teams||[];
-    if(m.teams.length>=(m.maxTeams||20))return notify('Match is full','Deny this or bump Max Teams first','n-bad');
-    if(!m.teams.some(x=>x.teamId===r.teamId))m.teams.push({teamId:r.teamId,teamName:r.teamName});
-    DB.set('matches',ms);
-  }
-  r.status=approve?'approved':'denied';
-  DB.set('matchRequests',requests);renderMatchSignupRequests();updateMatchSignupBadge();renderMatches();renderAMatches();
-  logAdminAction(approve?'Match signup approved':'Match signup denied',`${r.teamName} ${approve?'was accepted into':'was turned away from'} ${r.matchName} by ${CU?CU.name:'Admin'}`);
-  if(approve){
-    fireWebhookEvent('matchSignupAccepted',{title:'✅ Scrim/Match Slot Confirmed',color:3066993,fields:[
-      {name:'Team',value:r.teamName,inline:true},
-      {name:'Match',value:r.matchName,inline:true},
-      {name:'Map',value:m?.map||'—',inline:true},
-      {name:'Date',value:m?.date||'TBD',inline:true},
-      {name:'Time',value:m?.time||'TBD',inline:true},
-      {name:'Mode',value:m?.mode||'—',inline:true}
-    ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName,map:m?.map||'',date:m?.date||'',time:m?.time||'',mode:m?.mode||''});
-  }else{
-    fireWebhookEvent('matchSignupDenied',{title:'Scrim/Match Slot Request Denied',color:15158332,fields:[
-      {name:'Team',value:r.teamName,inline:true},
-      {name:'Match',value:r.matchName,inline:true}
-    ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName});
-  }
-  notify(approve?'Request approved!':'Request denied','','n-ok');
+  guardedAction('resolveMatchSignupRequest:'+id,async()=>{
+    await sbRefreshKey('matchRequests');
+    const requests=DB.get('matchRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
+    await sbRefreshKey('matches');
+    const ms=DB.get('matches');const m=ms.find(x=>x.id===r.matchId);
+    const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
+    if(approve&&m){
+      m.teams=m.teams||[];
+      if(m.teams.length>=(m.maxTeams||20))return notify('Match is full','Deny this or bump Max Teams first','n-bad');
+      if(!m.teams.some(x=>x.teamId===r.teamId))m.teams.push({teamId:r.teamId,teamName:r.teamName});
+      DB.set('matches',ms);
+    }
+    r.status=approve?'approved':'denied';
+    DB.set('matchRequests',requests);renderMatchSignupRequests();updateMatchSignupBadge();renderMatches();renderAMatches();
+    logAdminAction(approve?'Match signup approved':'Match signup denied',`${r.teamName} ${approve?'was accepted into':'was turned away from'} ${r.matchName} by ${CU?CU.name:'Admin'}`);
+    if(approve){
+      fireWebhookEvent('matchSignupAccepted',{title:'✅ Scrim/Match Slot Confirmed',color:3066993,fields:[
+        {name:'Team',value:r.teamName,inline:true},
+        {name:'Match',value:r.matchName,inline:true},
+        {name:'Map',value:m?.map||'—',inline:true},
+        {name:'Date',value:m?.date||'TBD',inline:true},
+        {name:'Time',value:m?.time||'TBD',inline:true},
+        {name:'Mode',value:m?.mode||'—',inline:true}
+      ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName,map:m?.map||'',date:m?.date||'',time:m?.time||'',mode:m?.mode||''});
+    }else{
+      fireWebhookEvent('matchSignupDenied',{title:'Scrim/Match Slot Request Denied',color:15158332,fields:[
+        {name:'Team',value:r.teamName,inline:true},
+        {name:'Match',value:r.matchName,inline:true}
+      ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName});
+    }
+    notify(approve?'Request approved!':'Request denied','','n-ok');
+  });
 }
 function updateMatchSignupBadge(){
   const pending=DB.get('matchRequests',[]).filter(r=>r.status==='pending').length;
@@ -8009,6 +8056,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   // ── 2. Hide overlay and boot app ──
   sbHideOverlay();
   seed(); startCountdown(); populateCountrySelect('rc'); applyLogo();
+  pruneMatchedTdmQueue();
   updateTopbarQueuePill(); setInterval(updateTopbarQueuePill,15000);
   applyThemeColors(DB.get('cfg',{}).themeColorA,DB.get('cfg',{}).themeColorB);
   applyOverlayDesign();
