@@ -2659,8 +2659,23 @@ async function sbLoad(){
 }
 
 // Write: upsert a row via PostgREST (Prefer: resolution=merge-duplicates does an upsert on the primary key)
-async function sbWrite(key, val){
+// Writes to the SAME key are chained (not fired concurrently). Two near-simultaneous writes to one
+// key — e.g. "accept" then immediately "auto-match" on the TDM queue — are two separate fire-and-forget
+// fetches. Over the network those can complete OUT OF ORDER, and since each write just upserts the
+// whole row, whichever response lands LAST wins — even if it was the one kicked off FIRST. That
+// silently reverts the row back to an older state on Supabase's side. A refresh then pulls that
+// stale row back down, which looks exactly like "the accepted person came back after a while."
+// Chaining guarantees each write's HTTP round-trip finishes before the next one for that key starts,
+// so they always land in the order they were actually made.
+const _sbWriteQueue={};
+function sbWrite(key, val){
   if(!SB_OK || !SB_SYNC.includes(key)) return;
+  const prev=_sbWriteQueue[key]||Promise.resolve();
+  const run=prev.then(()=>sbWriteNow(key,val),()=>sbWriteNow(key,val));
+  _sbWriteQueue[key]=run;
+  return run;
+}
+async function sbWriteNow(key, val){
   try{
     const res = await fetch(SB_REST, {
       method: 'POST',
@@ -2680,6 +2695,21 @@ async function sbWrite(key, val){
   } catch(e){
     sbStatus('err', 'Sync failed: ' + e.message);
     console.warn('[RAGEISM] sbWrite error for key "' + key + '":', e.message);
+  }
+}
+// Pulls just ONE key fresh from Supabase and overwrites the local cached copy with it. Used right
+// before acting on shared, contended state (the TDM queue, tournament signups) so an admin/player
+// on a device that's been sitting idle for a while doesn't read-modify-write a STALE snapshot and
+// silently stomp changes someone else made on another device in the meantime.
+async function sbRefreshKey(key){
+  if(!SB_OK) return;
+  try{
+    const res = await fetch(SB_REST + '?select=value&key=eq.' + encodeURIComponent(key), { method:'GET', headers: SB_HEADERS });
+    if(!res.ok) return;
+    const rows = await res.json();
+    if(rows && rows.length) localStorage.setItem('rge5_' + key, JSON.stringify(rows[0].value));
+  } catch(e){
+    console.warn('[RAGEISM] sbRefreshKey failed for "' + key + '":', e.message);
   }
 }
 
@@ -4016,9 +4046,10 @@ function myQueueEntry(queue){
   // matches players by their `ign` field, not their Discord display name.
   return queue.find(q=>q.playerIgn===CU.ign&&q.status!=='matched');
 }
-function requestTdmQueue(mode){
+async function requestTdmQueue(mode){
   if(!CU)return notify('Login required','','n-bad');
   mode=mode==='single'?'single':'bo3';
+  await sbRefreshKey('tdmQueue'); // pull the freshest queue first — avoids writing back a stale snapshot that could wipe out someone else's accept/cancel that happened on another device
   const queue=DB.get('tdmQueue',[]);
   if(myQueueEntry(queue))return notify('Already in queue','You already have a pending or accepted request.','n-bad');
   const pl=DB.get('players',[]);const me=pl.find(p=>p.ign===CU.ign);
@@ -4029,7 +4060,8 @@ function requestTdmQueue(mode){
 }
 // Cancelling shifts everyone else up one spot — this pings the queue so nobody's left wondering
 // why their position suddenly changed.
-function cancelTdmQueue(id){
+async function cancelTdmQueue(id){
+  await sbRefreshKey('tdmQueue');
   const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
   if(!ADM&&(!CU||CU.ign!==q.playerIgn))return;
   const remaining=queue.filter(x=>x.id!==id);
@@ -4137,8 +4169,9 @@ function renderTdmQueue(){
     }
   }
 }
-function acceptTdmQueue(id){
+async function acceptTdmQueue(id){
   if(!ADM)return;
+  await sbRefreshKey('tdmQueue');
   const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
   q.status='accepted';DB.set('tdmQueue',queue);
   logAdminAction('TDM queue request accepted',`${q.playerIgn} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
@@ -4325,8 +4358,9 @@ function tdmTournamentMyRequest(tid){
 function tdmTournamentIsIn(t){
   return !!(CU&&(t.participants||[]).some(p=>p.ign===CU.ign));
 }
-function requestJoinTdmTournament(tid){
+async function requestJoinTdmTournament(tid){
   if(!CU)return notify('Login required','Sign in to request a tournament slot','n-bad');
+  await sbRefreshKey('tdmTournaments');await sbRefreshKey('tdmTournamentRequests');
   const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tid);if(!t)return;
   if(t.status!=='reg_open')return notify('Registration not open',`This tournament is currently: ${TDM_TOURNEY_STATUS_LABEL[t.status]||t.status}`,'n-bad');
   if(tdmTournamentIsIn(t))return notify('Already registered','You\'re already in this tournament','n-bad');
@@ -4342,8 +4376,9 @@ function requestJoinTdmTournament(tid){
   renderTdmTournaments();
   notify('Request sent!','Awaiting admin approval','n-ok');
 }
-function resolveTdmTournamentRequest(id,approve){
+async function resolveTdmTournamentRequest(id,approve){
   if(!ADM)return;
+  await sbRefreshKey('tdmTournamentRequests');await sbRefreshKey('tdmTournaments');
   const reqs=DB.get('tdmTournamentRequests',[]);const r=reqs.find(x=>x.id===id);if(!r)return;
   const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===r.tournamentId);
   if(approve&&t){
@@ -4397,8 +4432,9 @@ function tdmRoundName(sizeAtStartOfRound){
   if(sizeAtStartOfRound===8)return 'Quarterfinal';
   return 'Round of '+sizeAtStartOfRound;
 }
-function generateBracketForTournament(id){
+async function generateBracketForTournament(id){
   if(!ADM)return;
+  await sbRefreshKey('tdmTournaments');
   const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===id);if(!t)return;
   const entrants=t.participants||[];
   if(entrants.length<2)return notify('Need at least 2 players','Approve more signup requests first','n-bad');
@@ -4436,9 +4472,10 @@ function regenerateTdmBracket(id){
   if(t&&t.bracket&&!confirm('Re-shuffle and regenerate the bracket? Any bracket progress will be cleared.'))return;
   generateBracketForTournament(id);
 }
-function startBracketMatch(tid,roundIdx,matchIdx){
+async function startBracketMatch(tid,roundIdx,matchIdx){
   if(!ADM)return;
   if(tdmGetLive())return notify('A match is already live','Finish or end it before starting another.','n-bad');
+  await sbRefreshKey('tdmTournaments');
   const list=DB.get('tdmTournaments',[]);const t=list.find(x=>x.id===tid);if(!t||!t.bracket)return;
   const rd=t.bracket.rounds[roundIdx];const bm=rd&&rd.matches[matchIdx];
   if(!bm||bm.status!=='pending'||!bm.aRoster||!bm.bRoster)return;
