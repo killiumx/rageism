@@ -2684,16 +2684,36 @@ async function sbAtomicUpdate(key, mutate, maxAttempts=6){
   }
   for(let attempt=0;attempt<maxAttempts;attempt++){
     await (_sbWriteQueue[key]||Promise.resolve()); // still don't race our own in-flight writes
-    let cur=DB.get(key,[]),updatedAt=null;
+    let cur=DB.get(key,[]),updatedAt=null,rowExists=false;
     try{
       const res=await fetch(SB_REST+'?select=value,updated_at&key=eq.'+encodeURIComponent(key),{headers:SB_HEADERS});
       if(res.ok){
         const rows=await res.json();
-        if(rows.length){cur=rows[0].value;updatedAt=rows[0].updated_at;}
+        // IMPORTANT: rowExists is tracked separately from updatedAt. updatedAt can legitimately
+        // come back null/undefined — e.g. the `updated_at` column isn't populated by a trigger on
+        // this table — and that used to be treated the same as "no row at all", which sent every
+        // update for an EXISTING row down the insert-if-absent path below. That insert always got
+        // ignored (the row already exists) and always reported 0 rows back, so every single
+        // attempt failed and the retry loop burned through all 6 attempts and showed "Please try
+        // again" — even solo, even with nobody else touching the row. See the bottom of this
+        // function comment thread / supabase_setup.sql for the real fix (a trigger that maintains
+        // updated_at), but this at least stops the false failures in the meantime.
+        if(rows.length){cur=rows[0].value;updatedAt=rows[0].updated_at||null;rowExists=true;}
+      } else if(res.status===400 || res.status===406){
+        // The `updated_at` column itself may not exist on this table at all (400/undefined
+        // column), not just be unpopulated. Fall back to a plain existence/value check so we don't
+        // wrongly assume "no row" for a row that's actually there.
+        try{
+          const res2=await fetch(SB_REST+'?select=value&key=eq.'+encodeURIComponent(key),{headers:SB_HEADERS});
+          if(res2.ok){
+            const rows2=await res2.json();
+            if(rows2.length){cur=rows2[0].value;rowExists=true;}
+          }
+        }catch(e2){ console.warn('[RAGEISM] sbAtomicUpdate fallback fetch failed:',e2.message); }
       }
     }catch(e){ console.warn('[RAGEISM] sbAtomicUpdate fetch failed:',e.message); }
     const next=mutate(cur);
-    const landed=await sbConditionalWrite(key,next,updatedAt);
+    const landed=await sbConditionalWrite(key,next,updatedAt,rowExists);
     if(landed){
       localStorage.setItem('rge5_'+key,JSON.stringify(next));
       return next;
@@ -2704,12 +2724,15 @@ async function sbAtomicUpdate(key, mutate, maxAttempts=6){
   return null;
 }
 // Conditional write: PATCH only succeeds (returns a row) if updated_at still matches what we read.
-// No prior row (expectedUpdatedAt === null) falls back to an insert-if-absent.
-function sbConditionalWrite(key,val,expectedUpdatedAt){
+// If the row exists but we don't have a usable updated_at (column missing/not maintained by a
+// trigger — see note above), fall back to a plain key-scoped PATCH instead of wrongly treating it
+// as "no prior row". Only actually-absent rows fall to the insert-if-absent branch.
+function sbConditionalWrite(key,val,expectedUpdatedAt,rowExists){
   const run=async()=>{
     try{
-      if(expectedUpdatedAt){
-        const res=await fetch(SB_REST+'?key=eq.'+encodeURIComponent(key)+'&updated_at=eq.'+encodeURIComponent(expectedUpdatedAt),{
+      if(rowExists){
+        const url=SB_REST+'?key=eq.'+encodeURIComponent(key)+(expectedUpdatedAt?'&updated_at=eq.'+encodeURIComponent(expectedUpdatedAt):'');
+        const res=await fetch(url,{
           method:'PATCH',
           headers:{...SB_HEADERS,'Prefer':'return=representation'},
           body:JSON.stringify({value:val})
