@@ -2668,6 +2668,72 @@ async function sbLoad(){
 // Chaining guarantees each write's HTTP round-trip finishes before the next one for that key starts,
 // so they always land in the order they were actually made.
 const _sbWriteQueue={};
+// Real concurrency control for hot-contested keys (the TDM queue, tournament requests): fetches
+// the row WITH its updated_at, applies `mutate` to get the new value, then only commits if
+// updated_at still matches what we just read (a conditional UPDATE — 0 rows affected means someone
+// else saved in between). On conflict, refetch and retry. This is the actual fix for "I cancelled
+// it and it came back" — the earlier _sbWriteQueue chaining above only orders writes made from THIS
+// browser tab; it can't stop two different devices from both reading the old list, both editing it,
+// and the second save quietly erasing the first person's change. Falls back to a plain optimistic
+// write (old behavior) when offline/Supabase unavailable, since there's nothing to conflict with.
+async function sbAtomicUpdate(key, mutate, maxAttempts=6){
+  if(!SB_OK || !SB_SYNC.includes(key)){
+    const next=mutate(DB.get(key,[]));
+    DB.set(key,next);
+    return next;
+  }
+  for(let attempt=0;attempt<maxAttempts;attempt++){
+    await (_sbWriteQueue[key]||Promise.resolve()); // still don't race our own in-flight writes
+    let cur=DB.get(key,[]),updatedAt=null;
+    try{
+      const res=await fetch(SB_REST+'?select=value,updated_at&key=eq.'+encodeURIComponent(key),{headers:SB_HEADERS});
+      if(res.ok){
+        const rows=await res.json();
+        if(rows.length){cur=rows[0].value;updatedAt=rows[0].updated_at;}
+      }
+    }catch(e){ console.warn('[RAGEISM] sbAtomicUpdate fetch failed:',e.message); }
+    const next=mutate(cur);
+    const landed=await sbConditionalWrite(key,next,updatedAt);
+    if(landed){
+      localStorage.setItem('rge5_'+key,JSON.stringify(next));
+      return next;
+    }
+    // Someone else saved this key between our read and our write — loop and retry against fresh data.
+  }
+  notify('Please try again','Someone else updated this at the same moment — refresh and retry','n-bad');
+  return null;
+}
+// Conditional write: PATCH only succeeds (returns a row) if updated_at still matches what we read.
+// No prior row (expectedUpdatedAt === null) falls back to an insert-if-absent.
+function sbConditionalWrite(key,val,expectedUpdatedAt){
+  const run=async()=>{
+    try{
+      if(expectedUpdatedAt){
+        const res=await fetch(SB_REST+'?key=eq.'+encodeURIComponent(key)+'&updated_at=eq.'+encodeURIComponent(expectedUpdatedAt),{
+          method:'PATCH',
+          headers:{...SB_HEADERS,'Prefer':'return=representation'},
+          body:JSON.stringify({value:val})
+        });
+        if(!res.ok)return false;
+        const rows=await res.json();
+        return rows.length>0;
+      }else{
+        const res=await fetch(SB_REST,{
+          method:'POST',
+          headers:{...SB_HEADERS,'Prefer':'resolution=ignore-duplicates,return=representation'},
+          body:JSON.stringify([{key,value:val}])
+        });
+        if(!res.ok)return false;
+        const rows=await res.json();
+        return rows.length>0; // empty = a row already existed (someone else created it first) -> conflict, retry
+      }
+    }catch(e){ console.warn('[RAGEISM] sbConditionalWrite failed:',e.message); return false; }
+  };
+  const prev=_sbWriteQueue[key]||Promise.resolve();
+  const chained=prev.then(run,run);
+  _sbWriteQueue[key]=chained.then(()=>{},()=>{});
+  return chained;
+}
 function sbWrite(key, val){
   if(!SB_OK || !SB_SYNC.includes(key)) return;
   const prev=_sbWriteQueue[key]||Promise.resolve();
@@ -4094,12 +4160,14 @@ function myQueueEntry(queue){
 async function requestTdmQueue(mode){
   if(!CU)return notify('Login required','','n-bad');
   mode=mode==='single'?'single':'bo3';
-  await sbRefreshKey('tdmQueue'); // pull the freshest queue first — avoids writing back a stale snapshot that could wipe out someone else's accept/cancel that happened on another device
-  const queue=DB.get('tdmQueue',[]);
-  if(myQueueEntry(queue))return notify('Already in queue','You already have a pending or accepted request.','n-bad');
   const pl=DB.get('players',[]);const me=pl.find(p=>p.ign===CU.ign);
-  queue.push({id:'tq'+Date.now(),playerId:me?me.id:'guest-'+CU.ign,playerIgn:CU.ign,roster:[{id:me?me.id:'guest-'+CU.ign,ign:CU.ign}],status:'pending',mode,ts:Date.now()});
-  DB.set('tdmQueue',queue);
+  let blocked=false;
+  const next=await sbAtomicUpdate('tdmQueue',queue=>{
+    if(myQueueEntry(queue)){blocked=true;return queue;}
+    return [...queue,{id:'tq'+Date.now(),playerId:me?me.id:'guest-'+CU.ign,playerIgn:CU.ign,roster:[{id:me?me.id:'guest-'+CU.ign,ign:CU.ign}],status:'pending',mode,ts:Date.now()}];
+  });
+  if(next===null)return; // conflict after retries, sbAtomicUpdate already notified
+  if(blocked)return notify('Already in queue','You already have a pending or accepted request.','n-bad');
   renderTdmQueue();
   notify('Request sent!',mode==='single'?'You\'re queued for a 1v1 (single round) match — an admin will accept it soon.':'You\'re queued for a BO3 match — an admin will accept it soon.','n-ok');
 }
@@ -4107,11 +4175,16 @@ async function requestTdmQueue(mode){
 // why their position suddenly changed.
 async function cancelTdmQueue(id){
   return guardedAction('cancelTdmQueue:'+id,async()=>{
-    await sbRefreshKey('tdmQueue');
-    const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
-    if(!ADM&&(!CU||CU.ign!==q.playerIgn))return;
-    const remaining=queue.filter(x=>x.id!==id);
-    DB.set('tdmQueue',remaining);
+    let removed=null,unauthorized=false;
+    const remaining=await sbAtomicUpdate('tdmQueue',queue=>{
+      const q=queue.find(x=>x.id===id);
+      if(!q)return queue;
+      if(!ADM&&(!CU||CU.ign!==q.playerIgn)){unauthorized=true;return queue;}
+      removed=q;
+      return queue.filter(x=>x.id!==id);
+    });
+    if(remaining===null)return; // conflict after retries, sbAtomicUpdate already notified
+    if(unauthorized||!removed)return;
     renderTdmQueue();
     notify('Request cancelled','','n-ok');
     const stillWaiting=remaining.filter(x=>x.status!=='matched').sort((a,b)=>{
@@ -4119,7 +4192,7 @@ async function cancelTdmQueue(id){
       return a.ts-b.ts;
     });
     if(stillWaiting.length){
-      fireWebhookEvent('queueReshuffled',{title:'🔄 BO3 Queue Reshuffled',description:`**${q.playerIgn}** left the queue — everyone moved up a spot.`,color:15105570,fields:[
+      fireWebhookEvent('queueReshuffled',{title:'🔄 BO3 Queue Reshuffled',description:`**${removed.playerIgn}** left the queue — everyone moved up a spot.`,color:15105570,fields:[
         {name:'Now Up Next',value:stillWaiting.map((x,i)=>`${i+1}. ${x.playerIgn}${x.status==='accepted'?' (accepted)':''}`).join('\n').slice(0,1000),inline:false}
       ]},stillWaiting.map(x=>x.playerIgn));
     }
@@ -4196,15 +4269,21 @@ async function manualMatchTdmQueue(){
   if(!ADM)return;
   if(_tdmQueueSelection.length!==2)return notify('Pick exactly 2','Select two requests to pair them together','n-bad');
   if(tdmGetLive())return notify('A match is already live','Finish or end it before starting another.','n-bad');
-  await sbRefreshKey('tdmQueue');
-  const queue=DB.get('tdmQueue',[]);
-  const q1=queue.find(x=>x.id===_tdmQueueSelection[0]),q2=queue.find(x=>x.id===_tdmQueueSelection[1]);
-  if(!q1||!q2||q1.status==='matched'||q2.status==='matched'){_tdmQueueSelection=[];renderTdmQueue();return notify('Selection expired','One of those requests changed — pick again','n-bad');}
-  const mode1=q1.mode||'bo3',mode2=q2.mode||'bo3';
-  if(mode1!==mode2)return notify('Mode mismatch','Can only pair two requests from the same queue — both BO3 or both 1v1','n-bad');
-  q1.status='matched';q2.status='matched';q1.matchedAt=Date.now();q2.matchedAt=Date.now();
-  DB.set('tdmQueue',queue);
-  const target=DB.get('tdmDefaultTarget',10),bo3=mode1==='bo3';
+  let q1=null,q2=null,expired=false,modeMismatch=false;
+  const result=await sbAtomicUpdate('tdmQueue',queue=>{
+    const a=queue.find(x=>x.id===_tdmQueueSelection[0]),b=queue.find(x=>x.id===_tdmQueueSelection[1]);
+    if(!a||!b||a.status==='matched'||b.status==='matched'){expired=true;return queue;}
+    const mode1=a.mode||'bo3',mode2=b.mode||'bo3';
+    if(mode1!==mode2){modeMismatch=true;return queue;}
+    a.status='matched';b.status='matched';a.matchedAt=Date.now();b.matchedAt=Date.now();
+    q1=a;q2=b;
+    return queue;
+  });
+  if(result===null)return; // conflict after retries, sbAtomicUpdate already notified
+  if(expired){_tdmQueueSelection=[];renderTdmQueue();return notify('Selection expired','One of those requests changed — pick again','n-bad');}
+  if(modeMismatch)return notify('Mode mismatch','Can only pair two requests from the same queue — both BO3 or both 1v1','n-bad');
+  if(!q1||!q2)return;
+  const target=DB.get('tdmDefaultTarget',10),bo3=(q1.mode||'bo3')==='bo3';
   createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
   logAdminAction('TDM match manually matched',`${q1.playerIgn} vs ${q2.playerIgn} manually paired from the ${bo3?'BO3':'1v1'} queue by ${CU?CU.name:'Admin'} (overriding wait-time order)`);
   _tdmQueueSelection=[];
@@ -4290,17 +4369,26 @@ function renderTdmQueue(){
 async function acceptTdmQueue(id){
   if(!ADM)return;
   return guardedAction('acceptTdmQueue:'+id,async()=>{
-    await sbRefreshKey('tdmQueue');
-    const queue=DB.get('tdmQueue',[]);const q=queue.find(x=>x.id===id);if(!q)return;
-    q.status='accepted';DB.set('tdmQueue',queue);
-    logAdminAction('TDM queue request accepted',`${q.playerIgn} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
-    tryAutoMatchTdmQueue();
+    let accepted=null,matchedPair=null; // captured from inside the mutate step, used after it commits
+    const result=await sbAtomicUpdate('tdmQueue',queue=>{
+      const q=queue.find(x=>x.id===id);
+      if(!q)return queue;
+      q.status='accepted';accepted=q;
+      matchedPair=tryFindQueuePair(queue); // same mutation pass: accept + any resulting pairing land in ONE write
+      return queue;
+    });
+    if(result===null)return; // conflict after retries, sbAtomicUpdate already notified
+    if(!accepted)return;
+    logAdminAction('TDM queue request accepted',`${accepted.playerIgn} accepted into the BO3 queue by ${CU?CU.name:'Admin'}`);
+    if(matchedPair)finalizeQueueAutoMatch(matchedPair[0],matchedPair[1]);
     renderTdmQueue();
   });
 }
-function tryAutoMatchTdmQueue(){
-  if(tdmGetLive())return; // don't auto-start a new match over a live one — they'll stay queued until it's free
-  const queue=DB.get('tdmQueue',[]);
+// Finds (but doesn't yet commit) the next pair to auto-match from an in-memory queue snapshot, and
+// marks them 'matched' on that same snapshot so the caller's single write includes the pairing.
+// Only runs if no match is currently live.
+function tryFindQueuePair(queue){
+  if(tdmGetLive())return null; // don't auto-start a new match over a live one — they'll stay queued until it's free
   const accepted=queue.filter(q=>q.status==='accepted').sort((a,b)=>a.ts-b.ts); // longest-waiting pair goes first
   // Only pair requests of the same mode — someone who asked for a quick 1v1 shouldn't get dragged
   // into a Best-of-3 (and vice versa). Within each mode, longest-waiting pair still goes first.
@@ -4309,9 +4397,26 @@ function tryAutoMatchTdmQueue(){
     const pool=accepted.filter(q=>(q.mode||'bo3')===mode);
     if(pool.length>=2){[q1,q2]=pool;break;}
   }
-  if(!q1||!q2)return;
+  if(!q1||!q2)return null;
   q1.status='matched';q2.status='matched';q1.matchedAt=Date.now();q2.matchedAt=Date.now();
-  DB.set('tdmQueue',queue);
+  return [q1,q2];
+}
+function tryAutoMatchTdmQueue(){
+  // Kept as a standalone entry point for other call sites; routes through the same atomic path so
+  // it can't race a concurrent accept/cancel from another device either.
+  guardedAction('tryAutoMatchTdmQueue',async()=>{
+    let matchedPair=null;
+    const result=await sbAtomicUpdate('tdmQueue',queue=>{
+      matchedPair=tryFindQueuePair(queue);
+      return queue;
+    });
+    if(result===null||!matchedPair)return;
+    finalizeQueueAutoMatch(matchedPair[0],matchedPair[1]);
+    renderTdmQueue();
+  });
+}
+// Creates the live match + notifications for a pair that's already been marked 'matched' and saved.
+function finalizeQueueAutoMatch(q1,q2){
   const target=DB.get('tdmDefaultTarget',10),bo3=(q1.mode||'bo3')==='bo3';
   createTdmMatchObj(q1.playerIgn,q2.playerIgn,q1.roster,q2.roster,bo3,target,`✅ Match Confirmed — ${q1.playerIgn} vs ${q2.playerIgn}`);
   logAdminAction('TDM match auto-created',`${q1.playerIgn} vs ${q2.playerIgn} auto-matched from the ${bo3?'BO3':'1v1'} queue`);
