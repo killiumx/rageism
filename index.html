@@ -8494,11 +8494,12 @@ window.addEventListener('DOMContentLoaded',async()=>{
   renderBkt();
 });
 
-// ═══════ AI SITE GUIDE — floating chat widget backed by a Supabase Edge Function ═══════
-// The function (deployed separately, see supabase/functions/ai-assistant) holds the Gemini API
-// key server-side and forwards it a compact JSON snapshot of live site stats + this message, so
-// it can answer "who's leading right now / how do I join a team / what's coming up" accurately
-// without the key — or the whole player/team dataset — ever shipping to the browser.
+// ═══════ AI SITE GUIDE — DISABLED FOR NOW ═══════
+// The Supabase project is currently over its egress quota / INACTIVE, so this whole feature
+// (both the JS below and its HTML widget near the end of <body>) is commented out rather than
+// deleted. To bring it back: uncomment this block and the matching HTML block, once the
+// Supabase project is restored.
+/*
 let AI_HISTORY=[];
 let AI_BUSY=false;
 let AI_LAST_SEND=0;
@@ -8596,6 +8597,7 @@ async function sendAiMessage(){
     if(sendBtn)sendBtn.disabled=false;
   }
 }
+*/
 </script>
 
 <!-- ═══════ FLOATING THEME BUBBLE — everyone can pick their own color theme ═══════ -->
@@ -8614,7 +8616,11 @@ async function sendAiMessage(){
   <button class="tp-reset" onclick="setUserTheme(null)"><i class="fa-solid fa-rotate-left"></i> Use site default</button>
 </div>
 
-<!-- ═══════ FLOATING AI SITE GUIDE — Gemini via a Supabase Edge Function (key never reaches the browser) ═══════ -->
+<!-- ═══════ FLOATING AI SITE GUIDE — DISABLED FOR NOW (Supabase project over egress quota / INACTIVE).
+     Everything below is commented out on purpose, not deleted — delete the <!-- and --> markers
+     around this block to bring it back once the Supabase project is restored and you want the
+     assistant live again. Nothing else on the site depends on this block. ═══════ -->
+<!--
 <button id="ai-bubble" onclick="toggleAiPanel()" title="Ask the site guide" aria-label="Ask the site guide">
   <i class="fa-solid fa-robot"></i>
 </button>
@@ -8636,5 +8642,6 @@ async function sendAiMessage(){
     <button id="ai-send" onclick="sendAiMessage()" aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
   </div>
 </div>
+-->
 </body>
 </html>
