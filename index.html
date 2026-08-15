@@ -341,16 +341,21 @@ html[data-ovbg="transparent"]{
 .ovscore-card{background:linear-gradient(135deg,var(--ov-bg1,rgba(10,10,20,.94)),var(--ov-bg2,rgba(20,10,30,.94)));backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:2.2rem 3rem;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;width:min(900px,88vw)}
 .ovscore-badge{font-size:.78rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--ov-c1,#818cf8);margin-bottom:1.4rem}
 .ovscore-row{display:flex;align-items:center;justify-content:center;gap:2.5rem}
-.ovscore-side{flex:1;min-width:0}
-.ovscore-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.6rem}
+.ovscore-side{flex:1 1 0;min-width:0;max-width:100%}
+/* Names & the center score used fixed rem sizes that didn't shrink with the card's own
+   min(900px,88vw) width — so on a narrower OBS Browser Source the big score digits kept their
+   full size, ate most of the row, and squeezed names down to just a couple of characters before
+   the ellipsis. clamp() ties the font size to the viewport so it scales down together with the
+   card instead of overflowing it. */
+.ovscore-name{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(.95rem,3.4vw,1.7rem);color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.6rem;max-width:100%}
 .ovscore-side-b .ovscore-name{color:var(--ov-c2,#f87171)}
-.ovscore-roster{display:flex;flex-direction:column;gap:.3rem;align-items:center}
-.ovscore-roster-item{font-size:.9rem;color:rgba(255,255,255,.65);font-family:'DM Mono',monospace}
+.ovscore-roster{display:flex;flex-direction:column;gap:.3rem;align-items:center;width:100%;min-width:0}
+.ovscore-roster-item{font-size:clamp(.62rem,1.7vw,.9rem);color:rgba(255,255,255,.65);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ovscore-mid{flex-shrink:0;padding:0 1rem}
-.ovscore-nums{font-family:'DM Mono',monospace;font-weight:800;font-size:4.2rem;color:#fff;display:flex;align-items:center;gap:1rem;line-height:1}
-.ovscore-dash{opacity:.35;font-size:2.4rem}
+.ovscore-nums{font-family:'DM Mono',monospace;font-weight:800;font-size:clamp(1.8rem,7vw,4.2rem);color:#fff;display:flex;align-items:center;gap:1rem;line-height:1}
+.ovscore-dash{opacity:.35;font-size:.6em}
 .ovscore-target{font-size:.72rem;color:rgba(255,255,255,.5);margin-top:.4rem;text-transform:uppercase;letter-spacing:1px}
-@media (max-width:480px){.ovscore-card{width:94vw;padding:1.3rem 1.2rem}.ovscore-row{gap:1rem}.ovscore-nums{font-size:2.2rem}.ovscore-dash{font-size:1.3rem}.ovscore-name{font-size:1rem}.ovscore-roster-item{font-size:.68rem}.ovscore-badge{font-size:.62rem;margin-bottom:.8rem}}
+@media (max-width:480px){.ovscore-card{width:94vw;padding:1.3rem 1.2rem}.ovscore-row{gap:1rem}.ovscore-badge{font-size:.62rem;margin-bottom:.8rem}}
 
 /* ── LEADERBOARD BROADCAST OVERLAY — widescreen 16:9 standings graphic (OBS Browser Source) ──
    Independent of the TikTok ticker overlay above; used for tournament/TDM/PMGC-style broadcasts. */
@@ -5199,7 +5204,7 @@ function tdmSetPlayerKills(side,playerId){
     m.status='done';m.winner=m.scoreA>=m.target?m.aName:m.bName;m.doneTs=new Date().toISOString();
     tdmFinishMatch(m,ms);
   }
-  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();renderTdmBoards();
   notify('Kills updated',`${p.ign}: ${oldVal} → ${newVal}`,'n-ok');
 }
 
@@ -5220,7 +5225,7 @@ function addTdmKill(side,playerId){
     tdmFinishMatch(m,ms);
     notify('Match complete!',`${m.winner} wins ${Math.max(m.scoreA,m.scoreB)}-${Math.min(m.scoreA,m.scoreB)}!`,'n-ok');
   }
-  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();renderTdmBoards();
 }
 
 function undoTdmKill(){
@@ -5230,7 +5235,7 @@ function undoTdmKill(){
   const key=last.side==='a'?'scoreA':'scoreB';m[key]=Math.max(0,(m[key]||0)-1);
   const players=DB.get('players');const gp=players.find(x=>x.ign===last.ign);
   if(gp){bumpBoardStat(gp.id,'kills',-1,gp);gp.tdmKills=Math.max(0,(gp.tdmKills||0)-1);gp.weeklyTdmKills=Math.max(0,(gp.weeklyTdmKills||0)-1);DB.set('players',players);}
-  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();notify('Last kill undone','','n-ok');
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();renderTdmBoards();notify('Last kill undone','','n-ok');
 }
 
 function endTdmMatch(){
@@ -5243,7 +5248,7 @@ function endTdmMatch(){
   // or (for a Best-of-3) started the next game. That's why ending Game 1 of a BO3 early looked like it
   // did nothing: nobody could ever reach Game 2 or 3 that way.
   if(m.winner!=='Draw')tdmFinishMatch(m,ms);
-  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();renderTdmBoards();
   notify('Match ended',m.bo3&&!m.seriesDone?`${m.winner} takes this game — series continues`:'','n-ok');
 }
 
@@ -5480,7 +5485,7 @@ function declareTdmGameWinner(side){
   if(!confirm(`${winnerName} wins ${m.bo3?`Game ${m.gameNum}`:'this match'}?`))return;
   m.status='done';m.winner=winnerName;m.doneTs=new Date().toISOString();
   tdmFinishMatch(m,ms);
-  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();
+  DB.set('tdmMatches',ms);renderTdmLive();renderTdmHistory();updateTdmBadge();buildTicker();updateStats();renderTdmBoards();
   notify(m.bo3&&!m.seriesDone?'Game ended':'Match ended',m.bo3&&!m.seriesDone?`${winnerName} takes this game — Game ${m.gameNum+1} is now live`:m.bo3?`${winnerName} wins the series!`:'','n-ok');
 }
 
@@ -5637,12 +5642,13 @@ function renderOverlayScore(){
   root.classList.add('show');
   const badge=document.getElementById('ovscore-badge');
   badge.textContent=m.bo3?`● LIVE · BEST OF 3 · GAME ${m.gameNum}/3`:'● LIVE';
-  document.getElementById('ovscore-a-name').textContent=(m.aName||'SQUAD A').toUpperCase();
-  document.getElementById('ovscore-b-name').textContent=(m.bName||'SQUAD B').toUpperCase();
+  const aNameEl=document.getElementById('ovscore-a-name'),bNameEl=document.getElementById('ovscore-b-name');
+  aNameEl.textContent=(m.aName||'SQUAD A').toUpperCase();aNameEl.title=m.aName||'';
+  bNameEl.textContent=(m.bName||'SQUAD B').toUpperCase();bNameEl.title=m.bName||'';
   document.getElementById('ovscore-a-val').textContent=m.scoreA||0;
   document.getElementById('ovscore-b-val').textContent=m.scoreB||0;
   document.getElementById('ovscore-target').textContent=`First to ${m.target}`;
-  const rosterHTML=roster=>(roster||[]).map(r=>`<div class="ovscore-roster-item">${esc(r.ign)}</div>`).join('');
+  const rosterHTML=roster=>(roster||[]).map(r=>`<div class="ovscore-roster-item" title="${esc(r.ign)}">${esc(r.ign)}</div>`).join('');
   document.getElementById('ovscore-a-roster').innerHTML=rosterHTML(m.aRoster);
   document.getElementById('ovscore-b-roster').innerHTML=rosterHTML(m.bRoster);
 }
@@ -7624,8 +7630,11 @@ function openManageTeam(id){
     <div id="mt-roles-wrap" style="display:${t.recruiting?'block':'none'}"><input class="fi" id="mt-roles" value="${t.recruitNote||''}" placeholder="Roles needed, e.g. Sniper, IGL — optional note"/></div>
   </div>
   <div class="card-title" style="margin-top:.8rem;margin-bottom:.5rem"><i class="fa-solid fa-users"></i> Roster</div>
+  ${canEditRoster(id)?`
   <div id="mt-members">${t.members.map((m,i)=>`<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.35rem"><input class="fi" style="flex:1" value="${m}" id="mt-m-${i}" list="ign-dl"/><button class="btn btn-danger btn-xs" onclick="removeMtMember(${i})"><i class="fa-solid fa-trash"></i></button></div>`).join('')}</div>
-  <button class="btn btn-ghost btn-sm" onclick="addMtMember()" style="margin-bottom:.7rem"><i class="fa-solid fa-plus"></i> Add Member</button>
+  <button class="btn btn-ghost btn-sm" onclick="addMtMember()" style="margin-bottom:.7rem"><i class="fa-solid fa-plus"></i> Add Member</button>`:`
+  <div style="font-size:.78rem;color:var(--textM);background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.7rem"><i class="fa-solid fa-lock" style="margin-right:.35rem"></i> Only this team's <strong>Manager</strong> (or an admin) can add or remove roster players. As Captain you can assign a Manager above — new players otherwise join via a Join Request that a Manager or admin approves.</div>
+  <div id="mt-members-readonly" style="margin-bottom:.7rem">${t.members.map(m=>`<span class="chip chip-neutral" style="font-size:.78rem;margin:.15rem .3rem .15rem 0">${esc(m)}</span>`).join('')||'<span class="text-dim" style="font-size:.8rem">No roster listed</span>'}</div>`}
   <button class="btn btn-accent btn-fw" onclick="saveManageTeam('${id}')"><i class="fa-solid fa-floppy-disk"></i> Save Team</button>`;
   openModal('manage-team-modal');
 }
@@ -7651,8 +7660,13 @@ function saveManageTeam(id){
   t.manager=document.getElementById('mt-mgr')?.value||'';
   t.recruiting=!!document.getElementById('mt-recruit')?.checked;
   t.recruitNote=document.getElementById('mt-roles')?.value.trim()||'';
-  const mems=[];document.querySelectorAll('#mt-members input').forEach(i=>{if(i.value.trim())mems.push(i.value.trim());});
-  if(mems.length)t.members=mems;
+  // Roster edits only ever get applied if the saving user still passes canEditRoster — the inputs
+  // simply aren't rendered for a Captain-only viewer (see openManageTeam), but this re-check guards
+  // against a stale/tampered DOM trying to smuggle roster changes through anyway.
+  if(canEditRoster(id)){
+    const mems=[];document.querySelectorAll('#mt-members input').forEach(i=>{if(i.value.trim())mems.push(i.value.trim());});
+    if(mems.length)t.members=mems;
+  }
   DB.set('teams',teams);closeModal('manage-team-modal');renderATeams();renderTeams();notify('Team saved!','','n-ok');
 }
 
@@ -7803,6 +7817,23 @@ function isManagerOf(teamId){
   const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);
   if(!t)return false;
   if(t.captain===CU.ign||t.manager===CU.ign)return true;
+  const roles=DB.get('adminRoles',[]);
+  return roles.some(r=>(r.authId&&CU.authId&&r.authId===CU.authId||(!r.authId&&r.ign===CU.ign))&&(r.role==='admin'||r.role==='manager'));
+}
+// Roster membership (who's actually ON the team) is stricter than isManagerOf() above, which also
+// lets the Captain open the Manage Team panel to edit name/tag/color/logo/manager. Adding a player
+// to the roster is the one action that used to let a Captain type in any IGN and instantly add them
+// — no approval, no notification, nothing — which is how players ended up "automatically" on rosters
+// they never agreed to join. That now requires the team's assigned Manager (or a site admin/manager
+// role) to vouch for the addition. A Captain without a Manager assigned can't add players directly;
+// new players have to come in through the normal Join Request flow (applyToOpenTeam → admin/manager
+// approval) instead.
+function canEditRoster(teamId){
+  if(ADM)return true;
+  if(!CU)return false;
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);
+  if(!t)return false;
+  if(t.manager===CU.ign)return true;
   const roles=DB.get('adminRoles',[]);
   return roles.some(r=>(r.authId&&CU.authId&&r.authId===CU.authId||(!r.authId&&r.ign===CU.ign))&&(r.role==='admin'||r.role==='manager'));
 }
