@@ -8616,32 +8616,6 @@ async function sendAiMessage(){
   <button class="tp-reset" onclick="setUserTheme(null)"><i class="fa-solid fa-rotate-left"></i> Use site default</button>
 </div>
 
-<!-- ═══════ FLOATING AI SITE GUIDE — DISABLED FOR NOW (Supabase project over egress quota / INACTIVE).
-     Everything below is commented out on purpose, not deleted — delete the <!-- and --> markers
-     around this block to bring it back once the Supabase project is restored and you want the
-     assistant live again. Nothing else on the site depends on this block. ═══════ -->
-<!--
-<button id="ai-bubble" onclick="toggleAiPanel()" title="Ask the site guide" aria-label="Ask the site guide">
-  <i class="fa-solid fa-robot"></i>
-</button>
-<div id="ai-panel">
-  <div id="ai-panel-head">
-    <i class="fa-solid fa-robot"></i>
-    <div id="ai-panel-title">Site Guide</div>
-    <button id="ai-panel-close" onclick="toggleAiPanel()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <div id="ai-msgs"></div>
-  <div id="ai-quick-row">
-    <button class="chip chip-neutral" onclick="aiQuickAsk('How do I sign up?')">How do I sign up?</button>
-    <button class="chip chip-neutral" onclick="aiQuickAsk('How do I join a team?')">Join a team</button>
-    <button class="chip chip-neutral" onclick="aiQuickAsk('What matches are coming up?')">Upcoming matches</button>
-    <button class="chip chip-neutral" onclick="aiQuickAsk('Who is leading the leaderboard right now?')">Top of leaderboard</button>
-  </div>
-  <div id="ai-panel-input-row">
-    <input class="fi" id="ai-input" placeholder="Ask me anything about the site…" onkeydown="aiInputKeydown(event)" autocomplete="off"/>
-    <button id="ai-send" onclick="sendAiMessage()" aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
-  </div>
-</div>
--->
+
 </body>
 </html>
