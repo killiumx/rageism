@@ -8386,11 +8386,28 @@ window.addEventListener('DOMContentLoaded',async()=>{
     sbInitMsg('Connecting to Supabase...');
     const sbR = await sbInit();
     // Overlay tabs (OBS/streaming Browser Sources) can sit open for hours, so this is by far the
-    // biggest driver of Supabase egress if left unfiltered. Only pull the handful of collections
-    // an overlay actually renders — never admin-only stuff like adminLog, playerReports,
-    // transferRequests, joinRequests, teamRequests, bracket, groups, polls, suggestions, clips,
-    // h2hRecords, tdmQueue, matchRequests, tdmTournament(Requests), rlogs5.
-    const OVERLAY_SYNC = ['players','teams','matches','tdmMatches','tdmBoards','rankingBoards','cfg','sponsors'];
+    // biggest driver of Supabase egress if left unfiltered. Each of the three overlay types only
+    // ever touches a small, specific set of DB.get() collections (traced directly from
+    // renderOverlay/renderOverlayLb/renderOverlayScore below) — so instead of one shared list,
+    // each overlay type requests only what it actually renders. It never needs adminLog,
+    // playerReports, transferRequests, joinRequests, teamRequests, bracket, groups, polls,
+    // suggestions, h2hRecords, tdmQueue, matchRequests, tdmTournament(Requests), rlogs5, teams.
+    const overlayKind = overlayParams.get('overlay');
+    const lbType = (overlayParams.get('type')==='tdm'||overlayParams.get('type')==='ranking') ? overlayParams.get('type') : 'scrims';
+    let OVERLAY_SYNC;
+    if(overlayKind==='score'){
+      // renderOverlayScore() only calls tdmGetLive() -> DB.get('tdmMatches'); roster names/scores
+      // are embedded directly in the match row, nothing else is read.
+      OVERLAY_SYNC=['tdmMatches'];
+    }else if(overlayKind==='lb'){
+      // renderOverlayLb(): 'tdm'+custom board needs tdmBoards+players; 'tdm' main board and
+      // 'scrims' need players; 'ranking' needs rankingBoards only.
+      OVERLAY_SYNC = lbType==='ranking' ? ['rankingBoards'] : (lbType==='tdm' ? ['players','tdmBoards'] : ['players']);
+    }else{
+      // Default ticker (renderOverlay + its helpers): live TDM/scrims standings, live/upcoming
+      // match info, sponsor shoutouts, and pinned clips.
+      OVERLAY_SYNC=['players','matches','tdmMatches','cfg','sponsors','clips'];
+    }
     if(sbR){await sbLoad(OVERLAY_SYNC);}
     sbHideOverlay();
     // NOTE: deliberately NOT calling seed() here. seed() wipes players/teams/matches/tdmMatches
@@ -8407,8 +8424,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     // admin dashboard writing changes is almost always a *different* browser/machine, so this
     // tab never receives a 'storage' event for those changes — without this poll, the overlay
     // freezes on whatever it loaded when OBS first opened it.
-    // Poll far less often than before too — a leaderboard/scorebug graphic doesn't need <20s freshness.
-    if(sbR){ setInterval(()=>{ sbLoad(OVERLAY_SYNC); }, 20000); }
+    // 30s poll — a leaderboard/scorebug/ticker graphic doesn't need much tighter freshness than that.
+    if(sbR){ setInterval(()=>{ sbLoad(OVERLAY_SYNC); }, 30000); }
     if(overlayParams.get('overlay')==='lb'){
       // Widescreen standings graphic — separate from the TikTok ticker overlay.
       const typeParam=overlayParams.get('type');
