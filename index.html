@@ -959,6 +959,39 @@ tr:last-child td{border-bottom:none}
   #theme-bubble{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 16px)}
   #theme-panel{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 80px)}
 }
+
+/* ── AI SITE GUIDE (floating, all users) — mirrors the theme bubble but on the opposite
+   corner so the two floating controls never collide. Talks to a Supabase Edge Function which
+   holds the Gemini key server-side; the browser never sees it. ─────────────────────── */
+#ai-bubble{position:fixed;bottom:22px;left:22px;z-index:7000;width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accentD));border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.25),0 0 0 4px rgba(255,255,255,.08);transition:transform .2s ease,box-shadow .2s ease}
+#ai-bubble:hover{transform:scale(1.08);box-shadow:0 10px 34px rgba(0,0,0,.32)}
+#ai-panel{position:fixed;bottom:86px;left:22px;z-index:7000;width:min(360px,92vw);max-height:min(560px,70vh);
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadowL);
+  display:none;flex-direction:column;overflow:hidden;font-family:var(--font-main);
+  opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transition:all .18s ease}
+#ai-panel.open{display:flex;opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+#ai-panel-head{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0}
+#ai-panel-head i{color:var(--accent)}
+#ai-panel-title{font-weight:700;font-size:.88rem;flex:1;color:var(--text)}
+#ai-panel-close{background:none;border:none;color:var(--textM);cursor:pointer;font-size:1rem;padding:.2rem}
+#ai-msgs{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.55rem;font-size:.83rem;min-height:120px}
+.ai-msg{max-width:85%;padding:.55rem .75rem;border-radius:var(--rS);line-height:1.42;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.ai-msg.bot{align-self:flex-start;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px}
+.ai-msg.typing{opacity:.6;font-style:italic}
+#ai-quick-row{padding:0 .8rem .5rem;display:flex;gap:.35rem;flex-wrap:wrap;flex-shrink:0}
+#ai-quick-row .chip{cursor:pointer;font-size:.68rem}
+#ai-panel-input-row{display:flex;gap:.5rem;padding:.65rem .7rem;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+#ai-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.55rem .7rem;color:var(--text);font-size:.83rem;font-family:var(--font-main)}
+#ai-send{background:var(--accent);border:none;color:#fff;border-radius:var(--rS);width:38px;flex-shrink:0;cursor:pointer;font-size:.9rem}
+#ai-send:disabled{opacity:.5;cursor:default}
+@media(max-width:760px){
+  #ai-bubble{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 16px)}
+  #ai-panel{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 80px);left:12px;width:calc(100vw - 24px)}
+}
 .tp-title{font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;margin-bottom:.15rem;color:var(--text)}
 .tp-sub{font-size:.7rem;color:var(--textM);margin-bottom:.8rem}
 .tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
@@ -2763,12 +2796,20 @@ async function sbInit(){
   }
 }
 
-// Load: GET all rows from the table (value column is jsonb, already parsed by PostgREST)
-async function sbLoad(){
+// Load: GET rows from the table (value column is jsonb, already parsed by PostgREST).
+// Pass `keys` (array of SB_SYNC key names) to fetch ONLY those collections instead of the
+// whole table — critical for anything that polls repeatedly (see the overlay poll below),
+// since an unfiltered `select=key,value` re-downloads all 24 collections (including things
+// a poller never uses, like adminLog/playerReports/transferRequests) on every single call.
+async function sbLoad(keys){
   if(!SB_OK) return false;
   try{
     sbInitMsg('Loading cloud data...');
-    const res = await fetch(SB_REST + '?select=key,value', { method: 'GET', headers: SB_HEADERS });
+    let url = SB_REST + '?select=key,value';
+    if(Array.isArray(keys) && keys.length){
+      url += '&key=in.(' + keys.map(k=>encodeURIComponent(k)).join(',') + ')';
+    }
+    const res = await fetch(url, { method: 'GET', headers: SB_HEADERS });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if(!rows || !rows.length) return false;
@@ -8344,7 +8385,13 @@ window.addEventListener('DOMContentLoaded',async()=>{
   if(isOverlayMode){
     sbInitMsg('Connecting to Supabase...');
     const sbR = await sbInit();
-    if(sbR){await sbLoad();}
+    // Overlay tabs (OBS/streaming Browser Sources) can sit open for hours, so this is by far the
+    // biggest driver of Supabase egress if left unfiltered. Only pull the handful of collections
+    // an overlay actually renders — never admin-only stuff like adminLog, playerReports,
+    // transferRequests, joinRequests, teamRequests, bracket, groups, polls, suggestions, clips,
+    // h2hRecords, tdmQueue, matchRequests, tdmTournament(Requests), rlogs5.
+    const OVERLAY_SYNC = ['players','teams','matches','tdmMatches','tdmBoards','rankingBoards','cfg','sponsors'];
+    if(sbR){await sbLoad(OVERLAY_SYNC);}
     sbHideOverlay();
     // NOTE: deliberately NOT calling seed() here. seed() wipes players/teams/matches/tdmMatches
     // back to empty (and mirrors that wipe to Supabase!) whenever the seeded-flag isn't already
@@ -8360,7 +8407,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     // admin dashboard writing changes is almost always a *different* browser/machine, so this
     // tab never receives a 'storage' event for those changes — without this poll, the overlay
     // freezes on whatever it loaded when OBS first opened it.
-    if(sbR){ setInterval(()=>{ sbLoad(); }, 6000); }
+    // Poll far less often than before too — a leaderboard/scorebug graphic doesn't need <20s freshness.
+    if(sbR){ setInterval(()=>{ sbLoad(OVERLAY_SYNC); }, 20000); }
     if(overlayParams.get('overlay')==='lb'){
       // Widescreen standings graphic — separate from the TikTok ticker overlay.
       const typeParam=overlayParams.get('type');
@@ -8428,6 +8476,109 @@ window.addEventListener('DOMContentLoaded',async()=>{
   }
   renderBkt();
 });
+
+// ═══════ AI SITE GUIDE — floating chat widget backed by a Supabase Edge Function ═══════
+// The function (deployed separately, see supabase/functions/ai-assistant) holds the Gemini API
+// key server-side and forwards it a compact JSON snapshot of live site stats + this message, so
+// it can answer "who's leading right now / how do I join a team / what's coming up" accurately
+// without the key — or the whole player/team dataset — ever shipping to the browser.
+let AI_HISTORY=[];
+let AI_BUSY=false;
+let AI_LAST_SEND=0;
+const AI_MIN_GAP_MS=2500; // free-tier Gemini is rate-limited to a handful of requests/min — this just spaces out rapid clicks
+function toggleAiPanel(){
+  const p=document.getElementById('ai-panel');if(!p)return;
+  const opening=!p.classList.contains('open');
+  p.classList.toggle('open');
+  if(opening){
+    if(!AI_HISTORY.length){
+      appendAiMsg('bot',"Hey! I'm the site guide. Ask me how to sign up, how to join or start a team, what's happening on the leaderboard, or what matches are coming up.");
+    }
+    setTimeout(()=>document.getElementById('ai-input')?.focus(),80);
+  }
+}
+function appendAiMsg(role,text){
+  const wrap=document.getElementById('ai-msgs');if(!wrap)return null;
+  const el=document.createElement('div');
+  el.className='ai-msg '+(role==='user'?'user':'bot');
+  el.textContent=text;
+  wrap.appendChild(el);
+  wrap.scrollTop=wrap.scrollHeight;
+  return el;
+}
+function aiInputKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiMessage();}}
+function aiQuickAsk(q){
+  const input=document.getElementById('ai-input');if(!input)return;
+  input.value=q;sendAiMessage();
+}
+// Compact, read-only snapshot of live public stats — no PII beyond public IGNs that are already
+// shown on the leaderboard/teams pages. Kept small on purpose to keep each request cheap.
+function buildAiSiteContext(){
+  try{
+    const cfg=DB.get('cfg',{});
+    const players=DB.get('players',[]);
+    const teams=DB.get('teams',[]);
+    const matches=DB.get('matches',[]);
+    const tdmMs=DB.get('tdmMatches',[]);
+    const approvedTeams=teams.filter(t=>t.approved);
+    const recruiting=approvedTeams.filter(t=>t.recruiting).slice(0,6)
+      .map(t=>({name:t.name,tag:t.tag||'',lookingFor:t.recruitNote||''}));
+    const upcoming=matches.filter(m=>m.status==='upcoming')
+      .sort((a,b)=>new Date((a.date||'')+' '+(a.time||''))-new Date((b.date||'')+' '+(b.time||'')))
+      .slice(0,5).map(m=>({name:m.name,map:m.map||'',date:m.date||'',time:m.time||'',slots:`${(m.teams||[]).length}/${m.maxTeams||20}`,openSignups:!!m.openSignups}));
+    const liveTdm=tdmMs.find(m=>m.status==='live');
+    const topScrims=[...players].sort((a,b)=>(b.kills||0)-(a.kills||0)).slice(0,5)
+      .map(p=>({ign:p.ign,kills:p.kills||0,wins:p.wins||0,team:p.team||''}));
+    const topTdm=[...players].filter(p=>(p.tdmMatches||0)>0).sort((a,b)=>(b.tdmWins||0)-(a.tdmWins||0)).slice(0,5)
+      .map(p=>({ign:p.ign,wins:p.tdmWins||0,kills:p.tdmKills||0,elo:p.tdmElo||1000}));
+    return {
+      site:{name:cfg.name||'the tournament',season:cfg.season||'',status:cfg.status||'',prizePool:cfg.prize||''},
+      counts:{registeredPlayers:players.length,approvedTeams:approvedTeams.length,recruitingTeams:recruiting.length},
+      recruitingTeams:recruiting,
+      upcomingMatches:upcoming,
+      liveTdmMatch:liveTdm?{squadA:liveTdm.aName,squadB:liveTdm.bName,scoreA:liveTdm.scoreA,scoreB:liveTdm.scoreB,firstTo:liveTdm.target}:null,
+      topScrimPlayers:topScrims,
+      topTdmPlayers:topTdm,
+      viewer:CU?{loggedIn:true,ign:CU.ign}:{loggedIn:false}
+    };
+  }catch(e){console.warn('[ai-guide] context build failed',e);return {};}
+}
+async function sendAiMessage(){
+  if(AI_BUSY)return;
+  const input=document.getElementById('ai-input');if(!input)return;
+  const text=input.value.trim();if(!text)return;
+  const since=Date.now()-AI_LAST_SEND;
+  if(since<AI_MIN_GAP_MS)return notify('Hold on a sec','Give the assistant a moment between questions','n-bad');
+  AI_LAST_SEND=Date.now();
+  input.value='';
+  appendAiMsg('user',text);
+  const typing=appendAiMsg('bot','…thinking');
+  typing.classList.add('typing');
+  AI_BUSY=true;
+  const sendBtn=document.getElementById('ai-send');if(sendBtn)sendBtn.disabled=true;
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/ai-assistant',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
+      body:JSON.stringify({message:text,history:AI_HISTORY.slice(-8),siteContext:buildAiSiteContext()})
+    });
+    let data={};try{data=await res.json();}catch(e){}
+    typing.remove();
+    if(!res.ok||data.error){
+      appendAiMsg('bot',"Sorry, I couldn't reach the assistant just now"+(data.error?` (${data.error})`:'')+". Try again in a bit, or use the menu on the left.");
+    }else{
+      const reply=data.reply||"I didn't get a reply back — try asking again.";
+      appendAiMsg('bot',reply);
+      AI_HISTORY.push({role:'user',text});AI_HISTORY.push({role:'assistant',text:reply});
+    }
+  }catch(e){
+    typing.remove();
+    appendAiMsg('bot',"Couldn't connect to the assistant — check your connection and try again.");
+  }finally{
+    AI_BUSY=false;
+    if(sendBtn)sendBtn.disabled=false;
+  }
+}
 </script>
 
 <!-- ═══════ FLOATING THEME BUBBLE — everyone can pick their own color theme ═══════ -->
@@ -8444,6 +8595,29 @@ window.addEventListener('DOMContentLoaded',async()=>{
     <div class="tp-swatch" data-theme="sunset" onclick="setUserTheme('sunset')"><div class="tp-dot" style="background:linear-gradient(135deg,#fff7f0,#ea580c)"></div>Sunset</div>
   </div>
   <button class="tp-reset" onclick="setUserTheme(null)"><i class="fa-solid fa-rotate-left"></i> Use site default</button>
+</div>
+
+<!-- ═══════ FLOATING AI SITE GUIDE — Gemini via a Supabase Edge Function (key never reaches the browser) ═══════ -->
+<button id="ai-bubble" onclick="toggleAiPanel()" title="Ask the site guide" aria-label="Ask the site guide">
+  <i class="fa-solid fa-robot"></i>
+</button>
+<div id="ai-panel">
+  <div id="ai-panel-head">
+    <i class="fa-solid fa-robot"></i>
+    <div id="ai-panel-title">Site Guide</div>
+    <button id="ai-panel-close" onclick="toggleAiPanel()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div id="ai-msgs"></div>
+  <div id="ai-quick-row">
+    <button class="chip chip-neutral" onclick="aiQuickAsk('How do I sign up?')">How do I sign up?</button>
+    <button class="chip chip-neutral" onclick="aiQuickAsk('How do I join a team?')">Join a team</button>
+    <button class="chip chip-neutral" onclick="aiQuickAsk('What matches are coming up?')">Upcoming matches</button>
+    <button class="chip chip-neutral" onclick="aiQuickAsk('Who is leading the leaderboard right now?')">Top of leaderboard</button>
+  </div>
+  <div id="ai-panel-input-row">
+    <input class="fi" id="ai-input" placeholder="Ask me anything about the site…" onkeydown="aiInputKeydown(event)" autocomplete="off"/>
+    <button id="ai-send" onclick="sendAiMessage()" aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
 </div>
 </body>
 </html>
