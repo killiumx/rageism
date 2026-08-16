@@ -1803,7 +1803,7 @@ tr:last-child td{border-bottom:none}
             <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
             <div class="fg" id="rd-linked-note" style="font-size:.72rem;color:var(--textD);background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .7rem"><i class="fa-brands fa-discord" style="color:#5865F2"></i> Linked to your Discord account automatically — that's what lets match results and Player of the Week actually @mention you.</div>
             <div class="frow"><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div><div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="rc"></select></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="rrk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div><div class="fg"></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Rank <span class="text-dim" style="font-weight:400">(optional)</span></label><select class="fi fsel" id="rrk"><option value="">Not set</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div><div class="fg"></div></div>
             <div class="frow"><div class="fg"><label class="fl">Role</label><select class="fi fsel" id="rro"><option>Fragger</option><option>Support</option><option>Sniper</option><option>IGL</option><option>Entry Fragger</option><option>Flanker</option></select></div><div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="rpl"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div></div>
             <div class="frow"><div class="fg"><label class="fl">Team (optional)</label><input class="fi" id="rtm" placeholder="Leave blank if solo"/></div><div class="fg"></div></div>
             <div class="fg"><label class="fl">Bio</label><textarea class="fta" id="rb" placeholder="Your playstyle, favourite weapons..."></textarea></div>
@@ -2375,7 +2375,8 @@ tr:last-child td{border-bottom:none}
       <div class="fg"><label class="fl">Display Name</label><input class="fi" id="ep-name" placeholder="Full name"/></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">Rank</label><select class="fi fsel" id="ep-rk"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
+      <div class="fg"><label class="fl">PUBG UID <span class="text-dim" style="font-weight:400">(needed so a captain can add you to a team)</span></label><input class="fi" id="ep-uid" placeholder="Your PUBG UID"/></div>
+      <div class="fg"><label class="fl">Rank <span class="text-dim" style="font-weight:400">(optional)</span></label><select class="fi fsel" id="ep-rk"><option value="">Not set</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
       <div class="fg"><label class="fl">Role</label><select class="fi fsel" id="ep-role"><option value="Fragger">Fragger</option><option value="IGL">IGL</option><option value="Support">Support</option><option value="Scout">Scout</option><option value="Flex">Flex</option></select></div>
       <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="ep-country"></select></div>
       <div class="fg"><label class="fl">Profile Picture URL</label><input class="fi" id="ep-avatar" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/pic.png"/></div>
@@ -6819,7 +6820,7 @@ function setupEditMe(){
   if(!p)return;
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
-  set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-uid',p.uid||'');set('ep-rk',p.rank||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
   populateCountrySelect('ep-country',p.country||'');
   const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
@@ -6835,8 +6836,13 @@ function saveEditPlayer(){
     const dupe=findDiscordOwner(newDiscord,null,id);
     if(dupe)return notify('Discord already linked',`${dupe.ign} is already linked to that Discord account — only one player per Discord account is allowed`,'n-bad');
   }
-  p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;
-  p.rank=g('ep-rk')||p.rank;p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
+  const newUid=g('ep-uid');
+  if(newUid){
+    const dupeUid=pl.find(x=>x.uid&&String(x.uid).trim()===newUid&&x.id!==id);
+    if(dupeUid)return notify('UID already in use',`That PUBG UID is already registered to ${dupeUid.ign}`,'n-bad');
+  }
+  p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;p.uid=newUid;
+  p.rank=g('ep-rk');p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
   p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
   p.twitter=g('ep-xt');p.instagram=g('ep-ig');p.webhook=g('ep-wh');
   DB.set('players',pl);
@@ -6885,7 +6891,7 @@ function openEditAdmin(id){
   const p=DB.get('players').find(x=>x.id===id);if(!p)return;
   const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
-  set('ep-rk',p.rank||'Bronze');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-uid',p.uid||'');set('ep-rk',p.rank||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
   populateCountrySelect('ep-country',p.country||'');
   const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
