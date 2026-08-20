@@ -869,6 +869,8 @@ tr:last-child td{border-bottom:none}
 .divider-line{height:1px;background:var(--border);margin:1.2rem 0}
 
 @media(max-width:900px){.sidebar{width:200px}}
+.res-layout{display:grid;grid-template-columns:1fr 340px;gap:1rem;align-items:start}
+.res-layout-side{position:sticky;top:4.5rem}
 
 /* ── PHONE FRIENDLY (≤760px): off-canvas sidebar drawer, stacked layout ── */
 @media(max-width:760px){
@@ -906,6 +908,16 @@ tr:last-child td{border-bottom:none}
 
   .g2,.g3,.g4,.frow,.frow3{grid-template-columns:1fr !important}
   .stat-grid{grid-template-columns:1fr 1fr}
+  .res-layout{grid-template-columns:1fr !important}
+  .res-layout-side{position:static !important}
+  #res-game-tabs{flex-direction:column;align-items:stretch !important}
+  #res-game-tabs>div{width:100%}
+  #res-game-tabs .fg{width:100%;min-width:0 !important}
+  .res-player-rows [style*="grid-template-columns:1fr 46px 26px 60px 40px"]{grid-template-columns:1fr 40px 24px 52px 34px;gap:.2rem}
+  .res-kills-in{width:100%;min-width:0}
+  .sh-row{flex-direction:column;align-items:flex-start !important}
+  .sh-row>div:last-child{width:100%}
+  #res-mid{width:100% !important}
 
   table{font-size:.78rem}
   .tbl-wrap{-webkit-overflow-scrolling:touch}
@@ -1488,10 +1500,10 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ADMIN LOG RESULTS ░ -->
       <div class="page" id="page-admin-results">
         <div class="sh-row">
-          <div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">PUBG scrims results — 1-4+ games per session, a different map each game, team placements &amp; individual kills per game</div></div>
+          <div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">Log results per tournament — add as many matches as you played, a different map each, team placements &amp; individual kills per match</div></div>
           <div style="display:flex;gap:.5rem;align-items:center">
             <select class="fi fsel" id="res-mid" style="min-width:180px" onchange="onMatchSelect()">
-              <option value="">— Select Match —</option>
+              <option value="">— Select Tournament —</option>
             </select>
           </div>
         </div>
@@ -1503,32 +1515,32 @@ tr:last-child td{border-bottom:none}
           <div id="res-meta-status" class="chip" style="font-size:.72rem;cursor:pointer" onclick="cycleResMatchStatus()" title="Click to cycle: Upcoming → Live → Ended"></div>
           <div style="margin-left:auto;display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="addResTeamSlot()"><i class="fa-solid fa-plus"></i> Add Team Slot</button>
-            <button class="btn btn-accent btn-sm" onclick="submitResults()" title="Tallies every kill entered above and marks the match Ended"><i class="fa-solid fa-flag-checkered"></i> End Match &amp; Save</button>
+            <button class="btn btn-accent btn-sm" onclick="submitResults()" title="Tallies every kill entered above and marks the tournament Ended"><i class="fa-solid fa-flag-checkered"></i> End Tournament &amp; Save</button>
           </div>
         </div>
-        <!-- game tabs: a scrims session is usually 1-4 games, sometimes more, each a different map -->
+        <!-- match tabs: a tournament is usually 1-4 matches, sometimes more, each a different map -->
         <div id="res-game-tabs" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.6rem .8rem;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem;align-items:center"></div>
 
         <!-- live score bar -->
         <div id="res-pts-bar" style="margin-bottom:.8rem"></div>
 
-        <div style="display:grid;grid-template-columns:1fr 340px;gap:1rem;align-items:start">
+        <div class="res-layout">
           <!-- LEFT: placement slots -->
           <div>
             <div id="res-no-match" style="background:var(--bg2);border:1px dashed var(--border);border-radius:var(--r);padding:2.5rem;text-align:center;color:var(--textD)">
               <i class="fa-solid fa-crosshairs" style="font-size:1.8rem;display:block;margin-bottom:.6rem;opacity:.3"></i>
-              <div style="font-size:.9rem;font-weight:600;margin-bottom:.25rem">Select a match above</div>
-              <div style="font-size:.8rem">Choose a scheduled match to begin logging results</div>
+              <div style="font-size:.9rem;font-weight:600;margin-bottom:.25rem">Select a tournament above</div>
+              <div style="font-size:.8rem">Choose a scheduled tournament to begin logging results</div>
             </div>
             <div id="result-rows" style="display:flex;flex-direction:column;gap:.6rem"></div>
             <div id="res-save-row" style="display:none;margin-top:.8rem">
-              <button class="btn btn-accent btn-fw" onclick="submitResults()" title="Tallies every kill entered above and marks the match Ended"><i class="fa-solid fa-flag-checkered"></i> End Match &amp; Save Results</button>
+              <button class="btn btn-accent btn-fw" onclick="submitResults()" title="Tallies every kill entered above and marks the tournament Ended"><i class="fa-solid fa-flag-checkered"></i> End Tournament &amp; Save Results</button>
               <div style="font-size:.68rem;color:var(--textD);text-align:center;margin-top:.4rem">Add kills live with the <i class="fa-solid fa-plus"></i> button as the match plays out — this just tallies and closes it out when you're ready.</div>
             </div>
           </div>
 
           <!-- RIGHT: recent logs -->
-          <div style="position:sticky;top:4.5rem">
+          <div class="res-layout-side">
             <div class="card" style="padding:.9rem">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
                 <div style="font-weight:700;font-size:.82rem;display:flex;align-items:center;gap:.4rem"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accentL)"></i> Recent Logs</div>
@@ -1579,14 +1591,14 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ADMIN MATCHES ░ -->
       <div class="page" id="page-admin-matches">
         <div class="sh-row">
-          <div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">Management</span></div></div>
+          <div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Management</span></div><div class="sh-sub">Each tournament can hold as many matches as you like — add/remove them and set a different map per match while logging results</div></div>
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')"><i class="fa-solid fa-clipboard-list"></i> Signup Requests <span id="match-signup-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
             <button class="btn btn-ghost btn-sm" onclick="renderSmartSortModal();openModal('smart-sort-modal')"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</button>
-            <button class="btn btn-accent btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New Match</button>
+            <button class="btn btn-accent btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New Tournament</button>
           </div>
         </div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Match</th><th>Map</th><th>Status</th><th>Date/Time</th><th></th></tr></thead><tbody id="am-body"></tbody></table></div></div>
+        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Tournament</th><th>Map</th><th>Status</th><th>Date/Time</th><th></th></tr></thead><tbody id="am-body"></tbody></table></div></div>
       </div>
 
       <!-- ░ ADMIN POLLS ░ -->
@@ -1606,6 +1618,21 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ADMIN SETTINGS ░ -->
       <div class="page" id="page-admin-settings">
         <div class="sh-row"><div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Settings</span></div></div></div>
+        <div class="card mb2">
+          <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Scrims Scoring System</div>
+          <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Set exactly how many points each placement (1st through 20th) is worth, plus points per kill. This applies to every scrim/tournament going forward — matches already logged keep whatever scoring was active when you saved their results.</div>
+          <div class="frow" style="align-items:flex-end;margin-bottom:1rem">
+            <div class="fg" style="max-width:180px"><label class="fl">Points per Kill</label><input class="fi" id="cfg-kill-pt" type="number" step="0.5" min="0"/></div>
+            <div style="display:flex;gap:.5rem;flex:1;justify-content:flex-end">
+              <button class="btn btn-ghost btn-sm" onclick="applyScorePreset('pgc')" title="1st=10, 2nd=6, 3rd=5, 4th=4, 5th=3, 6th=2, 7th-8th=1, rest=0 · 1pt/kill"><i class="fa-solid fa-trophy"></i> PGC Standard</button>
+              <button class="btn btn-ghost btn-sm" onclick="applyScorePreset('winsonly')" title="Only 1st place scores (10pts) — kills don't count"><i class="fa-solid fa-medal"></i> Wins Only</button>
+              <button class="btn btn-ghost btn-sm" onclick="applyScorePreset('flat')" title="Every placement worth the same as its rank descending — quick linear scale"><i class="fa-solid fa-arrow-down-wide-short"></i> Linear 20→1</button>
+            </div>
+          </div>
+          <div id="cfg-placement-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.6rem;margin-bottom:1rem"></div>
+          <button class="btn btn-accent btn-fw" onclick="saveScoreSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Scoring System</button>
+          <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="resetScoreSettings()"><i class="fa-solid fa-rotate-left"></i> Reset to PGC Default</button>
+        </div>
         <div class="g2">
           <div class="card">
             <div class="card-title"><i class="fa-solid fa-sliders"></i> Configuration</div>
@@ -1796,6 +1823,7 @@ tr:last-child td{border-bottom:none}
                 <button class="btn btn-danger btn-fw" onclick="resetSec('players')"><i class="fa-solid fa-users-slash"></i> Clear All Players</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('teams')"><i class="fa-solid fa-shield-slash"></i> Clear All Teams</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('stats')"><i class="fa-solid fa-chart-simple"></i> Reset All Stats (Scrims + TDM)</button>
+                <button class="btn btn-danger btn-fw" onclick="resetSec('matchesOnly')"><i class="fa-solid fa-trophy"></i> Delete All Tournament Data (Matches + Results)</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('tdmOnly')"><i class="fa-solid fa-skull-crossbones"></i> Clear TDM Stats Only</button>
                 <button class="btn btn-ghost btn-fw" onclick="resetSec('weekly')" style="border-color:rgba(99,102,241,.3)"><i class="fa-solid fa-calendar-week"></i> Reset Weekly Stats (for Player of the Week)</button>
                 <button class="btn btn-ghost btn-fw" onclick="postPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post Scrims Player of the Week Now</button>
@@ -1987,7 +2015,7 @@ tr:last-child td{border-bottom:none}
       <!-- ░ MATCHES ░ -->
       <div class="page" id="page-matches">
         <div class="sh-row">
-          <div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">Schedule</span></div></div>
+          <div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Schedule</span></div></div>
           <div style="display:flex;gap:.4rem;flex-wrap:wrap">
             <button class="btn btn-accent btn-sm" id="mv-list-btn" onclick="switchMatchesView('list')"><i class="fa-solid fa-list"></i> List</button>
             <button class="btn btn-ghost btn-sm" id="mv-cal-btn" onclick="switchMatchesView('calendar')"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
@@ -2182,9 +2210,9 @@ tr:last-child td{border-bottom:none}
 <div class="modal-overlay" id="match-modal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('match-modal')"><i class="fa-solid fa-xmark"></i></button>
-    <div class="modal-title">Create Match</div>
-    <div class="fg"><label class="fl">Match Name</label><input class="fi" id="mm-n" placeholder="Erangel Grand Finals"/></div>
-    <div class="frow"><div class="fg"><label class="fl">Map</label><select class="fi fsel" id="mm-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div></div>
+    <div class="modal-title">Create Tournament</div>
+    <div class="fg"><label class="fl">Tournament Name</label><input class="fi" id="mm-n" placeholder="Erangel Grand Finals"/></div>
+    <div class="frow"><div class="fg"><label class="fl">Map <span style="font-weight:400;color:var(--textD)">(match 1 — add more matches, each on its own map, while logging results)</span></label><select class="fi fsel" id="mm-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Livik</option><option>Karakin</option><option>Taego</option><option>Deston</option><option>Rondo</option><option>Nusa</option></select></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div></div>
     <div class="frow"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div></div>
     <div class="frow"><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md" onchange="mmSyncTeamSize()"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div><div class="fg"><label class="fl">Total Player Slots</label><input class="fi" id="mm-players" type="number" value="80" min="1" oninput="mmAutoCalc()"/></div></div>
     <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem">
@@ -2192,8 +2220,8 @@ tr:last-child td{border-bottom:none}
       <div style="flex:1;text-align:right"><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Team slots (auto)</div><div id="mm-mt-display" style="font-size:1.35rem;font-weight:800;color:var(--accentL);line-height:1.2">20 teams</div></div>
     </div>
     <input type="hidden" id="mm-mt" value="20"/>
-    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this match</label>
-    <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Match</button>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this tournament</label>
+    <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Tournament</button>
   </div>
 </div>
 
@@ -2216,7 +2244,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="tr-roster" style="display:flex;flex-direction:column;gap:.4rem;margin:.6rem 0 1rem"></div>
 
-    <div class="fg"><label class="fl">Preferred Map</label><select class="fi fsel" id="tmap"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
+    <div class="fg"><label class="fl">Preferred Map</label><select class="fi fsel" id="tmap"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Livik</option><option>Karakin</option><option>Taego</option><option>Deston</option><option>Rondo</option><option>Nusa</option></select></div>
     <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
       <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:.4rem"><input type="checkbox" id="t-recruit" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> We're looking for more players</label>
       <input class="fi" id="t-roles" placeholder="Roles needed, e.g. Sniper, IGL — optional"/>
@@ -3180,12 +3208,77 @@ function miniAvHTML(p,extraStyle=''){
   return `<div class="cell-av" style="${extraStyle}">${letter}</div>`;
 }
 function countryName(code){const m=COUNTRIES.find(c=>c[0]===code);return m?m[1]:'';}
-const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
-// ── PUBG Esports Points System (PGC standard) ──
-// Placement points: 1st=10, 2nd=6, 3rd=5, 4th=4, 5th=3, 6th=2, 7th-8th=1, 9th+=0
-const PLACEMENT_PTS=[10,6,5,4,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
-// Kill points: 1 point per kill (no cap)
-const KILL_PT=1;
+// ── Real, current PUBG Mobile Classic-mode map pool ──
+const MI={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Livik:'<i class="fa-solid fa-water"></i>',Karakin:'<i class="fa-solid fa-bomb"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>',Rondo:'<i class="fa-solid fa-landmark"></i>',Nusa:'<i class="fa-solid fa-umbrella-beach"></i>'};
+// ── PUBG Esports Points System ──
+// Fully admin-customizable now (Admin → Settings → Scoring). These are just the factory
+// defaults used the first time the site loads with no saved settings; DEFAULT_PLACEMENT_PTS
+// always has exactly 20 entries (placements 1st through 20th). PLACEMENT_PTS/KILL_PT below are
+// `let`, not `const` — loadScoreSettings() overwrites them from DB on boot and whenever the
+// admin saves new values, so every place in the app that reads PLACEMENT_PTS[place-1] or
+// multiplies by KILL_PT automatically picks up the custom scoring without further changes.
+const DEFAULT_PLACEMENT_PTS=[10,6,5,4,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
+const DEFAULT_KILL_PT=1;
+let PLACEMENT_PTS=DEFAULT_PLACEMENT_PTS.slice();
+let KILL_PT=DEFAULT_KILL_PT;
+function loadScoreSettings(){
+  const s=DB.get('scoreSettings',null);
+  if(s&&Array.isArray(s.placementPts)&&s.placementPts.length===20){
+    PLACEMENT_PTS=s.placementPts.map(n=>Number(n)||0);
+  }else{
+    PLACEMENT_PTS=DEFAULT_PLACEMENT_PTS.slice();
+  }
+  KILL_PT=(s&&typeof s.killPts==='number'&&!isNaN(s.killPts))?s.killPts:DEFAULT_KILL_PT;
+}
+loadScoreSettings();
+
+// ── Scoring System admin form (Admin → Settings → Scrims Scoring System) ──
+// Builds one small number input per placement (1st..20th) plus the kill-points field, seeded
+// from whatever's currently active (PLACEMENT_PTS/KILL_PT, which loadScoreSettings() already
+// populated from DB, or the shipped PGC defaults).
+function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function renderScoreSettingsForm(){
+  const grid=document.getElementById('cfg-placement-grid');if(!grid)return;
+  grid.innerHTML=PLACEMENT_PTS.map((pts,i)=>`
+    <div class="fg" style="margin:0">
+      <label class="fl" style="font-size:.68rem">${ordinal(i+1)}</label>
+      <input class="fi" id="cfg-place-${i}" type="number" step="0.5" min="0" value="${pts}" style="padding:.5rem .6rem;text-align:center"/>
+    </div>`).join('');
+  const kp=document.getElementById('cfg-kill-pt');if(kp)kp.value=KILL_PT;
+}
+function readScoreSettingsForm(){
+  const placementPts=[];
+  for(let i=0;i<20;i++){const el=document.getElementById(`cfg-place-${i}`);placementPts.push(el?(Number(el.value)||0):0);}
+  const kpEl=document.getElementById('cfg-kill-pt');
+  const killPts=kpEl?(Number(kpEl.value)||0):DEFAULT_KILL_PT;
+  return{placementPts,killPts};
+}
+function saveScoreSettings(){
+  if(!ADM)return;
+  const s=readScoreSettingsForm();
+  DB.set('scoreSettings',s);
+  loadScoreSettings();
+  logAdminAction('Scoring system updated',`Kill points: ${s.killPts} · 1st place: ${s.placementPts[0]}pts`);
+  notify('Scoring saved!','New results will use this scoring — matches already logged keep their old totals','n-ok');
+}
+function resetScoreSettings(){
+  if(!ADM)return;
+  if(!confirm('Reset scoring to the PGC default (10/6/5/4/3/2/1/1/0.../0, 1pt per kill)?'))return;
+  DB.set('scoreSettings',{placementPts:DEFAULT_PLACEMENT_PTS.slice(),killPts:DEFAULT_KILL_PT});
+  loadScoreSettings();
+  renderScoreSettingsForm();
+  notify('Scoring reset','Back to PGC-standard scoring','n-ok');
+}
+function applyScorePreset(name){
+  let placementPts,killPts;
+  if(name==='pgc'){placementPts=DEFAULT_PLACEMENT_PTS.slice();killPts=1;}
+  else if(name==='winsonly'){placementPts=[10,...Array(19).fill(0)];killPts=0;}
+  else if(name==='flat'){placementPts=Array.from({length:20},(_,i)=>20-i);killPts=1;}
+  else return;
+  PLACEMENT_PTS=placementPts;KILL_PT=killPts;
+  renderScoreSettingsForm();
+  notify('Preset loaded','Click "Save Scoring System" below to apply it','n-ok');
+}
 const GL=['A','B','C','D','E','F','G','H'];
 
 function seed(){
@@ -3203,8 +3296,8 @@ function seed(){
   DB.set('s5',true);
 }
 // ═══ ANALYTICS ENGINE ═══
-const AN_MAPS={Erangel:'<i class="fa-solid fa-mountain-sun"></i>',Miramar:'<i class="fa-solid fa-sun"></i>',Sanhok:'<i class="fa-solid fa-tree"></i>',Vikendi:'<i class="fa-solid fa-snowflake"></i>',Taego:'<i class="fa-solid fa-torii-gate"></i>',Deston:'<i class="fa-solid fa-city"></i>'};
-const AN_MAP_COLOR={Erangel:'var(--green)',Miramar:'var(--amber)',Sanhok:'#22c55e',Vikendi:'#67e8f9',Taego:'#f97316',Deston:'var(--blue)'};
+const AN_MAPS=MI;
+const AN_MAP_COLOR={Erangel:'var(--green)',Miramar:'var(--amber)',Sanhok:'#22c55e',Vikendi:'#67e8f9',Livik:'#06b6d4',Karakin:'#a8a29e',Taego:'#f97316',Deston:'var(--blue)',Rondo:'#a855f7',Nusa:'#14b8a6'};
 const BAR_COLS=['#6366f1','#a855f7','#ef4444','#f59e0b','#10b981','#3b82f6','#ec4899','#06b6d4'];
 let AN_TAB='overview', AN_MAP='Erangel', AN_TEAM='';
 
@@ -3873,7 +3966,8 @@ function showPage(n){
     const otw=document.getElementById('cfg-ov-tdm-wins');if(otw)otw.checked=cfg.ovTdmShowWins!==false;
     renderRankingBoardSelect();
     loadSponsorsField();
-    migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();}
+    migrateWebhooks();populateWebhookEventSelect();renderWebhookList();renderAdminAuditLog();
+    renderScoreSettingsForm();}
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
@@ -6322,8 +6416,8 @@ function addResGame(){
 }
 
 function removeResGame(gi){
-  if(RES_GAMES.length<=1)return notify('Can\'t remove last game','A session needs at least one game','n-bad');
-  if(!confirm(`Remove Game ${gi+1}? Its placements/kills will be lost.`))return;
+  if(RES_GAMES.length<=1)return notify('Can\'t remove last match','A tournament needs at least one match','n-bad');
+  if(!confirm(`Remove Match ${gi+1}? Its placements/kills will be lost.`))return;
   RES_GAMES.splice(gi,1);
   RES_GIDX = Math.min(RES_GIDX, RES_GAMES.length-1);
   RES_SLOTS = RES_GAMES[RES_GIDX].slots;
@@ -6350,17 +6444,17 @@ function renderGameTabs(){
   wrap.innerHTML=`
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;flex:1">
       ${RES_GAMES.map((g,gi)=>`<button class="btn ${gi===RES_GIDX?'btn-accent':'btn-ghost'} btn-sm" onclick="switchResGame(${gi})" style="position:relative">
-        Game ${gi+1}${g.map?` · ${MI[g.map]||''} ${g.map}`:''}
-        ${RES_GAMES.length>1?`<span onclick="event.stopPropagation();removeResGame(${gi})" style="margin-left:.4rem;opacity:.7" title="Remove game"><i class="fa-solid fa-xmark"></i></span>`:''}
+        Match ${gi+1}${g.map?` · ${MI[g.map]||''} ${g.map}`:''}
+        ${RES_GAMES.length>1?`<span onclick="event.stopPropagation();removeResGame(${gi})" style="margin-left:.4rem;opacity:.7" title="Remove match"><i class="fa-solid fa-xmark"></i></span>`:''}
       </button>`).join('')}
-      <button class="btn btn-ghost btn-sm" onclick="addResGame()" title="Add the next game in this scrims session — 1-4 games is typical, add more if you played more"><i class="fa-solid fa-plus"></i> Add Game</button>
+      <button class="btn btn-ghost btn-sm" onclick="addResGame()" title="Add the next match in this tournament — 1-4 matches is typical, add as many as you like, each with its own map"><i class="fa-solid fa-plus"></i> Add Match</button>
     </div>
     <div class="fg" style="margin:0;min-width:170px">
       <select class="fi fsel" id="res-game-map-${RES_GIDX}" onchange="onResGameMapChange(${RES_GIDX})">
-        <option value="">— Map for Game ${RES_GIDX+1} —</option>${mapOpts}
+        <option value="">— Map for Match ${RES_GIDX+1} —</option>${mapOpts}
       </select>
     </div>
-    ${RES_GAMES.length>1?`<div style="font-size:.68rem;color:var(--textD);width:100%;margin-top:.3rem"><i class="fa-solid fa-circle-info"></i> Ending the match sums placement + kill points across all ${RES_GAMES.length} games into one combined result.</div>`:''}
+    ${RES_GAMES.length>1?`<div style="font-size:.68rem;color:var(--textD);width:100%;margin-top:.3rem"><i class="fa-solid fa-circle-info"></i> Ending the tournament sums placement + kill points across all ${RES_GAMES.length} matches into one combined result.</div>`:''}
   `;
   const sel=document.getElementById(`res-game-map-${RES_GIDX}`);
   if(sel&&RES_GAMES[RES_GIDX])sel.value=RES_GAMES[RES_GIDX].map||'';
@@ -7718,7 +7812,7 @@ function mmAutoCalc(){
   const disp=document.getElementById('mm-mt-display');if(disp)disp.textContent=`${teams} team${teams===1?'':'s'}`;
   const hidden=document.getElementById('mm-mt');if(hidden)hidden.value=teams;
 }
-function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');mmAutoCalc();const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]});DB.set('matches',ms);closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,`${v('mm-mt')} team slots for ${v('mm-players')} players`,'n-ok');}
+function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');mmAutoCalc();const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]});DB.set('matches',ms);closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Tournament #${id} created!`,`${v('mm-mt')} team slots for ${v('mm-players')} players`,'n-ok');}
 
 // ═══ COMPARE ═══
 function renderCmpSelects(){const pl=DB.get('players');['cmp1','cmp2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— Select Player —</option>'+pl.map(p=>`<option value="${p.id}">${p.ign} (${p.team||p.rank})</option>`).join('');if(cur)s.value=cur;});}
@@ -8348,8 +8442,76 @@ function saveProfileWebhook(){
   p.webhook=wh;DB.set('players',players);notify('Webhook saved!','','n-ok');
 }
 function delTeam(id){if(!ADM)return;let t=DB.get('teams');const target=t.find(x=>x.id===id);t=t.filter(x=>x.id!==id);DB.set('teams',t);renderATeams();renderTeams();if(target)logAdminAction('Team removed',`${target.name} was removed/rejected`);notify('Team removed','','n-ok');}
-function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
-function delMatch(id){if(!ADM)return;let ms=DB.get('matches');const target=ms.find(x=>x.id===id);ms=ms.filter(x=>x.id!==id);DB.set('matches',ms);renderAMatches();renderMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();if(target)logAdminAction('Match removed',`${target.name||target.id} was removed`);notify('Match removed','','n-ok');}
+function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;const logs=DB.get('rlogs5',[]);body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';const hasResults=logs.some(l=>l.matchId===m.id);return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')" title="Cycle status"><i class="fa-solid fa-arrows-rotate"></i></button>${hasResults?`<button class="btn btn-ghost btn-xs" onclick="clearMatchResults('${m.id}')" title="Clear logged results & roll back stats, keep the match"><i class="fa-solid fa-eraser"></i></button>`:''}<button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')" title="Delete match &amp; its results"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
+// Undoes everything submitResults() added to player/team records for a given logged result,
+// using the totals already saved on the log itself (log.matchSummary = combined per-team totals,
+// log.entries = per-player-per-game lines). Streaks (win/kill streak counters) aren't reversed
+// since there's no way to know what they were immediately before this result without replaying
+// the player's whole history — everything else (kills/wins/deaths/points/games/xp) is exact.
+function reverseLogStats(log){
+  const pl=DB.get('players');const teams=DB.get('teams');
+  (log.matchSummary||[]).forEach(tt=>{
+    const t=teams.find(x=>x.id===tt.teamId);
+    if(t){
+      t.points=Math.max(0,(t.points||0)-(tt.totalPts||0));
+      t.kills=Math.max(0,(t.kills||0)-(tt.kills||0));
+      t.wins=Math.max(0,(t.wins||0)-(tt.wins||0));
+      t.matchesPlayed=Math.max(0,(t.matchesPlayed||0)-1);
+    }
+  });
+  const byIgn={};
+  (log.entries||[]).forEach(e=>{
+    if(!e.ign)return;
+    if(!byIgn[e.ign])byIgn[e.ign]={kills:0,pts:0,wins:0,deaths:0,games:0};
+    const b=byIgn[e.ign];
+    b.kills+=(e.kills||0);b.pts+=(e.pts||0);b.games+=1;
+    if(e.placement===1&&!e.elim)b.wins+=1;
+    if(e.elim||e.placement>1)b.deaths+=1;
+  });
+  Object.entries(byIgn).forEach(([ign,b])=>{
+    const p=pl.find(x=>x.ign===ign);if(!p)return;
+    p.kills=Math.max(0,(p.kills||0)-b.kills);
+    p.weeklyKills=Math.max(0,(p.weeklyKills||0)-b.kills);
+    p.points=Math.max(0,(p.points||0)-b.pts);
+    p.wins=Math.max(0,(p.wins||0)-b.wins);
+    p.weeklyWins=Math.max(0,(p.weeklyWins||0)-b.wins);
+    p.deaths=Math.max(0,(p.deaths||0)-b.deaths);
+    p.gamesPlayed=Math.max(0,(p.gamesPlayed||0)-b.games);
+    p.xp=Math.max(0,(p.xp||0)-(b.kills*50)-(b.wins*500));
+  });
+  DB.set('players',pl);DB.set('teams',teams);
+}
+
+// Wipes every logged result for one match/tournament, reversing the stats they added and
+// deleting the log rows — but leaves the match itself so the host can re-enter results.
+function clearMatchResults(id){
+  if(!ADM)return;
+  const logs=DB.get('rlogs5',[]);
+  const mine=logs.filter(l=>l.matchId===id);
+  if(!mine.length)return notify('Nothing to clear','This match has no logged results yet','n-bad');
+  if(!confirm(`Clear ${mine.length} result log${mine.length===1?'':'s'} for this match? Player/team stats added by ${mine.length===1?'it':'them'} will be rolled back. The match itself stays — you can re-log results.`))return;
+  mine.forEach(reverseLogStats);
+  DB.set('rlogs5',logs.filter(l=>l.matchId!==id));
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===id);
+  if(m){m.status='upcoming';DB.set('matches',ms);}
+  renderAMatches();renderMatches();renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();renderTeams();if(ADM)renderAdminOverview();
+  logAdminAction('Match results cleared',`${m?m.name||m.id:id} — ${mine.length} log(s) removed, stats rolled back`);
+  notify('Results cleared','Stats rolled back — match reset to Upcoming','n-ok');
+}
+
+function delMatch(id){
+  if(!ADM)return;
+  let ms=DB.get('matches');const target=ms.find(x=>x.id===id);
+  if(!confirm(`Delete "${target?target.name:id}"? Any logged results for it will also be removed and the stats they added rolled back. This can't be undone.`))return;
+  const logs=DB.get('rlogs5',[]);
+  const mine=logs.filter(l=>l.matchId===id);
+  mine.forEach(reverseLogStats);
+  if(mine.length)DB.set('rlogs5',logs.filter(l=>l.matchId!==id));
+  ms=ms.filter(x=>x.id!==id);DB.set('matches',ms);
+  renderAMatches();renderMatches();renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();renderTeams();refreshDLs();if(ADM)renderAdminOverview();
+  if(target)logAdminAction('Match removed',`${target.name||target.id} was removed${mine.length?` along with ${mine.length} result log(s)`:''}`);
+  notify('Match removed',mine.length?`${mine.length} result log(s) deleted, stats rolled back`:'','n-ok');
+}
 function renderAPolls(){const polls=DB.get('polls');const el=document.getElementById('apo-list');if(!el)return;el.innerHTML=polls.map(p=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><div><div style="font-weight:600;font-size:.87rem">${p.q}</div><div class="text-dim" style="font-size:.72rem">${p.votes.reduce((a,b)=>a+b,0)} votes · ${p.active?'Open':'Closed'}</div></div><div style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="closePoll('${p.id}')"><i class="fa-solid fa-lock"></i></button><button class="btn btn-danger btn-xs" onclick="delPoll('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')||'<div class="text-dim" style="font-size:.82rem">No polls.</div>';}
 function copyOverlayLink(){
   const el=document.getElementById('ov-link');if(!el)return;
@@ -8735,6 +8897,14 @@ function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))ret
     // stats (kills/wins/tdmKills/tdmWins etc.) are never touched by this.
     const pl=DB.get('players');pl.forEach(p=>{p.weeklyKills=0;p.weeklyWins=0;p.weeklyTdmKills=0;p.weeklyTdmWins=0;});
     DB.set('players',pl);
+  }else if(what==='matchesOnly'){
+    // "Delete all tournament data" — wipes every scrims match/tournament and every logged
+    // result, and rolls back every stat those results ever added to players/teams. TDM,
+    // players, teams, and everything else are left untouched.
+    const logs=DB.get('rlogs5',[]);
+    logs.forEach(reverseLogStats);
+    DB.set('matches',[]);DB.set('rlogs5',[]);DB.set('matchRequests',[]);
+    renderAMatches();renderMatches();renderResultLogs();
   }
   renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
 function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, polls, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','polls','suggestions','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
