@@ -1572,6 +1572,7 @@ tr:last-child td{border-bottom:none}
           <div class="sh"><div class="sh-title">Match <span style="color:var(--accentL)">Management</span></div></div>
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')"><i class="fa-solid fa-clipboard-list"></i> Signup Requests <span id="match-signup-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
+            <button class="btn btn-ghost btn-sm" onclick="renderSmartSortModal();openModal('smart-sort-modal')"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</button>
             <button class="btn btn-accent btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New Match</button>
           </div>
         </div>
@@ -1821,25 +1822,11 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-accent btn-fw" onclick="regPlayer()"><i class="fa-solid fa-right-to-bracket"></i> Register to Arena</button>
           </div>
           <div>
-            <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Team Registration</div>
-              <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Search and add players below — they need to be registered individually first. The first player you add becomes captain; you can reassign that anytime with the crown button.</div>
-              <div class="fg"><label class="fl">Team Name</label><input class="fi" id="tn" placeholder="e.g. Your Team Name"/></div>
-              <div class="fg"><label class="fl">Tag</label><input class="fi" id="tt" placeholder="[TAG]" maxlength="5"/></div>
-
-              <div class="fg" style="position:relative">
-                <label class="fl">Add Players <span class="text-dim" style="font-weight:400">(search by name or IGN)</span></label>
-                <input class="fi" id="tr-search" placeholder="Start typing a name or IGN..." oninput="trSearchPlayers()" onfocus="trSearchPlayers()" onblur="setTimeout(()=>{const b=document.getElementById('tr-search-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
-                <div id="tr-search-results" class="tdm-search-results" style="display:none;position:absolute;left:0;right:0;z-index:5;background:var(--bg2);border:1px solid var(--border)"></div>
-              </div>
-              <div id="tr-roster" style="display:flex;flex-direction:column;gap:.4rem;margin:.6rem 0 1rem"></div>
-
-              <div class="fg"><label class="fl">Preferred Map</label><select class="fi fsel" id="tmap"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
-              <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
-                <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:.4rem"><input type="checkbox" id="t-recruit" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> We're looking for more players</label>
-                <input class="fi" id="t-roles" placeholder="Roles needed, e.g. Sniper, IGL — optional"/>
-              </div>
-              <button class="btn btn-ghost btn-fw" onclick="regTeam()"><i class="fa-solid fa-shield"></i> Register Team</button>
+            <div class="card" style="text-align:center;padding:2.2rem 1.5rem">
+              <i class="fa-solid fa-shield-halved" style="font-size:1.8rem;color:var(--accentL);opacity:.8;display:block;margin-bottom:.7rem"></i>
+              <div style="font-weight:700;font-size:1.02rem;margin-bottom:.4rem">Registering a team?</div>
+              <div style="font-size:.83rem;color:var(--textM);margin-bottom:1.1rem;line-height:1.5">Team registration now lives on the <strong>Teams</strong> page, right next to everyone else who's signed up — get every player registered here first, then head over to build the roster.</div>
+              <button class="btn btn-accent btn-fw" onclick="showPage('teams')"><i class="fa-solid fa-shield-halved"></i> Go to Teams</button>
             </div>
           </div>
         </div>
@@ -2019,7 +2006,9 @@ tr:last-child td{border-bottom:none}
 
       <!-- ░ TEAMS ░ -->
       <div class="page" id="page-teams">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Registered <span style="color:var(--accentL)">Teams</span></div><div class="sh-sub" id="teams-count">0 teams</div></div></div>
+        <div class="sh-row"><div class="sh"><div class="sh-title">Registered <span style="color:var(--accentL)">Teams</span></div><div class="sh-sub" id="teams-count">0 teams</div></div>
+          <button class="btn btn-accent btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
+        </div>
         <div class="teams-toolbar">
           <input class="fi" id="teams-search" style="max-width:280px" placeholder="Search teams by name, tag, or player..." oninput="renderTeams()"/>
           <button class="btn btn-ghost btn-sm" id="teams-recruit-btn" onclick="toggleRecruitFilter()"><i class="fa-solid fa-bullhorn"></i> Recruiting Only</button>
@@ -2039,6 +2028,7 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('upcoming',this)">Upcoming</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('done',this)">Ended</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('tdm',this)"><i class="fa-solid fa-skull-crossbones"></i> TDM</button>
+            <button class="btn btn-ghost btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
             <button class="btn btn-ghost btn-sm admin-only" onclick="openModal('match-modal')" style="display:none"><i class="fa-solid fa-plus"></i> New</button>
           </div>
         </div>
@@ -2239,6 +2229,34 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- ═══ TEAM REGISTRATION — moved out of the Sign Up page so it's reachable from wherever teams
+     actually get discovered (Teams page toolbar, Matches page toolbar), not buried under player
+     sign up. Same tn/tt/tr-search/tr-roster/tmap/t-recruit/t-roles ids and regTeam()/trSearchPlayers()
+     logic as before, just relocated into a modal. ═══ -->
+<div class="modal-overlay" id="team-reg-modal">
+  <div class="modal-box" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('team-reg-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-shield-halved"></i> Team Registration</div>
+    <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Search and add players below — they need to be registered individually first (see Sign Up). The first player you add becomes captain; you can reassign that anytime with the crown button.</div>
+    <div class="fg"><label class="fl">Team Name</label><input class="fi" id="tn" placeholder="e.g. Your Team Name"/></div>
+    <div class="fg"><label class="fl">Tag</label><input class="fi" id="tt" placeholder="[TAG]" maxlength="5"/></div>
+
+    <div class="fg" style="position:relative">
+      <label class="fl">Add Players <span class="text-dim" style="font-weight:400">(search by name or IGN)</span></label>
+      <input class="fi" id="tr-search" placeholder="Start typing a name or IGN..." oninput="trSearchPlayers()" onfocus="trSearchPlayers()" onblur="setTimeout(()=>{const b=document.getElementById('tr-search-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
+      <div id="tr-search-results" class="tdm-search-results" style="display:none;position:absolute;left:0;right:0;z-index:5;background:var(--bg2);border:1px solid var(--border)"></div>
+    </div>
+    <div id="tr-roster" style="display:flex;flex-direction:column;gap:.4rem;margin:.6rem 0 1rem"></div>
+
+    <div class="fg"><label class="fl">Preferred Map</label><select class="fi fsel" id="tmap"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
+    <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
+      <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:.4rem"><input type="checkbox" id="t-recruit" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> We're looking for more players</label>
+      <input class="fi" id="t-roles" placeholder="Roles needed, e.g. Sniper, IGL — optional"/>
+    </div>
+    <button class="btn btn-accent btn-fw" onclick="regTeam()"><i class="fa-solid fa-shield"></i> Register Team</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="match-signup-modal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('match-signup-modal')"><i class="fa-solid fa-xmark"></i></button>
@@ -2284,8 +2302,41 @@ tr:last-child td{border-bottom:none}
   <div class="modal-box" style="max-width:600px">
     <button class="modal-close" onclick="closeModal('match-signup-request-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div class="modal-title">Pending Scrim/Match Signup Requests</div>
-    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Approving books the team's slot and pings the whole roster on Discord (if a matchSignupAccepted webhook is configured); denying just notifies them.</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Approving books the team's slot and pings the whole roster on Discord (if a matchSignupAccepted webhook is configured); denying just notifies them. Got more requests than one match can hold? Close this and use <button class="btn btn-ghost btn-xs" style="display:inline-flex" onclick="closeModal('match-signup-request-modal');renderSmartSortModal();openModal('smart-sort-modal')"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</button> to auto-split the overflow across multiple matches at once.</div>
     <div id="match-signup-request-list"></div>
+  </div>
+</div>
+
+<!-- ═══ SMART-SORT LOBBIES — auto-distribute pending signups across one or more lobby matches
+     when demand exceeds a single match's Max Teams (e.g. 25 teams register for 20 slots, or 60
+     teams need spreading across 2-3 concurrently-hosted lobbies). Two strategies: fill each lobby
+     to capacity in order, or split the pool as evenly as possible across the chosen lobbies. ═══ -->
+<div class="modal-overlay" id="smart-sort-modal">
+  <div class="modal-box" style="max-width:640px">
+    <button class="modal-close" onclick="closeModal('smart-sort-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">Pull pending signup requests from one or more matches, then spread them across the lobbies you're actually hosting. Each approved team is auto-assigned an open slot in its lobby and gets the normal Discord acceptance ping.</div>
+
+    <div class="fl" style="margin-bottom:.4rem">1 · Pull pending requests from</div>
+    <div id="ss-source-list" style="display:flex;flex-direction:column;gap:.3rem;max-height:160px;overflow-y:auto;margin-bottom:1rem;border:1px solid var(--border);border-radius:var(--rS);padding:.5rem"></div>
+
+    <div class="fl" style="margin-bottom:.4rem">2 · Distribute into these lobbies</div>
+    <div id="ss-target-list" style="display:flex;flex-direction:column;gap:.3rem;max-height:200px;overflow-y:auto;margin-bottom:1rem;border:1px solid var(--border);border-radius:var(--rS);padding:.5rem"></div>
+
+    <div class="fl" style="margin-bottom:.4rem">3 · How to split them</div>
+    <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem">
+      <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.83rem;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem">
+        <input type="radio" name="ss-mode" value="fill" checked style="margin-top:.2rem"/>
+        <span><strong>Fill in order</strong><br><span style="color:var(--textM);font-size:.78rem">Packs the first lobby to its Max Teams, then overflows into the next one, in the order checked above. Good when one lobby is your "main" and extras just need somewhere to go.</span></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.83rem;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem">
+        <input type="radio" name="ss-mode" value="split" style="margin-top:.2rem"/>
+        <span><strong>Split evenly</strong><br><span style="color:var(--textM);font-size:.78rem">Round-robins teams across every checked lobby so headcounts stay as balanced as possible (e.g. 25 teams across 2 lobbies → 13/12), while still respecting each lobby's Max Teams.</span></span>
+      </label>
+    </div>
+
+    <div id="ss-preview" style="font-size:.78rem;color:var(--textM);margin-bottom:.9rem"></div>
+    <button class="btn btn-accent btn-fw" onclick="smartSortRun()"><i class="fa-solid fa-shuffle"></i> Run Smart-Sort</button>
   </div>
 </div>
 
@@ -4301,7 +4352,8 @@ function regTeam(){
   {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
   const newTeam=teams[teams.length-1];
   TR_CAPTAIN=null;TR_MEMBERS=[];trRenderRoster();
-  updateStats();refreshDLs();updatePendingBadges();
+  updateStats();refreshDLs();updatePendingBadges();renderTeams();
+  closeModal('team-reg-modal');
   notify('Team submitted!','Awaiting admin approval before appearing publicly.','n-ok');
   fireWebhookEvent('teamRegistration',{title:'New Team Registered — Pending Approval',color:15844367,fields:[
     {name:'Team',value:`${newTeam.name}${newTeam.tag?' ['+newTeam.tag+']':''}`,inline:true},
@@ -8101,6 +8153,108 @@ function resolveMatchSignupRequest(id,approve){
 function updateMatchSignupBadge(){
   const pending=DB.get('matchRequests',[]).filter(r=>r.status==='pending').length;
   const b=document.getElementById('match-signup-badge');if(b)b.textContent=pending;
+}
+
+// ═══ SMART-SORT LOBBIES ═══
+// Auto-distributes a pile of pending matchRequests across whichever matches the host is actually
+// running as concurrent lobbies, respecting each lobby's own Max Teams cap. Requests carry a
+// creation-ordered id ('mr'+Date.now()), so that's used as the fair, first-come-first-served queue
+// order for both distribution modes.
+function ssReqTs(r){return Number(String(r.id).replace(/^mr/,''))||0;}
+function renderSmartSortModal(){
+  const ms=DB.get('matches');
+  const requests=DB.get('matchRequests',[]).filter(r=>r.status==='pending');
+  const pendingByMatch={};
+  requests.forEach(r=>{pendingByMatch[r.matchId]=(pendingByMatch[r.matchId]||0)+1;});
+
+  const srcEl=document.getElementById('ss-source-list');
+  const withPending=ms.filter(m=>pendingByMatch[m.id]);
+  srcEl.innerHTML=withPending.length?withPending.map(m=>`
+    <label style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.83rem;cursor:pointer;padding:.25rem .3rem">
+      <span style="display:flex;align-items:center;gap:.5rem;min-width:0"><input type="checkbox" class="ss-src" value="${m.id}" checked onchange="ssUpdatePreview()"/> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span></span>
+      <span class="chip chip-accent" style="font-size:.65rem;flex-shrink:0">${pendingByMatch[m.id]} pending</span>
+    </label>`).join(''):'<div class="text-dim" style="font-size:.8rem;padding:.4rem">No pending signup requests right now.</div>';
+
+  const tgtEl=document.getElementById('ss-target-list');
+  const lobbies=ms.filter(m=>m.status!=='done');
+  tgtEl.innerHTML=lobbies.length?lobbies.map(m=>{
+    const filled=(m.teams||[]).length,cap=m.maxTeams||20,full=filled>=cap;
+    return `<label style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.83rem;cursor:${full?'not-allowed':'pointer'};padding:.25rem .3rem;opacity:${full?.5:1}">
+      <span style="display:flex;align-items:center;gap:.5rem;min-width:0"><input type="checkbox" class="ss-tgt" value="${m.id}" ${full?'disabled':''} onchange="ssUpdatePreview()"/> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span></span>
+      <span class="chip ${full?'chip-neutral':'chip-green'}" style="font-size:.65rem;flex-shrink:0">${filled}/${cap}${full?' full':''}</span>
+    </label>`;}).join(''):'<div class="text-dim" style="font-size:.8rem;padding:.4rem">No open matches to sort into — create one first.</div>';
+
+  document.querySelectorAll('input[name="ss-mode"]').forEach(r=>r.onchange=ssUpdatePreview);
+  ssUpdatePreview();
+}
+function ssUpdatePreview(){
+  const ms=DB.get('matches');
+  const sourceIds=[...document.querySelectorAll('.ss-src:checked')].map(el=>el.value);
+  const targetIds=[...document.querySelectorAll('.ss-tgt:checked')].map(el=>el.value);
+  const el=document.getElementById('ss-preview');if(!el)return;
+  const pendingCount=DB.get('matchRequests',[]).filter(r=>r.status==='pending'&&sourceIds.includes(r.matchId)).length;
+  const totalCap=targetIds.reduce((sum,id)=>{const m=ms.find(x=>x.id===id);if(!m)return sum;return sum+Math.max(0,(m.maxTeams||20)-(m.teams||[]).length);},0);
+  if(!pendingCount||!targetIds.length){el.innerHTML='Pick at least one source and one target lobby above to preview the split.';return;}
+  const placed=Math.min(pendingCount,totalCap),left=pendingCount-placed;
+  el.innerHTML=`<i class="fa-solid fa-circle-info"></i> ${pendingCount} pending team${pendingCount===1?'':'s'} · ${totalCap} open slot${totalCap===1?'':'s'} across ${targetIds.length} lobby${targetIds.length===1?'':'s'} → <strong style="color:var(--green)">${placed} will be placed</strong>${left?`, <strong style="color:var(--amber)">${left} will stay pending</strong> (no room left — add another lobby or raise Max Teams)`:''}.`;
+}
+function smartSortRun(){
+  const sourceIds=[...document.querySelectorAll('.ss-src:checked')].map(el=>el.value);
+  const targetIds=[...document.querySelectorAll('.ss-tgt:checked')].map(el=>el.value);
+  if(!sourceIds.length)return notify('Pick source matches','Check off at least one match to pull pending signups from','n-bad');
+  if(!targetIds.length)return notify('Pick target lobbies','Check off at least one lobby to distribute teams into','n-bad');
+  const mode=document.querySelector('input[name="ss-mode"]:checked')?.value||'fill';
+  guardedAction('smartSortLobbies',async()=>{
+    await sbRefreshKey('matchRequests');await sbRefreshKey('matches');
+    const requests=DB.get('matchRequests',[]);
+    const ms=DB.get('matches');
+    const teamsDb=DB.get('teams');
+    const pending=requests.filter(r=>r.status==='pending'&&sourceIds.includes(r.matchId)).sort((a,b)=>ssReqTs(a)-ssReqTs(b));
+    if(!pending.length)return notify('Nothing to sort','No pending signups in the selected source matches','n-bad');
+    const targets=targetIds.map(id=>ms.find(m=>m.id===id)).filter(Boolean);
+    targets.forEach(m=>{m.teams=m.teams||[];});
+    const cap=new Map(targets.map(m=>[m.id,Math.max(0,(m.maxTeams||20)-m.teams.length)]));
+    const placements=[];const unplaced=[];let ti=0;
+    for(const r of pending){
+      let placed=false;
+      for(let k=0;k<targets.length;k++){
+        const m=targets[ti%targets.length];
+        if(mode==='fill'){
+          if(cap.get(m.id)>0){cap.set(m.id,cap.get(m.id)-1);placements.push({r,m});placed=true;break;}
+          ti++; // this lobby's full — move to the next and keep trying it for subsequent teams too
+        }else{
+          ti=(ti+1)%targets.length;
+          if(cap.get(m.id)>0){cap.set(m.id,cap.get(m.id)-1);placements.push({r,m});placed=true;break;}
+        }
+      }
+      if(!placed)unplaced.push(r);
+    }
+    const perMatchCount={};
+    placements.forEach(({r,m})=>{
+      const taken=new Set(m.teams.map(x=>x.slot).filter(Boolean));
+      let slot=1;while(taken.has(slot)&&slot<=(m.maxTeams||20))slot++;
+      m.teams.push({teamId:r.teamId,teamName:r.teamName,slot});
+      r.status='approved';r.matchId=m.id;r.matchName=m.name;r.assignedSlot=slot;
+      perMatchCount[m.name]=(perMatchCount[m.name]||0)+1;
+      const t=teamsDb.find(x=>x.id===r.teamId);
+      fireWebhookEvent('matchSignupAccepted',{title:'✅ Scrim/Match Slot Confirmed',color:3066923,fields:[
+        {name:'Team',value:r.teamName,inline:true},
+        {name:'Slot',value:`#${slot}`,inline:true},
+        {name:'Match',value:m.name,inline:true},
+        {name:'Map',value:m.map||'—',inline:true},
+        {name:'Date',value:m.date||'TBD',inline:true},
+        {name:'Time',value:m.time||'TBD',inline:true},
+        {name:'Mode',value:m.mode||'—',inline:true}
+      ]},teamMentionIgns(t),{team:r.teamName,slot,match:m.name,map:m.map||'',date:m.date||'',time:m.time||'',mode:m.mode||''});
+    });
+    DB.set('matches',ms);DB.set('matchRequests',requests);
+    renderMatchSignupRequests();updateMatchSignupBadge();renderMatches();renderAMatches();renderDashboardData();refreshDLs();
+    const summary=Object.entries(perMatchCount).map(([n,c])=>`${n}: +${c}`).join(' · ')||'nothing placed';
+    logAdminAction('Smart-sort lobbies run',`${placements.length} team(s) distributed (${mode==='fill'?'fill-in-order':'split evenly'}) — ${summary}${unplaced.length?`; ${unplaced.length} left pending (no room)`:''} — by ${CU?CU.name:'Admin'}`);
+    renderSmartSortModal();
+    if(!placements.length)return notify('No room','Every checked lobby is already full','n-bad');
+    notify('Smart-sort complete!',`${summary}${unplaced.length?` — ${unplaced.length} team(s) still pending, no room left`:''}`,'n-ok');
+  });
 }
 
 function saveProfileWebhook(){
