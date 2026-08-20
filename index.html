@@ -503,6 +503,24 @@ html[data-ovbg="transparent"]{
 .lobby-slot-name{font-size:.78rem;font-weight:700;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .lobby-slot-sub{font-size:.65rem;color:var(--textD)}
 
+/* ── Team Lobby tree (pure-CSS org-chart: match → Confirmed/Pending → each team) ───
+   Classic nested <ul><li> family-tree pattern; connector lines drawn with ::before/::after
+   borders so no JS layout math is needed. Scrolls horizontally on wide rosters. ── */
+.tree-scroll{max-height:60vh;overflow:auto;padding:.5rem 0}
+.team-tree{display:flex;justify-content:center;min-width:min-content;padding:0 .5rem}
+.team-tree ul{padding-top:20px;position:relative;display:flex;justify-content:center}
+.team-tree li{list-style:none;position:relative;padding:20px 10px 0;text-align:center;display:flex;flex-direction:column;align-items:center}
+.team-tree li::before,.team-tree li::after{content:'';position:absolute;top:0;right:50%;border-top:1px solid var(--border);width:50%;height:20px}
+.team-tree li::after{right:auto;left:50%;border-left:1px solid var(--border)}
+.team-tree li:only-child::before,.team-tree li:only-child::after{display:none}
+.team-tree li:only-child{padding-top:0}
+.team-tree li:first-child::before,.team-tree li:last-child::after{border:0 none}
+.team-tree li:last-child::before{border-right:1px solid var(--border);border-radius:0 6px 0 0}
+.team-tree li:first-child::after{border-radius:6px 0 0 0}
+.team-tree ul ul::before{content:'';position:absolute;top:0;left:50%;border-left:1px solid var(--border);width:0;height:20px}
+.team-tree li a{border:1px solid var(--border);border-radius:var(--rS);background:var(--bg2);padding:.5rem .7rem;display:inline-block;min-width:76px;transition:transform .12s,border-color .12s}
+.team-tree li a:hover{transform:translateY(-2px);border-color:var(--borderH)}
+
 /* ── Team recruiting ─────────────────────────── */
 .team-recruit-badge{display:inline-flex;align-items:center;gap:.3rem;background:rgba(16,185,129,.12);
   border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:.62rem;font-weight:700;letter-spacing:.4px;
@@ -7460,18 +7478,20 @@ function renderMatches(filter='all'){
     return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
 }
-// ═══ TEAM LOBBY — a visual slot-by-slot chart of every team registered for a match ═══
-// Anyone can open this (no admin gate) — it's the "see all the teams on a chart" view: every
-// team slot 1..maxTeams rendered as a card, filled ones showing the team's tag/color/roster,
-// open ones showing a dashed placeholder so it's obvious at a glance how much room is left.
+// ═══ TEAM LOBBY — a visual chart of every team registered for a match, in either a slot Grid
+// (spatial, 1..maxTeams) or a Tree (hierarchical: match → Confirmed/Pending → each team). ═══
+// Anyone can open this (no admin gate) — it's the "see all the teams" view; the two toggle
+// buttons at the top just change how that same roster is laid out.
 function openMatchLobby(matchId){
   const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);
   // Belt-and-suspenders check — even if someone calls this directly, teams can't see the slot
   // chart until the host has started the event (revealed slots) for this match.
   if(!ADM&&!(m&&m.slotsRevealed))return notify('Lobby not open yet','The host hasn\'t started this event — check back once slots are revealed.','n-bad');
-  renderMatchLobbyGrid(matchId);
+  window._lobbyViewMatchId=matchId;window._lobbyViewMode='grid';
+  renderLobbyModalBody();
   openModal('match-lobby-modal');
 }
+function switchLobbyView(mode){window._lobbyViewMode=mode;renderLobbyModalBody();}
 // Host control: flips whether teams can see the slot lobby for a match. Kept off by default so
 // registrations/approvals can happen behind the scenes before the host is ready to "start the event."
 function toggleSlotsRevealed(matchId){
@@ -7489,13 +7509,30 @@ function toggleSlotsRevealed(matchId){
     ]},null,{match:m.name,map:m.map||'',date:m.date||'',time:m.time||''});
   }
 }
-function renderMatchLobbyGrid(matchId){
+function renderLobbyModalBody(){
+  const matchId=window._lobbyViewMatchId;
   const body=document.getElementById('lobby-modal-body');if(!body)return;
   const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m){body.innerHTML='<div class="text-dim">Match not found.</div>';return;}
-  const teams=DB.get('teams');
-  const filled=(m.teams||[]).length;
-  const cap=m.maxTeams||20;
+  const filled=(m.teams||[]).length,cap=m.maxTeams||20;
   const perTeam=m.teamSize||(m.mode==='Solo'?1:m.mode==='Duo'?2:m.mode==='Trio (3v3)'?3:4);
+  const mode=window._lobbyViewMode||'grid';
+  body.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;margin-bottom:.15rem;flex-wrap:wrap">
+      <div class="modal-title" style="margin-bottom:0">${esc(m.name)}</div>
+      <div style="display:flex;gap:.3rem;flex-shrink:0">
+        <button class="btn ${mode==='grid'?'btn-accent':'btn-ghost'} btn-xs" onclick="switchLobbyView('grid')"><i class="fa-solid fa-table-cells"></i> Grid</button>
+        <button class="btn ${mode==='tree'?'btn-accent':'btn-ghost'} btn-xs" onclick="switchLobbyView('tree')"><i class="fa-solid fa-sitemap"></i> Tree</button>
+      </div>
+    </div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${esc(m.date||'TBD')} ${esc(m.time||'')} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
+    <div id="lobby-view-content"></div>`;
+  const content=document.getElementById('lobby-view-content');
+  content.innerHTML=mode==='tree'?buildLobbyTreeHTML(matchId):buildLobbyGridHTML(matchId);
+}
+function buildLobbyGridHTML(matchId){
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return'';
+  const teams=DB.get('teams');
+  const cap=m.maxTeams||20;
   // Build a lookup by explicit slot number so each team sits exactly where the system auto-assigned
   // it (falls back to array position for any older entries saved before slots were tracked).
   const bySlot={};
@@ -7520,11 +7557,33 @@ function renderMatchLobbyGrid(matchId){
       </div>`);
     }
   }
-  body.innerHTML=`
-    <div class="modal-title" style="margin-bottom:.15rem">${esc(m.name)}</div>
-    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${esc(m.date||'TBD')} ${esc(m.time||'')} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
-    <div class="lobby-grid">${cells.join('')}</div>
-  `;
+  return `<div class="lobby-grid">${cells.join('')}</div>`;
+}
+// Tree view: match at the root, branching into a Confirmed node and (if any) a Pending node,
+// each fanning out into one leaf per team. Pure-CSS org-chart pattern via nested <ul><li> — see
+// the .team-tree rules for the connector lines.
+function buildLobbyTreeHTML(matchId){
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return'';
+  const teamsDb=DB.get('teams');
+  const cap=m.maxTeams||20;
+  const confirmed=(m.teams||[]).slice().sort((a,b)=>(a.slot||99)-(b.slot||99));
+  const pending=DB.get('matchRequests',[]).filter(r=>r.matchId===matchId&&r.status==='pending');
+  const leaf=(name,sub,opts={})=>`<li><a href="javascript:void(0)"${opts.onclick?` onclick="${opts.onclick}"`:''} style="${opts.dashed?'border-style:dashed;opacity:.75;':''}${opts.onclick?'cursor:pointer;':'cursor:default;'}"><div style="font-weight:700;font-size:.78rem;white-space:nowrap">${esc(name)}</div><div style="font-size:.62rem;color:var(--textD);margin-top:.1rem">${esc(sub)}</div></a></li>`;
+  const confirmedLeaves=confirmed.length?`<ul>${confirmed.map(entry=>{
+    const t=teamsDb.find(x=>x.id===entry.teamId);
+    return leaf(entry.teamName,`Slot ${entry.slot||'—'}`,{onclick:t?`openTeamProfile('${t.id}')`:''});
+  }).join('')}</ul>`:'';
+  const pendingLeaves=pending.length?`<ul>${pending.map(r=>leaf(r.teamName,'Waiting',{dashed:true})).join('')}</ul>`:'';
+  const branches=[
+    `<li><a href="javascript:void(0)" style="cursor:default;background:var(--greenGlow);border-color:var(--green);color:var(--green)"><div style="font-weight:700;font-size:.8rem">Confirmed</div><div style="font-size:.65rem">${confirmed.length}/${cap}</div></a>${confirmedLeaves}</li>`
+  ];
+  if(pending.length)branches.push(`<li><a href="javascript:void(0)" style="cursor:default;background:var(--accentGlow);border-color:var(--accent);color:var(--accentL)"><div style="font-weight:700;font-size:.8rem">Pending</div><div style="font-size:.65rem">${pending.length}</div></a>${pendingLeaves}</li>`);
+  if(!confirmed.length&&!pending.length)return'<div class="text-dim" style="text-align:center;padding:2rem">No teams registered for this match yet.</div>';
+  return `<div class="tree-scroll"><div class="team-tree"><ul>
+    <li><a href="javascript:void(0)" style="cursor:default;background:var(--bg3);border-color:var(--borderH)"><div style="font-weight:800;font-size:.85rem">${esc(m.name)}</div><div style="font-size:.65rem;color:var(--textM)">${confirmed.length}/${cap} teams</div></a>
+      <ul>${branches.join('')}</ul>
+    </li>
+  </ul></div></div>`;
 }
 // TDM list for the public Match Schedule page — live match(es) first, then most recent games,
 // each showing score and (for a Best-of-3) the game number / series record.
