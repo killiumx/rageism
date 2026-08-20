@@ -657,21 +657,6 @@ tr:last-child td{border-bottom:none}
 .act-text{font-size:.83rem;flex:1;color:var(--textM)}<br>.act-text strong{color:var(--text);font-weight:600}
 .act-time{font-size:.7rem;color:var(--textD);font-family:'DM Mono',monospace}
 
-/* ── BRACKET ───────────────────────── */
-.bkt-wrap{overflow-x:auto;padding-bottom:1rem}
-.bkt{display:flex;gap:0;min-width:800px}
-.b-round{display:flex;flex-direction:column;justify-content:space-around;flex:1;padding:0 .8rem}
-.b-round-label{font-size:.7rem;font-weight:700;color:var(--textD);text-align:center;letter-spacing:.8px;text-transform:uppercase;margin-bottom:1rem}
-.b-match{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rS);overflow:hidden;transition:border-color .2s}
-.b-match:hover{border-color:var(--borderH)}
-.b-team{display:flex;align-items:center;justify-content:space-between;padding:.5rem .8rem;font-size:.84rem;font-weight:500;gap:.5rem}
-.b-team:first-child{border-bottom:1px solid rgba(255,255,255,.05)}
-.b-team.winner{background:rgba(99,102,241,.08);color:var(--accentL);font-weight:600}
-.b-team.loser{color:var(--textD)}
-.b-team.tbd{color:var(--textD);font-style:italic}
-.b-score{font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;min-width:16px;text-align:right;flex-shrink:0}
-.b-team.winner .b-score{color:var(--accent)}
-
 /* ── GROUPS ────────────────────────── */
 .group-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .group-header{padding:.75rem 1rem;background:linear-gradient(90deg,rgba(99,102,241,.08),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.7rem}
@@ -1124,7 +1109,7 @@ tr:last-child td{border-bottom:none}
       <div class="ls-tagline">PUBG Esports · Tournament Hub</div>
     </div>
     <div class="ls-feat">
-      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-trophy"></i></div><div class="ls-feat-txt">Live Tournament Bracket & Results</div></div>
+      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-trophy"></i></div><div class="ls-feat-txt">Live Scrims Results & Leaderboard</div></div>
       <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-chart-simple"></i></div><div class="ls-feat-txt">Real-time Leaderboard & Stats</div></div>
       <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-bolt"></i></div><div class="ls-feat-txt">Admin Controls & Match Management</div></div>
     </div>
@@ -1140,7 +1125,9 @@ tr:last-child td{border-bottom:none}
       </button>
       <div style="font-size:.72rem;color:var(--textD);text-align:center;margin-bottom:.5rem">The tournament host (Master Admin) is simply whoever signs in with Discord first.</div>
 
-      <!-- DISCORD LINK STEP — shown once, right after a first-time Discord sign-in, to attach an IGN -->
+      <!-- DISCORD LINK STEP — shown once, right after a first-time Discord sign-in. Signing in with
+           Discord *is* the sign-up now — there's no separate Signup tab — so this one step collects
+           everything needed for a full player profile before letting a new user into the app. -->
       <div id="discord-link-step" style="display:none">
         <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:1rem">
           <div id="dls-avatar" style="width:44px;height:44px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden;flex-shrink:0"><i class="fa-brands fa-discord"></i></div>
@@ -1149,9 +1136,19 @@ tr:last-child td{border-bottom:none}
             <div style="font-weight:700" id="dls-name">Discord User</div>
           </div>
         </div>
-        <label class="lf-label">Choose your IGN</label>
-        <input class="lf-input" id="dls-ign" placeholder="Your in-game name" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();completeDiscordLink();}"/>
-        <div style="font-size:.72rem;color:var(--textD);margin:.6rem 0 .8rem">If this matches an IGN already on the roster, it'll be claimed. Otherwise a new player profile is created for you.</div>
+        <div class="lf-row" style="grid-template-columns:1fr 1fr">
+          <div><label class="lf-label">Real Name</label><input class="lf-input" id="dls-realname" placeholder="John Doe" autocomplete="off"/></div>
+          <div><label class="lf-label">IGN</label><input class="lf-input" id="dls-ign" placeholder="RAGEISM_001" autocomplete="off"/></div>
+        </div>
+        <div class="lf-row" style="grid-template-columns:1fr 1fr">
+          <div><label class="lf-label">PUBG UID</label><input class="lf-input" id="dls-uid" placeholder="Player UID" autocomplete="off"/></div>
+          <div><label class="lf-label">Clan Tag <span style="font-weight:400;opacity:.6">(optional)</span></label><input class="lf-input" id="dls-tag" placeholder="[TAG]" maxlength="6"/></div>
+        </div>
+        <div class="lf-row" style="grid-template-columns:1fr 1fr">
+          <div><label class="lf-label">Region</label><select class="lf-input" id="dls-region"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div>
+          <div><label class="lf-label">Platform</label><select class="lf-input" id="dls-platform"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--textD);margin:.2rem 0 .8rem">Name, IGN &amp; UID are required. Everything else — bio, socials, rank, team — can be filled in or changed anytime from your Profile.</div>
         <button class="btn btn-accent btn-fw" onclick="completeDiscordLink()">
           <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
         </button>
@@ -1182,7 +1179,6 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('admin-teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
       <button class="sb-item" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Matches</button>
       <button class="sb-item" onclick="showPage('admin-polls')"><i class="fa-solid fa-chart-bar"></i> Polls</button>
-      <button class="sb-item" onclick="showPage('admin-bracket')"><i class="fa-solid fa-sitemap"></i> Bracket</button>
       <button class="sb-item" onclick="showPage('admin-settings')"><i class="fa-solid fa-gear"></i> Settings</button>
       <button class="sb-item" onclick="showPage('debug')"><i class="fa-solid fa-bug"></i> Debug</button>
     </div>
@@ -1191,7 +1187,6 @@ tr:last-child td{border-bottom:none}
       <div class="sb-section-label">Tournament</div>
       <button class="sb-item active" onclick="showPage('dashboard')"><i class="fa-solid fa-house"></i> Dashboard</button>
       <button class="sb-item" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i> Leaderboard</button>
-      <button class="sb-item" onclick="showPage('bracket')"><i class="fa-solid fa-sitemap"></i> Bracket</button>
       <button class="sb-item" onclick="showPage('groups')"><i class="fa-solid fa-layer-group"></i> Groups</button>
       <button class="sb-item" onclick="showPage('teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
       <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Matches</button>
@@ -1202,7 +1197,6 @@ tr:last-child td{border-bottom:none}
 
     <div class="sb-section">
       <div class="sb-section-label">Player</div>
-      <button class="sb-item" onclick="showPage('signup')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
       <button class="sb-item" onclick="showPage('profile')"><i class="fa-solid fa-id-card"></i> My Profile</button>
       <button class="sb-item" onclick="showPage('compare')"><i class="fa-solid fa-code-compare"></i> Compare</button>
       <button class="sb-item" onclick="showPage('community')"><i class="fa-solid fa-comments"></i> Community</button>
@@ -1463,11 +1457,6 @@ tr:last-child td{border-bottom:none}
               <div><div class="qa-label">Manage Admin Roles</div><div class="qa-sub">Master only — grant admin / manager permissions</div></div>
               <i class="fa-solid fa-chevron-right qa-arrow"></i>
             </div>
-            <div class="quick-action" onclick="showPage('admin-bracket')">
-              <div class="qa-icon" style="background:rgba(59,130,246,.1);color:var(--blue)"><i class="fa-solid fa-sitemap"></i></div>
-              <div><div class="qa-label">Edit Bracket</div><div class="qa-sub">Update match scores & winners</div></div>
-              <i class="fa-solid fa-chevron-right qa-arrow"></i>
-            </div>
           </div>
 
           <!-- Recent Activity -->
@@ -1499,7 +1488,7 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ADMIN LOG RESULTS ░ -->
       <div class="page" id="page-admin-results">
         <div class="sh-row">
-          <div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">PUBG match results — team placements &amp; individual kills</div></div>
+          <div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">PUBG scrims results — 1-4+ games per session, a different map each game, team placements &amp; individual kills per game</div></div>
           <div style="display:flex;gap:.5rem;align-items:center">
             <select class="fi fsel" id="res-mid" style="min-width:180px" onchange="onMatchSelect()">
               <option value="">— Select Match —</option>
@@ -1517,6 +1506,9 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-accent btn-sm" onclick="submitResults()" title="Tallies every kill entered above and marks the match Ended"><i class="fa-solid fa-flag-checkered"></i> End Match &amp; Save</button>
           </div>
         </div>
+        <!-- game tabs: a scrims session is usually 1-4 games, sometimes more, each a different map -->
+        <div id="res-game-tabs" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.6rem .8rem;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem;align-items:center"></div>
+
         <!-- live score bar -->
         <div id="res-pts-bar" style="margin-bottom:.8rem"></div>
 
@@ -1609,12 +1601,6 @@ tr:last-child td{border-bottom:none}
           </div>
           <div class="card"><div class="card-title"><i class="fa-solid fa-list"></i> Active Polls</div><div id="apo-list"></div></div>
         </div>
-      </div>
-
-      <!-- ░ ADMIN BRACKET ░ -->
-      <div class="page" id="page-admin-bracket">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Bracket <span style="color:var(--accentL)">Editor</span></div></div></div>
-        <div class="card"><div id="bkt-admin-el"></div></div>
       </div>
 
       <!-- ░ ADMIN SETTINGS ░ -->
@@ -1823,36 +1809,6 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <!-- ░ SIGNUP ░ -->
-      <div class="page" id="page-signup">
-        <div class="sh-row mb2"><div class="sh"><div class="sh-title">Player <span style="color:var(--accentL)">Sign Up</span></div><div class="sh-sub" id="reg-count">0 players registered</div></div></div>
-        <div class="g2">
-          <div class="card">
-            <div class="card-title"><i class="fa-solid fa-user-plus"></i> Individual Registration</div>
-            <div class="frow"><div class="fg"><label class="fl">Real Name</label><input class="fi" id="rn" placeholder="John Doe"/></div><div class="fg"><label class="fl">IGN (used as your login username)</label><input class="fi" id="ri" placeholder="RAGEISM_001"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">PUBG UID</label><input class="fi" id="ru" placeholder="Player UID"/></div><div class="fg"><label class="fl">Clan Tag</label><input class="fi" id="rt" placeholder="[TAG]" maxlength="6"/></div></div>
-            <div class="fg" id="rd-linked-note" style="font-size:.72rem;color:var(--textD);background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .7rem"><i class="fa-brands fa-discord" style="color:#5865F2"></i> Linked to your Discord account automatically — that's what lets match results and Player of the Week actually @mention you.</div>
-            <div class="frow"><div class="fg"><label class="fl">Region</label><select class="fi fsel" id="rr"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div><div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="rc"></select></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Rank <span class="text-dim" style="font-weight:400">(optional)</span></label><select class="fi fsel" id="rrk"><option value="">Not set</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div><div class="fg"></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Role</label><select class="fi fsel" id="rro"><option>Fragger</option><option>Support</option><option>Sniper</option><option>IGL</option><option>Entry Fragger</option><option>Flanker</option></select></div><div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="rpl"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Team (optional)</label><input class="fi" id="rtm" placeholder="Leave blank if solo"/></div><div class="fg"></div></div>
-            <div class="fg"><label class="fl">Bio</label><textarea class="fta" id="rb" placeholder="Your playstyle, favourite weapons..."></textarea></div>
-            <button class="btn btn-accent btn-fw" onclick="regPlayer()"><i class="fa-solid fa-right-to-bracket"></i> Register to Arena</button>
-          </div>
-          <div>
-            <div class="card" style="text-align:center;padding:2.2rem 1.5rem">
-              <i class="fa-solid fa-shield-halved" style="font-size:1.8rem;color:var(--accentL);opacity:.8;display:block;margin-bottom:.7rem"></i>
-              <div style="font-weight:700;font-size:1.02rem;margin-bottom:.4rem">Registering a team?</div>
-              <div style="font-size:.83rem;color:var(--textM);margin-bottom:1.1rem;line-height:1.5">Team registration now lives on the <strong>Teams</strong> page, right next to everyone else who's signed up — get every player registered here first, then head over to build the roster.</div>
-              <button class="btn btn-accent btn-fw" onclick="showPage('teams')"><i class="fa-solid fa-shield-halved"></i> Go to Teams</button>
-            </div>
-          </div>
-        </div>
-        <div class="divider-line"></div>
-        <div class="sh-row"><div class="sh"><div class="sh-title">All <span style="color:var(--accentL)">Registrations</span></div></div></div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>IGN</th><th>Discord</th><th>Team</th><th>Rank</th><th>Role</th><th>Region</th><th></th></tr></thead><tbody id="reg-body"></tbody></table></div></div>
-      </div>
-
       <!-- ░ TDM (TEAM DEATHMATCH) ░ -->
       <div class="page" id="page-tdm">
         <div class="sh-row mb2"><div class="sh"><div class="sh-title">Team <span style="color:var(--accentL)">Deathmatch</span></div><div class="sh-sub">Search players from the database, build two squads, first to the kill target wins</div></div></div>
@@ -1997,12 +1953,6 @@ tr:last-child td{border-bottom:none}
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- ░ BRACKET ░ -->
-      <div class="page" id="page-bracket">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Bracket</span></div></div></div>
-        <div class="card"><div class="bkt-wrap"><div class="bkt" id="bkt-el"></div></div></div>
       </div>
 
       <!-- ░ GROUPS ░ -->
@@ -2464,6 +2414,12 @@ tr:last-child td{border-bottom:none}
       <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="ep-country"></select></div>
       <div class="fg"><label class="fl">Profile Picture URL</label><input class="fi" id="ep-avatar" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/pic.png"/></div>
     </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Clan Tag <span class="text-dim" style="font-weight:400">(optional)</span></label><input class="fi" id="ep-tag" placeholder="[TAG]" maxlength="6"/></div>
+      <div class="fg"><label class="fl">Region</label><select class="fi fsel" id="ep-region"><option value="">Not set</option><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div>
+      <div class="fg"><label class="fl">Platform</label><select class="fi fsel" id="ep-platform"><option value="">Not set</option><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div>
+      <div class="fg"><label class="fl">Team <span class="text-dim" style="font-weight:400">(optional — or join one from the Teams page)</span></label><input class="fi" id="ep-team" placeholder="Leave blank if solo"/></div>
+    </div>
     <div class="fg" style="margin-bottom:.8rem"><label class="fl">Bio</label><textarea class="fta" id="ep-bio" rows="2" placeholder="Tell the community about yourself..."></textarea></div>
     <div style="font-size:.72rem;font-weight:700;color:var(--textM);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Social Links</div>
     <div class="frow">
@@ -2502,7 +2458,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','bracket','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue','tdmTournaments','tdmTournamentRequests'];
+const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue','tdmTournaments','tdmTournamentRequests'];
 let SB_OK = false, SB_WRITES = 0, SB_CONFLICTS = 0;
 let SB_LAST_CONFLICT = null;
 let SB_LAST_WRITE_DIAG = null;
@@ -2633,11 +2589,29 @@ function showDiscordLinkStep(session, discordName, discordAvatar){
   window._dlsSession = session; window._dlsName = discordName; window._dlsAvatar = discordAvatar;
 }
 
+// Rare fallback: a signed-in user has no roster row (e.g. an admin deleted it). Re-shows the same
+// onboarding step used at first sign-in, on top of the app, instead of a separate Signup page.
+async function reopenOnboardingStep(){
+  if(!sbAuth||!CU) return notify('Session issue','Please sign out and sign back in with Discord','n-bad');
+  try{
+    const { data: { session } } = await sbAuth.auth.getSession();
+    if(!session) return notify('Session expired','Please sign out and sign back in with Discord','n-bad');
+    window._dlsSession = session; window._dlsName = CU.disc||CU.name||''; window._dlsAvatar = CU.discAvatar||'';
+    document.getElementById('ls').style.display='flex';
+    document.getElementById('ls').classList.remove('out');
+    document.querySelectorAll('#ls .btn[onclick="discordLogin()"], #ls .login-sub, #ls .ls-tagline').forEach(e=>e.style.display='none');
+    showDiscordLinkStep(session, window._dlsName, window._dlsAvatar);
+    const ig=document.getElementById('dls-ign');if(ig)ig.value=CU.ign||'';
+  }catch(e){notify('Couldn\'t reopen registration','Please sign out and sign back in with Discord','n-bad');}
+}
+
 // Finishes linking: either claims an existing roster IGN (if it matches, checked by admin-set entries)
-// or registers a brand-new player using the IGN they choose, tied to their Discord identity.
+// or registers a brand-new player using the full profile they just filled in, tied to their Discord identity.
 async function completeDiscordLink(){
   const ign = v('dls-ign');
-  if(!ign) return notify('IGN required', 'Enter the in-game name you want to compete under', 'n-bad');
+  const realname = v('dls-realname');
+  const uid = v('dls-uid');
+  if(!realname || !ign || !uid) return notify('Missing fields', 'Real Name, IGN & PUBG UID are required', 'n-bad');
   const session = window._dlsSession;
   if(!session) return notify('Session expired', 'Please sign in with Discord again', 'n-bad');
 
@@ -2650,21 +2624,31 @@ async function completeDiscordLink(){
   if(existing && existing.authId && existing.authId !== session.user.id){
     return notify('IGN already linked', 'That IGN is already linked to a different Discord account', 'n-bad');
   }
+  if(existing && existing.uid && String(existing.uid).trim() && String(existing.uid).trim()!==uid && (!mine || existing.id!==mine.id)){
+    // fine — UID uniqueness only matters against OTHER players, checked below
+  }
+  const dupeUid = players.find(x => x.uid && String(x.uid).trim()===uid && x.id!==(mine?mine.id:null) && x.id!==(existing?existing.id:null));
+  if(dupeUid) return notify('UID already in use', `That PUBG UID is already registered to ${dupeUid.ign}`, 'n-bad');
+
+  const tag=v('dls-tag'), region=v('dls-region'), platform=v('dls-platform');
   let p;
   if(mine){
-    // Already have a row — just make sure the IGN they typed isn't someone else's, then rename in place.
+    // Already have a row — just make sure the IGN they typed isn't someone else's, then update in place.
     if(existing && existing.id !== mine.id) return notify('IGN taken', 'That IGN belongs to another player', 'n-bad');
-    mine.ign = ign;
+    mine.ign = ign; mine.name = mine.name || realname; mine.uid = mine.uid || uid;
+    mine.tag = mine.tag || tag; mine.region = mine.region || region; mine.platform = mine.platform || platform;
     if(!mine.discord) mine.discord = window._dlsName;
     if(!mine.discordId && discordId) mine.discordId = discordId;
     p = mine;
   } else if(existing){
     existing.authId = session.user.id;
+    existing.name = existing.name || realname; existing.uid = existing.uid || uid;
+    existing.tag = existing.tag || tag; existing.region = existing.region || region; existing.platform = existing.platform || platform;
     if(!existing.discord) existing.discord = window._dlsName;
     if(!existing.discordId && discordId) existing.discordId = discordId;
     p = existing;
   } else {
-    p = { id: 'p' + Date.now(), ign, name: window._dlsName, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0, joinedAt:Date.now() };
+    p = { id: 'p' + Date.now(), ign, name: realname, uid, tag, region, platform, discord: window._dlsName, discordId, authId: session.user.id, kills:0, deaths:0, wins:0, xp:0, points:0, gamesPlayed:0, joinedAt:Date.now() };
     players.push(p);
     DB.set('players', players);
     // DB.set() has to run BEFORE firing the webhook — fireWebhookEvent looks up the player's
@@ -2672,7 +2656,9 @@ async function completeDiscordLink(){
     // that new player wasn't saved yet, so the tag would silently fail to resolve.
     fireWebhookEvent('playerRegistration',{title:'🎉 New Player Registered!',description:`Welcome to the tournament, **${ign}**!`,color:5793266,fields:[
       {name:'IGN',value:ign,inline:true},
-      {name:'Discord',value:window._dlsName||'—',inline:true}
+      {name:'Discord',value:window._dlsName||'—',inline:true},
+      {name:'Region',value:region||'—',inline:true},
+      {name:'Platform',value:platform||'—',inline:true}
     ]},ign);
   }
   DB.set('players', players);
@@ -3210,7 +3196,6 @@ function seed(){
   DB.set('polls',[]);
   DB.set('suggestions',[]);
   DB.set('rlogs5',[]);
-  DB.set('bracket',{qf:[],sf:[],final:[]});
   DB.set('teamRequests',[]);
   DB.set('joinRequests',[]);
   DB.set('adminRoles',[]);
@@ -3859,7 +3844,7 @@ function refreshDLs(){
 }
 
 // ═══ PAGES ═══
-const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-bracket':'Bracket Editor','admin-settings':'Settings','signup':'Sign Up','leaderboard':'Leaderboard','bracket':'Tournament Bracket','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
+const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-settings':'Settings','leaderboard':'Leaderboard','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
 function openSidebar(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('mobile-backdrop')?.classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobile-backdrop')?.classList.remove('show');}
 function showPage(n){
@@ -3874,8 +3859,8 @@ function showPage(n){
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.page===n));
   if(n==='leaderboard')renderLB();if(n==='teams')renderTeams();if(n==='matches')renderMatches();
   if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderPolls();renderSugs();}if(n==='clips')renderClips();
-  if(n==='bracket')renderBkt();if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
-  if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-bracket')renderBktAdmin();if(n==='admin-results'){renderResultLogs();refreshDLs();}
+  if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
+  if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-results'){renderResultLogs();refreshDLs();}
   if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const clu=document.getElementById('cfg-logo-url');if(clu)clu.value=cfg.logoUrl||'';const cbn=document.getElementById('cfg-discord-botname');if(cbn)cbn.value=cfg.discordBotName||'𝐑𝐚𝐠𝐞𝐢𝐬𝐦 𝐄𝐬𝐩𝐨𝐫𝐭𝐬';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
     const oc1=document.getElementById('cfg-ov-c1');if(oc1)oc1.value=cfg.ovC1||'#6366f1';
     const oc2=document.getElementById('cfg-ov-c2');if(oc2)oc2.value=cfg.ovC2||'#ec4899';
@@ -4274,30 +4259,6 @@ function renderAdminOverview(){
   updatePendingBadges();
 }
 
-// ═══ PLAYER REG ═══
-async function regPlayer(){
-  const n=v('rn'),ig=v('ri'),uid=v('ru');if(!n||!ig||!uid)return notify('Missing fields','Name, IGN & UID required','n-bad');
-  const pl=DB.get('players');if(pl.find(p=>p.ign===ig))return notify('IGN taken','','n-bad');if(pl.find(p=>p.uid===uid))return notify('UID exists','','n-bad');
-  // Discord is no longer a free-typed field — the site only has one sign-in path (Discord OAuth),
-  // so by the time anyone can reach this page they're already authenticated, and their REAL Discord
-  // identity (cached at login as window._myDiscordId/_myDiscordName) is what gets attached here.
-  // That's what actually makes @mentions in match results / Player of the Week work for them.
-  const discord=window._myDiscordName||'';
-  const discordId=window._myDiscordId||'';
-  const entry={id:'p'+Date.now(),name:n,ign:ig,uid,tag:v('rt'),discord,discordId,region:v('rr'),country:v('rc'),rank:v('rrk'),role:v('rro'),platform:v('rpl'),team:v('rtm'),bio:v('rb'),kills:0,deaths:0,damage:0,wins:0,xp:0,joinedAt:Date.now()};
-  // If this is the currently signed-in Discord user filling out their full profile, keep them linked to their account
-  if(CU&&CU.authId&&CU.ign&&CU.ign.toLowerCase()===ig.toLowerCase())entry.authId=CU.authId;
-  pl.push(entry);
-  DB.set('players',pl);['rn','ri','ru','rt','rtm','rb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  renderReg();updateStats();buildTicker();refreshDLs();notify('Registered!',`${ig} joined the arena`,'n-ok');
-  fireWebhookEvent('playerRegistration',{title:'New Player Registered',color:5793266,fields:[
-    {name:'IGN',value:ig,inline:true},
-    {name:'Name',value:n,inline:true},
-    {name:'Team',value:entry.team||'Solo / Unassigned',inline:true},
-    {name:'Region',value:entry.region||'—',inline:true},
-    {name:'Platform',value:entry.platform||'—',inline:true}
-  ]},ig);
-}
 // ═══ TEAM REGISTRATION — PUBG UID LOOKUP ═══
 let TR_CAPTAIN=null; // resolved player {uid,ign,name}
 let TR_MEMBERS=[];   // array of resolved player {uid,ign,name}
@@ -6305,7 +6266,13 @@ function renderGroups(){
 }
 
 // ═══ RESULT ENTRY ═══
-let RES_SLOTS = []; // [{placement, teamId, players:[{ign,kills,elim}]}]
+// A scrims "session" (one Match entity) can span several individual games — usually 1-4, sometimes
+// more — each played on a different map. RES_GAMES holds all of them; RES_SLOTS (below) always
+// points at whichever game is currently being edited. Ending the match sums placement+kill points
+// for every player/team across every game into a single combined log entry.
+let RES_GAMES = []; // [{map, slots:[{placement,teamId,players:[{ign,kills,elim}]}]}]
+let RES_GIDX = 0;   // index into RES_GAMES currently shown
+let RES_SLOTS = []; // convenience alias -> RES_GAMES[RES_GIDX].slots
 
 function onMatchSelect(){
   const mid = document.getElementById('res-mid')?.value;
@@ -6318,7 +6285,7 @@ function onMatchSelect(){
     if(metaBar){metaBar.style.display='none';}
     if(saveRow){saveRow.style.display='none';}
     if(rr){rr.innerHTML='';}
-    RES_SLOTS=[];return;
+    RES_GAMES=[];RES_SLOTS=[];renderGameTabs();return;
   }
   const ms=DB.get('matches');const m=ms.find(x=>x.id===mid);
   if(noMatch)noMatch.style.display='none';
@@ -6332,10 +6299,71 @@ function onMatchSelect(){
   // Auto-detect teams in match from bracket/groups or just create 4 empty slots
   const teams=DB.get('teams').filter(t=>t.approved);
   // Pre-populate with teams that were registered (up to 4 for a typical PUBG match)
-  RES_SLOTS = teams.slice(0,4).map((t,i)=>({placement:i+1,teamId:t.id,players:buildPlayersForTeam(t.id)}));
-  // Pad to at least 4 slots
-  while(RES_SLOTS.length<4) RES_SLOTS.push({placement:RES_SLOTS.length+1,teamId:'',players:[]});
+  const firstSlots = teams.slice(0,4).map((t,i)=>({placement:i+1,teamId:t.id,players:buildPlayersForTeam(t.id)}));
+  while(firstSlots.length<4) firstSlots.push({placement:firstSlots.length+1,teamId:'',players:[]});
+  RES_GAMES = [{map:m?m.map:'',slots:firstSlots}];
+  RES_GIDX = 0;
+  RES_SLOTS = RES_GAMES[0].slots;
+  renderGameTabs();
   renderResSlots();
+}
+
+// Adds the next game in this scrims session — same team roster carried over (placements/kills
+// reset), different map. Nothing here touches the previous game's data.
+function addResGame(){
+  const carryTeams = RES_SLOTS.filter(s=>s.teamId).map(s=>s.teamId);
+  const newSlots = carryTeams.length
+    ? carryTeams.map((tid,i)=>({placement:i+1,teamId:tid,players:buildPlayersForTeam(tid)}))
+    : [{placement:1,teamId:'',players:[]},{placement:2,teamId:'',players:[]},{placement:3,teamId:'',players:[]},{placement:4,teamId:'',players:[]}];
+  RES_GAMES.push({map:'',slots:newSlots});
+  RES_GIDX = RES_GAMES.length-1;
+  RES_SLOTS = RES_GAMES[RES_GIDX].slots;
+  renderGameTabs();renderResSlots();
+}
+
+function removeResGame(gi){
+  if(RES_GAMES.length<=1)return notify('Can\'t remove last game','A session needs at least one game','n-bad');
+  if(!confirm(`Remove Game ${gi+1}? Its placements/kills will be lost.`))return;
+  RES_GAMES.splice(gi,1);
+  RES_GIDX = Math.min(RES_GIDX, RES_GAMES.length-1);
+  RES_SLOTS = RES_GAMES[RES_GIDX].slots;
+  renderGameTabs();renderResSlots();
+}
+
+function switchResGame(gi){
+  if(!RES_GAMES[gi])return;
+  RES_GIDX=gi;RES_SLOTS=RES_GAMES[gi].slots;
+  renderGameTabs();renderResSlots();
+}
+
+function onResGameMapChange(gi){
+  const sel=document.getElementById(`res-game-map-${gi}`);if(!sel||!RES_GAMES[gi])return;
+  RES_GAMES[gi].map=sel.value;
+  renderGameTabs();
+}
+
+function renderGameTabs(){
+  const wrap=document.getElementById('res-game-tabs');if(!wrap)return;
+  if(!RES_GAMES.length){wrap.innerHTML='';wrap.style.display='none';return;}
+  wrap.style.display='flex';
+  const mapOpts=Object.keys(MI||{}).map(mk=>`<option value="${mk}">${MI[mk]} ${mk}</option>`).join('');
+  wrap.innerHTML=`
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;flex:1">
+      ${RES_GAMES.map((g,gi)=>`<button class="btn ${gi===RES_GIDX?'btn-accent':'btn-ghost'} btn-sm" onclick="switchResGame(${gi})" style="position:relative">
+        Game ${gi+1}${g.map?` · ${MI[g.map]||''} ${g.map}`:''}
+        ${RES_GAMES.length>1?`<span onclick="event.stopPropagation();removeResGame(${gi})" style="margin-left:.4rem;opacity:.7" title="Remove game"><i class="fa-solid fa-xmark"></i></span>`:''}
+      </button>`).join('')}
+      <button class="btn btn-ghost btn-sm" onclick="addResGame()" title="Add the next game in this scrims session — 1-4 games is typical, add more if you played more"><i class="fa-solid fa-plus"></i> Add Game</button>
+    </div>
+    <div class="fg" style="margin:0;min-width:170px">
+      <select class="fi fsel" id="res-game-map-${RES_GIDX}" onchange="onResGameMapChange(${RES_GIDX})">
+        <option value="">— Map for Game ${RES_GIDX+1} —</option>${mapOpts}
+      </select>
+    </div>
+    ${RES_GAMES.length>1?`<div style="font-size:.68rem;color:var(--textD);width:100%;margin-top:.3rem"><i class="fa-solid fa-circle-info"></i> Ending the match sums placement + kill points across all ${RES_GAMES.length} games into one combined result.</div>`:''}
+  `;
+  const sel=document.getElementById(`res-game-map-${RES_GIDX}`);
+  if(sel&&RES_GAMES[RES_GIDX])sel.value=RES_GAMES[RES_GIDX].map||'';
 }
 
 function buildPlayersForTeam(teamId){
@@ -6403,7 +6431,7 @@ function updateResPointsBar(){
   if(!filled.length){bar.innerHTML='';return;}
   const teams=DB.get('teams');
   bar.innerHTML=`<div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
-    <span style="font-size:.68rem;color:var(--textD);font-weight:600;text-transform:uppercase;letter-spacing:.4px">Live Score:</span>
+    <span style="font-size:.68rem;color:var(--textD);font-weight:600;text-transform:uppercase;letter-spacing:.4px">Game ${RES_GIDX+1} Score:</span>
     ${filled.map(slot=>{
       const t=teams.find(x=>x.id===slot.teamId);
       const tn=t?t.name:'?';
@@ -6510,90 +6538,111 @@ function openProfileByIgn(ign){
 function submitResults(){
   const mid=document.getElementById('res-mid')?.value;
   if(!mid)return notify('No match selected','Pick a match first','n-bad');
-  const filled=RES_SLOTS.filter(s=>s.teamId&&s.players.length);
-  if(!filled.length)return notify('No data','Select at least one team with players','n-bad');
+  const anyFilled=RES_GAMES.some(g=>g.slots.some(s=>s.teamId&&s.players.length));
+  if(!anyFilled)return notify('No data','Select at least one team with players in at least one game','n-bad');
 
   const pl=DB.get('players');const logs=DB.get('rlogs5',[]);
   const ms=DB.get('matches');const matchObj=ms.find(x=>x.id===mid);
   const teams=DB.get('teams');
-  let entries=[];let winnerIGN='',winnerTeam='';
-  let matchSummary=[];// for the score preview in the log
 
-  RES_SLOTS.forEach((slot,si)=>{
-    if(!slot.teamId)return;
-    const t=teams.find(x=>x.id===slot.teamId);
-    const tn=t?t.name:'';
-    const place=slot.placement;
-    const placePts=PLACEMENT_PTS[place-1]||0;
-    const teamKills=slot.players.reduce((a,sp)=>a+(sp.kills||0),0);
-    const killPts=teamKills*KILL_PT;
-    const totalTeamPts=placePts+killPts;
+  // Combined totals across every game in this session — teamId -> {name, placePts, killPts, kills, wins, gamesCount, placements:[]}
+  const teamTotals={};
+  // ign -> aggregated player totals across every game
+  const playerTotals={};
+  let entries=[];// flat per-game per-player log lines, kept for history/edit UI
+  let perGameSummaries=[];// one matchSummary-shaped array per game, for the breakdown view
 
-    if(si===0&&tn)winnerTeam=tn;
+  RES_GAMES.forEach((game,gi)=>{
+    const gameFilled=game.slots.filter(s=>s.teamId&&s.players.length);
+    if(!gameFilled.length){perGameSummaries.push({map:game.map,summary:[]});return;}
+    let gameSummary=[];
+    gameFilled.forEach(slot=>{
+      const t=teams.find(x=>x.id===slot.teamId);
+      const tn=t?t.name:'';
+      const place=slot.placement;
+      const placePts=PLACEMENT_PTS[place-1]||0;
+      const teamKills=slot.players.reduce((a,sp)=>a+(sp.kills||0),0);
+      const killPts=teamKills*KILL_PT;
+      const totalTeamPts=placePts+killPts;
 
-    // Update team-level points/wins/kills
-    if(t){
-      t.points=(t.points||0)+totalTeamPts;
-      t.kills=(t.kills||0)+teamKills;
-      if(place===1)t.wins=(t.wins||0)+1;
-      t.matchesPlayed=(t.matchesPlayed||0)+1;
-    }
+      if(!teamTotals[slot.teamId])teamTotals[slot.teamId]={teamId:slot.teamId,teamName:tn,placePts:0,killPts:0,totalPts:0,kills:0,wins:0,games:0,placements:[]};
+      const tt=teamTotals[slot.teamId];
+      tt.placePts+=placePts;tt.killPts+=killPts;tt.totalPts+=totalTeamPts;tt.kills+=teamKills;tt.games+=1;tt.placements.push(place);
+      if(place===1)tt.wins+=1;
 
-    matchSummary.push({teamId:slot.teamId,teamName:tn,placement:place,placePts,killPts,totalPts:totalTeamPts,kills:teamKills});
+      gameSummary.push({teamId:slot.teamId,teamName:tn,placement:place,placePts,killPts,totalPts:totalTeamPts,kills:teamKills});
 
-    slot.players.forEach((sp)=>{
-      if(!sp.ign)return;
-      const p=pl.find(x=>x.ign===sp.ign);
-      const playerPts=(sp.kills||0)*KILL_PT+(place===1?Math.round(placePts/Math.max(slot.players.length,1)):0);
-      if(p){
-        p.kills=(p.kills||0)+(sp.kills||0);
-        p.weeklyKills=(p.weeklyKills||0)+(sp.kills||0);
-        p.points=(p.points||0)+playerPts;
-        if(!sp.elim&&place===1){p.wins=(p.wins||0)+1;p.weeklyWins=(p.weeklyWins||0)+1;}
-        if(sp.elim)p.deaths=(p.deaths||0)+1;
-        else if(place>1)p.deaths=(p.deaths||0)+1;
-        p.gamesPlayed=(p.gamesPlayed||0)+1;
-        p.xp=(p.xp||0)+((sp.kills||0)*50)+(place===1?500:place===2?250:place===3?100:0);
-        if(place===1&&!winnerIGN)winnerIGN=sp.ign;
-        // Win/kill streaks — win streak resets on anything but 1st, kill streak resets on a
-        // dry match. bestMatchKills feeds the "10-Kill Game" badge.
-        p.curWinStreak=(place===1)?(p.curWinStreak||0)+1:0;
-        p.bestWinStreak=Math.max(p.bestWinStreak||0,p.curWinStreak);
-        p.curKillStreak=((sp.kills||0)>0)?(p.curKillStreak||0)+1:0;
-        p.bestKillStreak=Math.max(p.bestKillStreak||0,p.curKillStreak);
-        p.bestMatchKills=Math.max(p.bestMatchKills||0,sp.kills||0);
-      }
-      entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*KILL_PT,pts:playerPts,team:tn,ts:new Date().toLocaleTimeString()});
+      slot.players.forEach(sp=>{
+        if(!sp.ign)return;
+        const playerPts=(sp.kills||0)*KILL_PT+(place===1?Math.round(placePts/Math.max(slot.players.length,1)):0);
+        if(!playerTotals[sp.ign])playerTotals[sp.ign]={ign:sp.ign,team:tn,kills:0,pts:0,wins:0,deaths:0,games:0,bestGameKills:0};
+        const pt=playerTotals[sp.ign];
+        pt.kills+=(sp.kills||0);pt.pts+=playerPts;pt.games+=1;pt.bestGameKills=Math.max(pt.bestGameKills,sp.kills||0);
+        if(!sp.elim&&place===1)pt.wins+=1;
+        if(sp.elim||place>1)pt.deaths+=1;
+        if(place===1&&!pt.firstWinInSession)pt.firstWinInSession=true;
+        entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*KILL_PT,pts:playerPts,team:tn,map:game.map,game:gi+1,ts:new Date().toLocaleTimeString()});
+      });
     });
+    perGameSummaries.push({map:game.map,summary:gameSummary});
   });
 
+  // Apply combined totals to persistent player/team records — same fields the single-game flow
+  // always updated, just summed across however many games this session had.
+  Object.values(teamTotals).forEach(tt=>{
+    const t=teams.find(x=>x.id===tt.teamId);
+    if(t){t.points=(t.points||0)+tt.totalPts;t.kills=(t.kills||0)+tt.kills;t.wins=(t.wins||0)+tt.wins;t.matchesPlayed=(t.matchesPlayed||0)+1;}
+  });
+  Object.values(playerTotals).forEach(pt=>{
+    const p=pl.find(x=>x.ign===pt.ign);
+    if(!p)return;
+    p.kills=(p.kills||0)+pt.kills;p.weeklyKills=(p.weeklyKills||0)+pt.kills;
+    p.points=(p.points||0)+pt.pts;
+    p.wins=(p.wins||0)+pt.wins;p.weeklyWins=(p.weeklyWins||0)+pt.wins;
+    p.deaths=(p.deaths||0)+pt.deaths;
+    p.gamesPlayed=(p.gamesPlayed||0)+pt.games;
+    p.xp=(p.xp||0)+(pt.kills*50)+(pt.wins*500);
+    p.curWinStreak=pt.wins>0?(p.curWinStreak||0)+1:0;
+    p.bestWinStreak=Math.max(p.bestWinStreak||0,p.curWinStreak);
+    p.curKillStreak=pt.kills>0?(p.curKillStreak||0)+1:0;
+    p.bestKillStreak=Math.max(p.bestKillStreak||0,p.curKillStreak);
+    p.bestMatchKills=Math.max(p.bestMatchKills||0,pt.bestGameKills);
+  });
+
+  // Session winner = highest combined points across all games (classic scrims scoring).
+  const matchSummary=Object.values(teamTotals).sort((a,b)=>b.totalPts-a.totalPts);
+  const topTeamTotal=matchSummary[0];
+  const winnerTeam=topTeamTotal?topTeamTotal.teamName:'';
+  const topPlayerByPts=Object.values(playerTotals).sort((a,b)=>b.pts-a.pts)[0];
+  const winnerIGN=topPlayerByPts?topPlayerByPts.ign:'';
+  const mapsPlayed=RES_GAMES.map(g=>g.map).filter(Boolean);
+
   DB.set('players',pl);DB.set('teams',teams);
-  const logEntry={id:'log'+Date.now(),matchId:mid,matchName:matchObj?matchObj.name:mid,map:matchObj?matchObj.map:'',winnerIGN,winnerTeam,entries,matchSummary,slots:RES_SLOTS.map(s=>({...s})),ts:new Date().toLocaleString()};
+  const logEntry={id:'log'+Date.now(),matchId:mid,matchName:matchObj?matchObj.name:mid,map:mapsPlayed.join(', ')||(matchObj?matchObj.map:''),gamesCount:RES_GAMES.length,maps:mapsPlayed,winnerIGN,winnerTeam,entries,matchSummary,perGameSummaries,slots:matchSummary.map(s=>({...s})),ts:new Date().toLocaleString()};
   logs.unshift(logEntry);if(logs.length>100)logs.pop();DB.set('rlogs5',logs);
   if(matchObj){matchObj.status='done';DB.set('matches',ms);}
   renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();buildTicker();renderAdminOverview();renderTeams();
   if(matchObj){
-    const topFragger=logEntry.entries.length?[...logEntry.entries].sort((a,b)=>b.kills-a.kills)[0]:null;
+    const topFragger=entries.length?[...entries].sort((a,b)=>b.kills-a.kills)[0]:null;
     fireWebhookEvent('matchResults',{title:`Match Results — ${logEntry.matchName||logEntry.matchId}`,color:6304479,fields:[
       {name:'Match',value:logEntry.matchName||logEntry.matchId,inline:true},
-      {name:'Map',value:logEntry.map||'—',inline:true},
+      {name:'Games',value:String(logEntry.gamesCount),inline:true},
+      {name:'Maps',value:logEntry.map||'—',inline:true},
       {name:'Winner',value:logEntry.winnerTeam||logEntry.winnerIGN||'—',inline:true},
       {name:'Top Fragger',value:topFragger?`${topFragger.ign} (${topFragger.kills}K)`:'—',inline:true}
     ]},topFragger?topFragger.ign:null);
     if(logEntry.winnerTeam){
-      const wSummary=logEntry.matchSummary.find(s=>s.teamName===logEntry.winnerTeam);
       const winTeamObj=DB.get('teams',[]).find(t=>t.name===logEntry.winnerTeam);
       fireWebhookEvent('teamWins',{title:`🏆 ${logEntry.winnerTeam} takes the win!`,color:16766720,fields:[
         {name:'Match',value:logEntry.matchName||logEntry.matchId,inline:true},
-        {name:'Map',value:logEntry.map||'—',inline:true},
-        {name:'Team Kills',value:String(wSummary?wSummary.kills:0),inline:true}
+        {name:'Maps',value:logEntry.map||'—',inline:true},
+        {name:'Team Kills',value:String(topTeamTotal?topTeamTotal.kills:0),inline:true}
       ]},winTeamObj?teamMentionIgns(winTeamObj):(logEntry.winnerIGN?[logEntry.winnerIGN]:[]));
     }
   }
-  const topTeam=matchSummary.sort((a,b)=>b.totalPts-a.totalPts)[0];
-  notify('Results saved!',`Winner: ${winnerTeam||winnerIGN||'—'} · ${topTeam?topTeam.totalPts+'pts':''}`,'n-ok');
+  notify('Results saved!',`Winner: ${winnerTeam||winnerIGN||'—'} · ${topTeamTotal?topTeamTotal.totalPts+'pts across '+RES_GAMES.length+' game'+(RES_GAMES.length>1?'s':''):''}`,'n-ok');
   // Reset
-  RES_SLOTS=[];renderResSlots();
+  RES_GAMES=[];RES_GIDX=0;RES_SLOTS=[];renderGameTabs();renderResSlots();
   document.getElementById('res-mid').value='';
   const noMatch=document.getElementById('res-no-match');if(noMatch)noMatch.style.display='block';
   const metaBar=document.getElementById('res-meta-bar');if(metaBar)metaBar.style.display='none';
@@ -6625,16 +6674,24 @@ function renderResultLogs(){
   if(!logs.length){el.innerHTML='<div class="text-dim" style="font-size:.78rem;padding:.5rem 0">No logs yet.</div>';return;}
   const teams=DB.get('teams');
   el.innerHTML=logs.slice(0,15).map((log,li)=>{
-    // Use matchSummary if available, otherwise fall back to entries
+    // matchSummary = combined totals across every game in the session; perGameSummaries (if present)
+    // breaks those totals back out per map for older single-game logs perGameSummaries is absent.
     const summary=log.matchSummary||[];
+    const gamesCount=log.gamesCount||1;
     const byTeam={};
     log.entries.forEach(e=>{if(!byTeam[e.team||'—'])byTeam[e.team||'—']=[];byTeam[e.team||'—'].push(e);});
-    const sorted=Object.entries(byTeam).sort((a,b)=>{const pa=a[1][0]?.placement||99,pb=b[1][0]?.placement||99;return pa-pb;});
+    // Rank team blocks by combined points (falls back to first-game placement for old logs)
+    const sorted=Object.entries(byTeam).sort((a,b)=>{
+      const sa=summary.find(s=>s.teamName===a[0]),sb=summary.find(s=>s.teamName===b[0]);
+      if(sa&&sb)return sb.totalPts-sa.totalPts;
+      const pa=a[1][0]?.placement||99,pb=b[1][0]?.placement||99;return pa-pb;
+    });
     const topPts=summary.length?Math.max(...summary.map(s=>s.totalPts||0)):0;
     return `<div class="rlog-card">
       <div class="rlog-card-hdr" onclick="toggleLogBody(${li})">
         <span class="font-mono text-accent fw6" style="font-size:.72rem">${log.matchId||'—'}</span>
-        ${log.map?`<span style="font-size:.68rem;color:var(--textD)">${MI[log.map]||''} ${log.map}</span>`:''}
+        ${log.map?`<span style="font-size:.68rem;color:var(--textD)">${(log.maps||[log.map]).map(mk=>MI[mk]||'🗺').join(' ')} ${log.map}</span>`:''}
+        ${gamesCount>1?`<span class="chip chip-neutral" style="font-size:.58rem">${gamesCount} games</span>`:''}
         ${log.winnerTeam||log.winnerIGN?`<span class="chip chip-amber" style="font-size:.58rem"><i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>${log.winnerTeam||log.winnerIGN}</span>`:''}
         ${topPts?`<span class="chip chip-accent" style="font-size:.58rem;font-weight:700">${topPts}pts</span>`:''}
         <span class="text-dim font-mono" style="font-size:.62rem;margin-left:auto">${log.ts}</span>
@@ -6642,21 +6699,23 @@ function renderResultLogs(){
         <i class="fa-solid fa-chevron-down text-dim" style="font-size:.6rem;transition:transform .2s" id="rlchev-${li}"></i>
       </div>
       <div class="rlog-body" id="rlog-body-${li}">
+        ${gamesCount>1?`<div style="font-size:.65rem;color:var(--textD);margin-bottom:.5rem">Combined total across ${gamesCount} games (${(log.maps||[]).join(' → ')})</div>`:''}
         ${sorted.map(([tn,members])=>{
-          const pl=members[0]?.placement;const plLabel=pl===1?'🥇':pl===2?'🥈':pl===3?'🥉':`#${pl}`;
           const t=teams.find(x=>x.name===tn);const tcolor=t?.color||'var(--accent)';
           const tkills=members.reduce((a,e)=>a+e.kills,0);
           const sum=summary.find(s=>s.teamName===tn);
+          const pl=members[0]?.placement;const plLabel=pl===1?'🥇':pl===2?'🥈':pl===3?'🥉':`#${pl}`;
           const pts=sum?sum.totalPts:(PLACEMENT_PTS[(pl||1)-1]||0)+tkills*KILL_PT;
           return `<div class="rlog-team-block">
             <div class="rlog-team-name" style="display:flex;align-items:center;gap:.4rem;color:${tcolor}">
-              <span>${plLabel} ${tn}</span>
-              <span style="color:var(--textD);font-size:.65rem;font-weight:400">${tkills}K</span>
+              <span>${gamesCount>1?'':plLabel+' '}${tn}</span>
+              <span style="color:var(--textD);font-size:.65rem;font-weight:400">${tkills}K${sum&&sum.games>1?` · ${sum.games} games`:''}</span>
               <span style="margin-left:auto;color:var(--accentL);font-family:'DM Mono',monospace;font-weight:700;font-size:.72rem">${pts}pts</span>
               ${sum?`<span style="color:var(--textD);font-size:.63rem">(${sum.placePts}+${sum.killPts})</span>`:''}
             </div>
             ${members.map(e=>`<div class="rlog-pline">
               <span style="font-weight:600;color:${e.elim?'var(--textD)':'var(--text)'}">${e.ign}</span>
+              ${gamesCount>1&&e.map?`<span style="font-size:.6rem;color:var(--textD)">G${e.game} ${MI[e.map]||''}${e.map}</span>`:''}
               <span class="chip chip-red" style="font-size:.6rem">${e.kills}K</span>
               ${e.elim?'<span style="font-size:.65rem;color:var(--red)">☠</span>':'<span style="font-size:.65rem;color:var(--green)">✓</span>'}
               <span style="font-size:.62rem;color:var(--accentL);font-family:'DM Mono',monospace">${(e.kills||0)*KILL_PT}pts</span>
@@ -6922,6 +6981,7 @@ function setupEditMe(){
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
   set('ep-uid',p.uid||'');set('ep-rk',p.rank||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-tag',p.tag||'');set('ep-region',p.region||'');set('ep-platform',p.platform||'');set('ep-team',p.team||'');
   populateCountrySelect('ep-country',p.country||'');
   const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
@@ -6944,6 +7004,7 @@ function saveEditPlayer(){
   }
   p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;p.uid=newUid;
   p.rank=g('ep-rk');p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
+  p.tag=g('ep-tag');p.region=g('ep-region');p.platform=g('ep-platform');p.team=g('ep-team');
   p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
   p.twitter=g('ep-xt');p.instagram=g('ep-ig');p.webhook=g('ep-wh');
   DB.set('players',pl);
@@ -7132,7 +7193,7 @@ function buildMyProfile(){
           <i class="fa-solid fa-circle-info" style="color:var(--accentL);margin-right:.4rem"></i>
           You're logged in but not yet registered as a tournament player. Register below to get a full player profile with stats.
         </div>
-        <button class="btn btn-accent btn-fw" onclick="showPage('signup')"><i class="fa-solid fa-user-plus"></i> Register as a Player</button>
+        <button class="btn btn-accent btn-fw" onclick="reopenOnboardingStep()"><i class="fa-solid fa-user-plus"></i> Complete Registration</button>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:.84rem;color:var(--textM)">Logged in as <strong style="color:var(--text)">${CU.name}</strong></div>
@@ -7328,43 +7389,6 @@ function renderTeamStandings(){
     </tr>`;
   }).join('');
 }
-
-// ═══ BRACKET ═══
-function renderBkt(){
-  const b=DB.get('bracket',{qf:[],sf:[],final:[]});const el=document.getElementById('bkt-el');if(!el)return;
-  const rounds=[{t:'Quarter-Finals',ms:b.qf||[]},{t:'Semi-Finals',ms:b.sf||[]},{t:'Final',ms:b.final||[]}];
-  el.innerHTML=rounds.map((r,ri)=>`<div class="b-round"><div class="b-round-label">${r.t}</div>
-    ${r.ms.map(m=>`<div class="b-match" style="margin-bottom:${ri===0?'1rem':'2.2rem'}"><div class="b-team ${m.winner===m.a?'winner':m.winner?'loser':'tbd'}"><span>${m.a||'TBD'}</span><span class="b-score">${m.sa!=null&&m.sa!==''?m.sa:'—'}</span></div><div class="b-team ${m.winner===m.b?'winner':m.winner?'loser':'tbd'}"><span>${m.b||'TBD'}</span><span class="b-score">${m.sb!=null&&m.sb!==''?m.sb:'—'}</span></div></div>`).join('')}
-  </div>`).join('');
-  const fin=b.final&&b.final[0];
-  if(fin?.winner)el.innerHTML+=`<div class="b-round" style="justify-content:center;align-items:center"><div class="b-round-label">Champion</div><div style="text-align:center;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:1.5rem 2rem;box-shadow:0 8px 30px rgba(245,158,11,.12)"><div style="font-size:1.4rem;color:var(--amber);margin-bottom:.5rem"><i class="fa-solid fa-trophy"></i></div><div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--amber)">${fin.winner}</div><div class="text-dim" style="font-size:.72rem;margin-top:.3rem;text-transform:uppercase;letter-spacing:.8px">Tournament Champion</div></div></div>`;
-}
-function renderBktAdmin(){
-  const b=DB.get('bracket',{qf:[],sf:[],final:[]});const el=document.getElementById('bkt-admin-el');if(!el)return;
-  const rounds=[{k:'qf',t:'Quarter-Finals'},{k:'sf',t:'Semi-Finals'},{k:'final',t:'Final'}];
-  el.innerHTML=rounds.map(r=>`<div style="margin-bottom:1.2rem"><div class="card-title" style="margin-bottom:.6rem">${r.t}</div>
-    ${(b[r.k]||[]).map((m,i)=>`<div style="display:grid;grid-template-columns:1fr 40px 1fr;gap:.5rem;align-items:center;margin-bottom:.5rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem">
-      <input class="fi" style="font-size:.82rem;padding:.38rem .7rem" id="ba-${r.k}-${i}-a" value="${m.a||''}" placeholder="Team A"/>
-      <span class="text-dim font-mono" style="font-size:.68rem;text-align:center">vs</span>
-      <input class="fi" style="font-size:.82rem;padding:.38rem .7rem" id="ba-${r.k}-${i}-b" value="${m.b||''}" placeholder="Team B"/>
-      <input class="fi" type="number" style="font-size:.82rem;padding:.38rem .7rem;text-align:center" id="ba-${r.k}-${i}-sa" value="${m.sa||''}" placeholder="Score"/>
-      <div></div>
-      <input class="fi" type="number" style="font-size:.82rem;padding:.38rem .7rem;text-align:center" id="ba-${r.k}-${i}-sb" value="${m.sb||''}" placeholder="Score"/>
-      <select class="fi fsel" style="font-size:.82rem;grid-column:1/-1" id="ba-${r.k}-${i}-w">
-        <option value="">— Select Winner —</option>
-        <option value="${m.a||''}">${m.a||'Team A'}</option>
-        <option value="${m.b||''}">${m.b||'Team B'}</option>
-      </select>
-      <button class="btn btn-danger btn-xs" style="grid-column:1/-1" onclick="deleteBracketMatch('${r.k}',${i})"><i class="fa-solid fa-trash"></i> Delete Match</button>
-    </div>`).join('')}
-    <button class="btn btn-ghost btn-xs" onclick="addBracketMatch('${r.k}')"><i class="fa-solid fa-plus"></i> Add Match</button>
-  </div>`).join('')+`<button class="btn btn-accent btn-fw" onclick="saveBracket()"><i class="fa-solid fa-floppy-disk"></i> Save Bracket</button>`;
-  setTimeout(()=>{rounds.forEach(r=>{(b[r.k]||[]).forEach((m,i)=>{const s=document.getElementById(`ba-${r.k}-${i}-w`);if(s&&m.winner)s.value=m.winner;});});},50);
-}
-function addBracketMatch(k){const b=DB.get('bracket',{qf:[],sf:[],final:[]});b[k]=b[k]||[];b[k].push({a:'',b:'',sa:0,sb:0,winner:''});DB.set('bracket',b);renderBktAdmin();}
-// Previously the editor could only ever grow (Add Match) with no way to remove a mistaken entry.
-function deleteBracketMatch(k,i){const b=DB.get('bracket',{qf:[],sf:[],final:[]});b[k]=b[k]||[];b[k].splice(i,1);DB.set('bracket',b);renderBktAdmin();renderBkt();notify('Match removed','Remember to Save Bracket','n-ok');}
-function saveBracket(){const b=DB.get('bracket',{qf:[],sf:[],final:[]});['qf','sf','final'].forEach(rk=>{(b[rk]||[]).forEach((_,i)=>{const g=id=>document.getElementById(id)?.value||'';b[rk][i]={a:g(`ba-${rk}-${i}-a`),b:g(`ba-${rk}-${i}-b`),sa:parseInt(g(`ba-${rk}-${i}-sa`))||0,sb:parseInt(g(`ba-${rk}-${i}-sb`))||0,winner:g(`ba-${rk}-${i}-w`)};});});DB.set('bracket',b);renderBkt();notify('Bracket saved!','','n-ok');}
 
 // ═══ TEAMS ═══
 let TEAMS_RECRUIT_ONLY=false;
@@ -8713,7 +8737,7 @@ function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))ret
     DB.set('players',pl);
   }
   renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, polls, brackets, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','polls','suggestions','bracket','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, polls, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','polls','suggestions','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
@@ -8833,7 +8857,6 @@ window.addEventListener('DOMContentLoaded',async()=>{
       if(ADM){updatePendingBadges();}
     }
   }
-  renderBkt();
 });
 
 // ═══════ AI SITE GUIDE — DISABLED FOR NOW ═══════
