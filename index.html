@@ -492,6 +492,17 @@ html[data-ovbg="transparent"]{
 .tdm-banner-ticker-item b{color:#fff;font-weight:700}
 @media (max-width:640px){.tdm-banner-score{font-size:2.6rem}.tdm-banner-name{font-size:.95rem}.tdm-banner-main{padding:1.2rem 1.1rem 0}.tdm-banner-bars{padding:.4rem 1.1rem 0}.tdm-banner-ticker-item{font-size:.72rem}}
 
+/* ── Team Lobby grid (visual slot chart for a match's registered teams) ─── */
+.lobby-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.55rem;max-height:60vh;overflow-y:auto;padding-right:.2rem}
+.lobby-slot{border:1px solid var(--border);border-radius:var(--rS);background:var(--bg2);padding:.6rem .5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.15rem;min-height:88px;justify-content:center;transition:transform .12s,border-color .12s}
+.lobby-slot.filled{cursor:pointer;background:var(--bg3)}
+.lobby-slot.filled:hover{transform:translateY(-2px);border-color:var(--borderH)}
+.lobby-slot.open{border-style:dashed;opacity:.55}
+.lobby-slot-num{font-size:.6rem;color:var(--textD);font-weight:700;letter-spacing:.5px}
+.lobby-slot-swatch{width:16px;height:16px;border-radius:5px;margin:.15rem 0}
+.lobby-slot-name{font-size:.78rem;font-weight:700;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.lobby-slot-sub{font-size:.65rem;color:var(--textD)}
+
 /* ── Team recruiting ─────────────────────────── */
 .team-recruit-badge{display:inline-flex;align-items:center;gap:.3rem;background:rgba(16,185,129,.12);
   border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:.62rem;font-weight:700;letter-spacing:.4px;
@@ -1812,25 +1823,16 @@ tr:last-child td{border-bottom:none}
           <div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Team Registration</div>
-              <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Look up each player by their <strong>PUBG UID</strong> — their registered name/IGN fills in automatically. Players must sign up individually first.</div>
+              <div style="font-size:.78rem;color:var(--textM);margin-bottom:.8rem">Search and add players below — they need to be registered individually first. The first player you add becomes captain; you can reassign that anytime with the crown button.</div>
               <div class="fg"><label class="fl">Team Name</label><input class="fi" id="tn" placeholder="e.g. Your Team Name"/></div>
               <div class="fg"><label class="fl">Tag</label><input class="fi" id="tt" placeholder="[TAG]" maxlength="5"/></div>
 
-              <div class="fg"><label class="fl">Captain — PUBG UID</label>
-                <div class="frow" style="grid-template-columns:1fr auto">
-                  <input class="fi" id="tr-cap-uid" placeholder="Enter captain's PUBG UID" onkeydown="if(event.key==='Enter'){event.preventDefault();trSetCaptain();}"/>
-                  <button class="btn btn-ghost btn-sm" onclick="trSetCaptain()"><i class="fa-solid fa-magnifying-glass"></i> Find</button>
-                </div>
+              <div class="fg" style="position:relative">
+                <label class="fl">Add Players <span class="text-dim" style="font-weight:400">(search by name or IGN)</span></label>
+                <input class="fi" id="tr-search" placeholder="Start typing a name or IGN..." oninput="trSearchPlayers()" onfocus="trSearchPlayers()" onblur="setTimeout(()=>{const b=document.getElementById('tr-search-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
+                <div id="tr-search-results" class="tdm-search-results" style="display:none;position:absolute;left:0;right:0;z-index:5;background:var(--bg2);border:1px solid var(--border)"></div>
               </div>
-              <div id="tr-cap-chip" style="margin-bottom:.9rem"></div>
-
-              <div class="fg"><label class="fl">Add Member — PUBG UID</label>
-                <div class="frow" style="grid-template-columns:1fr auto">
-                  <input class="fi" id="tr-mem-uid" placeholder="Enter member's PUBG UID" onkeydown="if(event.key==='Enter'){event.preventDefault();trAddMember();}"/>
-                  <button class="btn btn-ghost btn-sm" onclick="trAddMember()"><i class="fa-solid fa-plus"></i> Add</button>
-                </div>
-              </div>
-              <div id="tr-mem-chips" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.9rem"></div>
+              <div id="tr-roster" style="display:flex;flex-direction:column;gap:.4rem;margin:.6rem 0 1rem"></div>
 
               <div class="fg"><label class="fl">Preferred Map</label><select class="fi fsel" id="tmap"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div>
               <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
@@ -2226,7 +2228,12 @@ tr:last-child td{border-bottom:none}
     <div class="fg"><label class="fl">Match Name</label><input class="fi" id="mm-n" placeholder="Erangel Grand Finals"/></div>
     <div class="frow"><div class="fg"><label class="fl">Map</label><select class="fi fsel" id="mm-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Taego</option></select></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div></div>
     <div class="frow"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div></div>
-    <div class="frow"><div class="fg"><label class="fl">Max Teams</label><input class="fi" id="mm-mt" type="number" value="20"/></div><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md"><option>Squad (4v4)</option><option>Duo</option><option>Solo</option></select></div></div>
+    <div class="frow"><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md" onchange="mmSyncTeamSize()"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div><div class="fg"><label class="fl">Total Player Slots</label><input class="fi" id="mm-players" type="number" value="80" min="1" oninput="mmAutoCalc()"/></div></div>
+    <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem">
+      <div style="flex-shrink:0"><div class="fl" style="margin-bottom:.3rem">Players / team</div><input class="fi" id="mm-teamsize" type="number" value="4" min="1" style="width:64px;text-align:center" oninput="mmAutoCalc()"/></div>
+      <div style="flex:1;text-align:right"><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Team slots (auto)</div><div id="mm-mt-display" style="font-size:1.35rem;font-weight:800;color:var(--accentL);line-height:1.2">20 teams</div></div>
+    </div>
+    <input type="hidden" id="mm-mt" value="20"/>
     <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this match</label>
     <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Match</button>
   </div>
@@ -2240,6 +2247,13 @@ tr:last-child td{border-bottom:none}
     <div class="fg"><label class="fl">Team</label><select class="fi fsel" id="ms-modal-team"></select></div>
     <div style="font-size:.72rem;color:var(--textD);margin-bottom:1rem">The host will review this and, once accepted, everyone on the roster gets pinged on Discord with the match time, map & mode.</div>
     <button class="btn btn-accent btn-fw" onclick="submitMatchSignup()"><i class="fa-solid fa-paper-plane"></i> Send Request</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="match-lobby-modal">
+  <div class="modal-box" style="max-width:720px">
+    <button class="modal-close" onclick="closeModal('match-lobby-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div id="lobby-modal-body"></div>
   </div>
 </div>
 
@@ -4224,40 +4238,57 @@ function trFindByUid(uid){
   const players=DB.get('players');
   return players.find(p=>String(p.uid).trim()===String(uid).trim())||null;
 }
-
-function trSetCaptain(){
-  const uid=v('tr-cap-uid');if(!uid)return notify('Enter a PUBG UID','','n-bad');
-  const p=trFindByUid(uid);
-  if(!p)return notify('No player found','That PUBG UID isn\'t registered yet — ask them to sign up first.','n-bad');
-  TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name};
-  TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==p.uid); // captain can't also be a plain member
-  trRenderCapChip();trRenderMemChips();
-  const el=document.getElementById('tr-cap-uid');if(el)el.value='';
-  notify('Captain found!',`${p.name} (${p.ign})`,'n-ok');
+// Single search box replacing the old two-box (captain UID / member UID) flow — type a name or
+// IGN, pick from the dropdown. First player added becomes captain automatically.
+function trSearchPlayers(){
+  const q=(v('tr-search')||'').toLowerCase().trim();
+  const box=document.getElementById('tr-search-results');if(!box)return;
+  if(!q){box.style.display='none';box.innerHTML='';return;}
+  const taken=new Set([...(TR_CAPTAIN?[TR_CAPTAIN.uid]:[]),...TR_MEMBERS.map(m=>m.uid)]);
+  const results=DB.get('players').filter(p=>!taken.has(p.uid)&&(p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q))).slice(0,6);
+  box.style.display='block';
+  if(!results.length){box.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching registered players</div>';return;}
+  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.uid}')"><div class="cell-av">${p.ign[0]}</div><div><div style="font-weight:600">${esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}</div></div></div>`).join('');
 }
-
-function trAddMember(){
-  const uid=v('tr-mem-uid');if(!uid)return notify('Enter a PUBG UID','','n-bad');
-  const p=trFindByUid(uid);
-  if(!p)return notify('No player found','That PUBG UID isn\'t registered yet — ask them to sign up first.','n-bad');
-  if(TR_CAPTAIN&&TR_CAPTAIN.uid===p.uid)return notify('Already captain','This player is already set as captain.','n-bad');
-  if(TR_MEMBERS.find(m=>m.uid===p.uid))return notify('Already added','','n-bad');
-  TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name});
-  trRenderMemChips();
-  const el=document.getElementById('tr-mem-uid');if(el)el.value='';
-  notify('Member added!',`${p.name} (${p.ign})`,'n-ok');
+function trAddPlayer(uid){
+  const p=trFindByUid(uid);if(!p)return;
+  if(!TR_CAPTAIN){TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name};notify('Captain set',`${p.name} (${p.ign})`,'n-ok');}
+  else{TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name});notify('Player added',`${p.name} (${p.ign})`,'n-ok');}
+  const s=document.getElementById('tr-search');if(s)s.value='';
+  const box=document.getElementById('tr-search-results');if(box){box.style.display='none';box.innerHTML='';}
+  trRenderRoster();
 }
-
-function trRemoveMember(uid){TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);trRenderMemChips();}
-function trRemoveCaptain(){TR_CAPTAIN=null;trRenderCapChip();}
-
-function trRenderCapChip(){
-  const el=document.getElementById('tr-cap-chip');if(!el)return;
-  el.innerHTML=TR_CAPTAIN?`<span class="chip chip-accent" style="font-size:.78rem;padding:.35rem .7rem"><i class="fa-solid fa-crown" style="margin-right:.3rem;color:var(--amber)"></i>${TR_CAPTAIN.name} <span style="opacity:.7">(${TR_CAPTAIN.ign})</span> <i class="fa-solid fa-xmark" style="margin-left:.4rem;cursor:pointer" onclick="trRemoveCaptain()"></i></span>`:'';
+function trMakeCaptain(uid){
+  const target=TR_MEMBERS.find(m=>m.uid===uid);if(!target)return;
+  TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);
+  if(TR_CAPTAIN)TR_MEMBERS.unshift(TR_CAPTAIN);
+  TR_CAPTAIN=target;
+  trRenderRoster();
 }
-function trRenderMemChips(){
-  const el=document.getElementById('tr-mem-chips');if(!el)return;
-  el.innerHTML=TR_MEMBERS.map(m=>`<span class="chip chip-neutral" style="font-size:.78rem;padding:.35rem .7rem">${m.name} <span style="opacity:.7">(${m.ign})</span> <i class="fa-solid fa-xmark" style="margin-left:.4rem;cursor:pointer" onclick="trRemoveMember('${m.uid}')"></i></span>`).join('');
+function trRemoveMember(uid){TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);trRenderRoster();}
+function trRemoveCaptain(){
+  TR_CAPTAIN=TR_MEMBERS.length?TR_MEMBERS.shift():null;
+  trRenderRoster();
+}
+function trRenderRoster(){
+  const el=document.getElementById('tr-roster');if(!el)return;
+  let rows='';
+  if(TR_CAPTAIN){
+    rows+=`<div style="display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px solid var(--accent);border-radius:var(--rS);padding:.5rem .8rem">
+      <i class="fa-solid fa-crown" style="color:var(--amber);flex-shrink:0"></i>
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem">${esc(TR_CAPTAIN.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(TR_CAPTAIN.ign)} · Captain</div></div>
+      <i class="fa-solid fa-xmark" style="cursor:pointer;color:var(--textD);flex-shrink:0" onclick="trRemoveCaptain()"></i>
+    </div>`;
+  }else{
+    rows+='<div class="text-dim" style="font-size:.8rem;padding:.3rem 0">No captain yet — the first player you add becomes captain.</div>';
+  }
+  rows+=TR_MEMBERS.map(m=>`<div style="display:flex;align-items:center;gap:.6rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .8rem">
+    <div style="width:14px;flex-shrink:0"></div>
+    <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${esc(m.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(m.ign)}</div></div>
+    <button class="btn btn-ghost btn-xs" title="Make captain" onclick="trMakeCaptain('${m.uid}')"><i class="fa-solid fa-crown"></i></button>
+    <i class="fa-solid fa-xmark" style="cursor:pointer;color:var(--textD);flex-shrink:0" onclick="trRemoveMember('${m.uid}')"></i>
+  </div>`).join('');
+  el.innerHTML=rows;
 }
 
 function regTeam(){
@@ -4266,10 +4297,10 @@ function regTeam(){
   const teams=DB.get('teams');if(teams.find(t=>t.name===name))return notify('Name taken','','n-bad');
   const mems=[TR_CAPTAIN.ign,...TR_MEMBERS.map(m=>m.ign)];
   teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:TR_CAPTAIN.ign,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting:!!document.getElementById('t-recruit')?.checked,recruitNote:v('t-roles')||''});
-  DB.set('teams',teams);['tn','tt','tr-cap-uid','tr-mem-uid','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  DB.set('teams',teams);['tn','tt','tr-search','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
   const newTeam=teams[teams.length-1];
-  TR_CAPTAIN=null;TR_MEMBERS=[];trRenderCapChip();trRenderMemChips();
+  TR_CAPTAIN=null;TR_MEMBERS=[];trRenderRoster();
   updateStats();refreshDLs();updatePendingBadges();
   notify('Team submitted!','Awaiting admin approval before appearing publicly.','n-ok');
   fireWebhookEvent('teamRegistration',{title:'New Team Registered — Pending Approval',color:15844367,fields:[
@@ -7374,8 +7405,74 @@ function renderMatches(filter='all'){
         signupBtn=`<span class="chip chip-accent" style="font-size:.66rem">Requested</span>`;
       }
     }
-    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
+    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
+}
+// ═══ TEAM LOBBY — a visual slot-by-slot chart of every team registered for a match ═══
+// Anyone can open this (no admin gate) — it's the "see all the teams on a chart" view: every
+// team slot 1..maxTeams rendered as a card, filled ones showing the team's tag/color/roster,
+// open ones showing a dashed placeholder so it's obvious at a glance how much room is left.
+function openMatchLobby(matchId){
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);
+  // Belt-and-suspenders check — even if someone calls this directly, teams can't see the slot
+  // chart until the host has started the event (revealed slots) for this match.
+  if(!ADM&&!(m&&m.slotsRevealed))return notify('Lobby not open yet','The host hasn\'t started this event — check back once slots are revealed.','n-bad');
+  renderMatchLobbyGrid(matchId);
+  openModal('match-lobby-modal');
+}
+// Host control: flips whether teams can see the slot lobby for a match. Kept off by default so
+// registrations/approvals can happen behind the scenes before the host is ready to "start the event."
+function toggleSlotsRevealed(matchId){
+  if(!ADM)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  m.slotsRevealed=!m.slotsRevealed;
+  DB.set('matches',ms);renderMatches();renderAMatches();
+  logAdminAction(m.slotsRevealed?'Match lobby revealed':'Match lobby hidden',`${m.name} lobby ${m.slotsRevealed?'opened to':'hidden from'} teams by ${CU?CU.name:'Admin'}`);
+  notify(m.slotsRevealed?'Event started — lobby is live!':'Lobby hidden from teams','',m.slotsRevealed?'n-ok':'n-info');
+  if(m.slotsRevealed){
+    fireWebhookEvent('matchLobbyRevealed',{title:'🎮 Event Started — Slots Are Live',color:3900151,fields:[
+      {name:'Match',value:m.name,inline:true},
+      {name:'Map',value:m.map||'—',inline:true},
+      {name:'Teams',value:`${(m.teams||[]).length}/${m.maxTeams||20}`,inline:true}
+    ]},null,{match:m.name,map:m.map||'',date:m.date||'',time:m.time||''});
+  }
+}
+function renderMatchLobbyGrid(matchId){
+  const body=document.getElementById('lobby-modal-body');if(!body)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m){body.innerHTML='<div class="text-dim">Match not found.</div>';return;}
+  const teams=DB.get('teams');
+  const filled=(m.teams||[]).length;
+  const cap=m.maxTeams||20;
+  const perTeam=m.teamSize||(m.mode==='Solo'?1:m.mode==='Duo'?2:m.mode==='Trio (3v3)'?3:4);
+  // Build a lookup by explicit slot number so each team sits exactly where the system auto-assigned
+  // it (falls back to array position for any older entries saved before slots were tracked).
+  const bySlot={};
+  (m.teams||[]).forEach((entry,idx)=>{bySlot[entry.slot||(idx+1)]=entry;});
+  const cells=[];
+  for(let i=1;i<=cap;i++){
+    const slot=bySlot[i];
+    if(slot){
+      const t=teams.find(x=>x.id===slot.teamId);
+      const color=t?.color||'var(--accent)';
+      cells.push(`<div class="lobby-slot filled" onclick="${t?`openTeamProfile('${t.id}')`:''}" style="border-color:${color}55">
+        <div class="lobby-slot-num">Slot ${i}</div>
+        <div class="lobby-slot-swatch" style="background:${color}"></div>
+        <div class="lobby-slot-name">${esc(slot.teamName)}</div>
+        <div class="lobby-slot-sub">${t?`${(t.members||[]).length} players${t.tag?' · ['+esc(t.tag)+']':''}`:'Registered'}</div>
+      </div>`);
+    }else{
+      cells.push(`<div class="lobby-slot open">
+        <div class="lobby-slot-num">Slot ${i}</div>
+        <i class="fa-solid fa-plus" style="color:var(--textD);font-size:1rem;margin:.2rem 0"></i>
+        <div class="lobby-slot-sub">Open slot</div>
+      </div>`);
+    }
+  }
+  body.innerHTML=`
+    <div class="modal-title" style="margin-bottom:.15rem">${esc(m.name)}</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${esc(m.date||'TBD')} ${esc(m.time||'')} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
+    <div class="lobby-grid">${cells.join('')}</div>
+  `;
 }
 // TDM list for the public Match Schedule page — live match(es) first, then most recent games,
 // each showing score and (for a Best-of-3) the game number / series record.
@@ -7470,7 +7567,23 @@ function cycleResMatchStatus(){
   renderMatches();renderAMatches();renderDashboardData();if(ADM)renderAdminOverview();
   notify(`Match status → ${m.status}`,'','n-ok');
 }
-function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,teams:[]});DB.set('matches',ms);closeModal('match-modal');renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,'','n-ok');}
+// Team size defaults per mode — driving the auto-calculated team-slot count below.
+const MM_MODE_TEAMSIZE={'Squad (4v4)':4,'Trio (3v3)':3,'Duo':2,'Solo':1};
+function mmSyncTeamSize(){
+  const mode=v('mm-md');const ts=document.getElementById('mm-teamsize');
+  if(ts&&MM_MODE_TEAMSIZE[mode])ts.value=MM_MODE_TEAMSIZE[mode];
+  mmAutoCalc();
+}
+// Recomputes "Team slots" any time Total Player Slots or Players/team changes, so the host
+// never has to do the division themselves — e.g. 64 players ÷ 4-per-team = 16 teams, automatically.
+function mmAutoCalc(){
+  const players=Math.max(1,parseInt(v('mm-players'))||0);
+  const teamSize=Math.max(1,parseInt(v('mm-teamsize'))||1);
+  const teams=Math.max(1,Math.floor(players/teamSize));
+  const disp=document.getElementById('mm-mt-display');if(disp)disp.textContent=`${teams} team${teams===1?'':'s'}`;
+  const hidden=document.getElementById('mm-mt');if(hidden)hidden.value=teams;
+}
+function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');mmAutoCalc();const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]});DB.set('matches',ms);closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Match #${id} created!`,`${v('mm-mt')} team slots for ${v('mm-players')} players`,'n-ok');}
 
 // ═══ COMPARE ═══
 function renderCmpSelects(){const pl=DB.get('players');['cmp1','cmp2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— Select Player —</option>'+pl.map(p=>`<option value="${p.id}">${p.ign} (${p.team||p.rank})</option>`).join('');if(cur)s.value=cur;});}
@@ -7949,31 +8062,40 @@ function resolveMatchSignupRequest(id,approve){
     await sbRefreshKey('matches');
     const ms=DB.get('matches');const m=ms.find(x=>x.id===r.matchId);
     const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
+    let assignedSlot=null;
     if(approve&&m){
       m.teams=m.teams||[];
-      if(m.teams.length>=(m.maxTeams||20))return notify('Match is full','Deny this or bump Max Teams first','n-bad');
-      if(!m.teams.some(x=>x.teamId===r.teamId))m.teams.push({teamId:r.teamId,teamName:r.teamName});
+      const cap=m.maxTeams||20;
+      if(m.teams.length>=cap)return notify('Match is full','Deny this or bump Max Teams first','n-bad');
+      if(!m.teams.some(x=>x.teamId===r.teamId)){
+        // Auto-select the lowest open slot number (1..cap) rather than just appending — this way
+        // slot numbers stay stable and meaningful even if an earlier team is later removed.
+        const taken=new Set(m.teams.map(x=>x.slot).filter(Boolean));
+        assignedSlot=1;while(taken.has(assignedSlot)&&assignedSlot<=cap)assignedSlot++;
+        m.teams.push({teamId:r.teamId,teamName:r.teamName,slot:assignedSlot});
+      }
       DB.set('matches',ms);
     }
     r.status=approve?'approved':'denied';
     DB.set('matchRequests',requests);renderMatchSignupRequests();updateMatchSignupBadge();renderMatches();renderAMatches();
-    logAdminAction(approve?'Match signup approved':'Match signup denied',`${r.teamName} ${approve?'was accepted into':'was turned away from'} ${r.matchName} by ${CU?CU.name:'Admin'}`);
+    logAdminAction(approve?'Match signup approved':'Match signup denied',`${r.teamName} ${approve?`was auto-assigned Slot ${assignedSlot} in`:'was turned away from'} ${r.matchName} by ${CU?CU.name:'Admin'}`);
     if(approve){
       fireWebhookEvent('matchSignupAccepted',{title:'✅ Scrim/Match Slot Confirmed',color:3066993,fields:[
         {name:'Team',value:r.teamName,inline:true},
+        {name:'Slot',value:assignedSlot?`#${assignedSlot}`:'—',inline:true},
         {name:'Match',value:r.matchName,inline:true},
         {name:'Map',value:m?.map||'—',inline:true},
         {name:'Date',value:m?.date||'TBD',inline:true},
         {name:'Time',value:m?.time||'TBD',inline:true},
         {name:'Mode',value:m?.mode||'—',inline:true}
-      ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName,map:m?.map||'',date:m?.date||'',time:m?.time||'',mode:m?.mode||''});
+      ]},teamMentionIgns(t),{team:r.teamName,slot:assignedSlot||'',match:r.matchName,map:m?.map||'',date:m?.date||'',time:m?.time||'',mode:m?.mode||''});
     }else{
       fireWebhookEvent('matchSignupDenied',{title:'Scrim/Match Slot Request Denied',color:15158332,fields:[
         {name:'Team',value:r.teamName,inline:true},
         {name:'Match',value:r.matchName,inline:true}
       ]},teamMentionIgns(t),{team:r.teamName,match:r.matchName});
     }
-    notify(approve?'Request approved!':'Request denied','','n-ok');
+    notify(approve?`Approved — assigned Slot ${assignedSlot}!`:'Request denied','','n-ok');
   });
 }
 function updateMatchSignupBadge(){
@@ -8018,8 +8140,9 @@ const WEBHOOK_EVENTS={
   teamRegistration:{label:'Team Registrations',icon:'fa-shield-halved',defaultScope:'all',tokens:'{team} {captain} {manager} {mentions}'},
   teamApproved:{label:'Team Approved',icon:'fa-circle-check',defaultScope:'all',tokens:'{team} {mentions}'},
   matchSignupRequest:{label:'Scrim/Match Signup Requests',icon:'fa-clipboard-list',defaultScope:'none',tokens:'{team} {match} {map} {date} {time} {mode}'},
-  matchSignupAccepted:{label:'Scrim/Match Signup Accepted',icon:'fa-calendar-check',defaultScope:'all',tokens:'{team} {match} {map} {date} {time} {mode} {mentions}'},
+  matchSignupAccepted:{label:'Scrim/Match Signup Accepted',icon:'fa-calendar-check',defaultScope:'all',tokens:'{team} {slot} {match} {map} {date} {time} {mode} {mentions}'},
   matchSignupDenied:{label:'Scrim/Match Signup Denied',icon:'fa-calendar-xmark',defaultScope:'captain',tokens:'{team} {match} {mentions}'},
+  matchLobbyRevealed:{label:'Event Started (Lobby Revealed)',icon:'fa-table-cells',defaultScope:'none',tokens:'{match} {map} {date} {time}'},
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
   playerOfWeek:{label:'Player of the Week',icon:'fa-crown'},
   weeklyRecap:{label:'Weekly Recap',icon:'fa-calendar-week'},
