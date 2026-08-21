@@ -683,16 +683,6 @@ tr:last-child td{border-bottom:none}
 
 
 
-/* ── POLLS ─────────────────────────── */
-.poll-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;margin-bottom:.9rem;transition:border-color .2s}
-.poll-card:hover{border-color:var(--borderH)}
-.poll-question{font-weight:600;font-size:.95rem;margin-bottom:.9rem}
-.poll-opt{position:relative;margin-bottom:.5rem;border-radius:var(--rS);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:border-color .2s}
-.poll-opt:hover{border-color:var(--accent)}
-.poll-fill{position:absolute;inset:0;background:rgba(99,102,241,.08);transform-origin:left;transition:transform .8s cubic-bezier(.4,0,.2,1)}
-.poll-inner{position:relative;padding:.55rem .85rem;display:flex;justify-content:space-between;align-items:center;font-size:.87rem;font-weight:500}
-.poll-pct{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--accentL);font-weight:500}
-
 /* ── SUGGESTIONS ───────────────────── */
 .sug-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;margin-bottom:.65rem;position:relative;transition:border-color .2s}
 .sug-item:hover{border-color:var(--borderH)}
@@ -1189,7 +1179,6 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('admin-players')"><i class="fa-solid fa-users-gear"></i> Players</button>
       <button class="sb-item" onclick="showPage('admin-teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
       <button class="sb-item" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Scrims</button>
-      <button class="sb-item" onclick="showPage('admin-polls')"><i class="fa-solid fa-chart-bar"></i> Polls</button>
       <button class="sb-item" onclick="showPage('admin-settings')"><i class="fa-solid fa-gear"></i> Settings</button>
       <button class="sb-item" onclick="showPage('debug')"><i class="fa-solid fa-bug"></i> Debug</button>
     </div>
@@ -1203,7 +1192,6 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Schedule</button>
       <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM <span class="sb-badge" id="tdm-live-badge" style="display:none;background:var(--red)">LIVE</span></button>
       <button class="sb-item" onclick="showPage('analytics')"><i class="fa-solid fa-chart-mixed"></i> Analytics</button>
-      <button class="sb-item" onclick="showPage('clips')"><i class="fa-solid fa-clapperboard"></i> Clips</button>
     </div>
 
     <div class="sb-section">
@@ -1603,20 +1591,6 @@ tr:last-child td{border-bottom:none}
           </div>
         </div>
         <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Scrim</th><th>Matches</th><th>Status</th><th>Date/Time</th><th></th></tr></thead><tbody id="am-body"></tbody></table></div></div>
-      </div>
-
-      <!-- ░ ADMIN POLLS ░ -->
-      <div class="page" id="page-admin-polls">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Poll <span style="color:var(--accentL)">Management</span></div></div></div>
-        <div class="g2">
-          <div class="card">
-            <div class="card-title"><i class="fa-solid fa-chart-bar"></i> Create Poll</div>
-            <div class="fg"><label class="fl">Question</label><input class="fi" id="pq" placeholder="Which map for Finals?"/></div>
-            <div class="fg"><label class="fl">Options (one per line)</label><textarea class="fta" id="po" placeholder="Erangel&#10;Miramar&#10;Sanhok"></textarea></div>
-            <button class="btn btn-accent btn-fw" onclick="createPoll()"><i class="fa-solid fa-chart-bar"></i> Post Poll</button>
-          </div>
-          <div class="card"><div class="card-title"><i class="fa-solid fa-list"></i> Active Polls</div><div id="apo-list"></div></div>
-        </div>
       </div>
 
       <!-- ░ ADMIN SETTINGS ░ -->
@@ -2070,27 +2044,9 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <!-- ░ CLIPS ░ -->
-      <div class="page" id="page-clips">
-        <div class="sh-row"><div class="sh"><div class="sh-title">Community <span style="color:var(--accentL)">Clips</span></div><div class="sh-sub">Drop your best play — admin pins one to the dashboard &amp; ticker</div></div></div>
-        <div class="card mb2">
-          <div class="frow">
-            <div class="fg"><label class="fl">Clip URL</label><input class="fi" id="clip-url" placeholder="https://youtube.com/... or clip link"/></div>
-            <div class="fg"><label class="fl">Note (optional)</label><input class="fi" id="clip-note" placeholder="What's happening in it?"/></div>
-          </div>
-          <button class="btn btn-accent btn-fw" onclick="submitClip()"><i class="fa-solid fa-clapperboard"></i> Submit Clip</button>
-        </div>
-        <div id="clips-list"></div>
-      </div>
-
       <!-- ░ COMMUNITY ░ -->
       <div class="page" id="page-community">
-        <div class="g2">
-          <div>
-            <div class="sh-row mb2"><div class="sh"><div class="sh-title"><span style="color:var(--accentL)">Polls</span></div></div></div>
-            <div id="polls-list"></div>
-          </div>
-          <div>
+        <div>
             <div class="sh-row mb2"><div class="sh"><div class="sh-title"><span style="color:var(--accentL)">Suggestions</span></div></div></div>
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-comment-dots"></i> Submit a Suggestion</div>
@@ -2501,7 +2457,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','polls','suggestions','rlogs5','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','clips','tdmQueue','tdmTournaments','tdmTournamentRequests'];
+const SB_SYNC = ['players','teams','matches','suggestions','rlogs5','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','tdmQueue','tdmTournaments','tdmTournamentRequests'];
 let SB_OK = false, SB_WRITES = 0, SB_CONFLICTS = 0;
 let SB_LAST_CONFLICT = null;
 let SB_LAST_WRITE_DIAG = null;
@@ -3301,7 +3257,6 @@ function seed(){
   DB.set('players',[]);
   DB.set('teams',[]);
   DB.set('matches',[]);
-  DB.set('polls',[]);
   DB.set('suggestions',[]);
   DB.set('rlogs5',[]);
   DB.set('teamRequests',[]);
@@ -3952,7 +3907,7 @@ function refreshDLs(){
 }
 
 // ═══ PAGES ═══
-const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Scrims','admin-polls':'Poll Management','admin-settings':'Settings','leaderboard':'Leaderboard','groups':'Group Stage','teams':'Teams','matches':'Schedule','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
+const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Scrims','admin-settings':'Settings','leaderboard':'Leaderboard','groups':'Group Stage','teams':'Teams','matches':'Schedule','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
 function openSidebar(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('mobile-backdrop')?.classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobile-backdrop')?.classList.remove('show');}
 function showPage(n){
@@ -3966,9 +3921,9 @@ function showPage(n){
   const tt=document.getElementById('topbar-title');if(tt)tt.textContent=PAGE_TITLES[n]||n;
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.page===n));
   if(n==='leaderboard')renderLB();if(n==='teams')renderTeams();if(n==='matches')renderMatches();
-  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderPolls();renderSugs();}if(n==='clips')renderClips();
+  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderSugs();}
   if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
-  if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-polls')renderAPolls();if(n==='admin-results'){renderResultLogs();refreshDLs();}
+  if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-results'){renderResultLogs();refreshDLs();}
   if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const clu=document.getElementById('cfg-logo-url');if(clu)clu.value=cfg.logoUrl||'';const cbn=document.getElementById('cfg-discord-botname');if(cbn)cbn.value=cfg.discordBotName||'𝐑𝐚𝐠𝐞𝐢𝐬𝐦 𝐄𝐬𝐩𝐨𝐫𝐭𝐬';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
     const oc1=document.getElementById('cfg-ov-c1');if(oc1)oc1.value=cfg.ovC1||'#6366f1';
     const oc2=document.getElementById('cfg-ov-c2');if(oc2)oc2.value=cfg.ovC2||'#ec4899';
@@ -6058,64 +6013,6 @@ function editTdmStat(playerId,field,val){
   renderTdmBoards();
   notify('Updated','','n-ok',1200);
 }
-// ═══ Community Clips ═══
-function submitClip(){
-  if(!CU)return notify('Login required','','n-bad');
-  const url=(document.getElementById('clip-url')?.value||'').trim();
-  if(!url)return notify('Add a link first','','n-bad');
-  if(!/^https?:\/\//i.test(url))return notify('That doesn\'t look like a link','Needs to start with http:// or https://','n-bad');
-  const note=(document.getElementById('clip-note')?.value||'').trim();
-  const clips=DB.get('clips',[]);
-  clips.unshift({id:'clip'+Date.now(),playerIgn:CU.name,url,note,ts:Date.now(),pinned:false});
-  DB.set('clips',clips);
-  document.getElementById('clip-url').value='';document.getElementById('clip-note').value='';
-  renderClips();
-  notify('Clip submitted!','Thanks for sharing — an admin may pin it','n-ok');
-}
-function renderClips(){
-  const el=document.getElementById('clips-list');if(!el)return;
-  const clips=[...DB.get('clips',[])].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.ts-a.ts);
-  if(!clips.length){el.innerHTML='<div class="text-dim" style="padding:2rem;text-align:center">No clips submitted yet — be the first!</div>';return;}
-  el.innerHTML=clips.map(c=>`<div class="card mb2" style="${c.pinned?'border-color:var(--amber)':''}">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;flex-wrap:wrap">
-      <div>
-        ${c.pinned?`<span class="chip" style="font-size:.6rem;color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);margin-bottom:.3rem;display:inline-block"><i class="fa-solid fa-thumbtack"></i> Pinned</span>`:''}
-        <div style="font-weight:600;font-size:.85rem">${esc(c.playerIgn)}</div>
-        <a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:var(--accentL);font-size:.82rem;word-break:break-all">${esc(c.url)}</a>
-        ${c.note?`<div style="font-size:.8rem;color:var(--textM);margin-top:.3rem">${esc(c.note)}</div>`:''}
-        <div class="text-dim" style="font-size:.68rem;margin-top:.3rem">${new Date(c.ts).toLocaleString()}</div>
-      </div>
-      <div class="admin-only" style="display:${ADM?'flex':'none'};gap:.3rem;flex-shrink:0">
-        <button class="btn ${c.pinned?'btn-ghost':'btn-accent'} btn-xs" onclick="pinClip('${c.id}')"><i class="fa-solid fa-thumbtack"></i> ${c.pinned?'Unpin':'Pin'}</button>
-        <button class="btn btn-danger btn-xs" onclick="deleteClip('${c.id}')"><i class="fa-solid fa-trash"></i></button>
-      </div>
-    </div>
-  </div>`).join('');
-}
-function pinClip(id){
-  if(!ADM)return;
-  const clips=DB.get('clips',[]);const c=clips.find(x=>x.id===id);if(!c)return;
-  const wasPinned=c.pinned;
-  clips.forEach(x=>x.pinned=false); // only one pinned clip at a time
-  c.pinned=!wasPinned;
-  DB.set('clips',clips);
-  renderClips();
-  notify(c.pinned?'Clip pinned!':'Clip unpinned','','n-ok');
-}
-function deleteClip(id){
-  if(!ADM)return;
-  if(!confirm('Delete this clip?'))return;
-  DB.set('clips',DB.get('clips',[]).filter(x=>x.id!==id));
-  renderClips();
-  notify('Clip deleted','','n-ok');
-}
-// Ticker slide for whichever clip is currently pinned — same pattern as the sponsor/recent-join slides.
-function pinnedClipItem(){
-  const c=DB.get('clips',[]).find(x=>x.pinned);
-  if(!c)return '';
-  return `<span class="tdm-banner-ticker-item"><i class="fa-solid fa-clapperboard"></i> Clip of the moment — ${esc(c.playerIgn)}${c.note?': '+esc(c.note):''}</span>`;
-}
-
 function openReportPlayer(id){
   if(!CU)return notify('Log in first','','n-bad');
   const p=DB.get('players',[]).find(x=>x.id===id);if(!p)return;
@@ -6313,7 +6210,6 @@ function renderOverlay(){
   }
   const rj=recentJoinItem();if(rj)items.push(rj);
   items.push(...sponsorItems());
-  const pc=pinnedClipItem();if(pc)items.push(pc);
   OV_ITEMS = items.length?items:['<span class="tdm-banner-ticker-item">RAGEISM Tournament — stay tuned</span>'];
   if(OV_IDX>=OV_ITEMS.length)OV_IDX=0;
 
@@ -8105,23 +8001,6 @@ function doCompareTeams(){
   </div>`;
 }
 
-// ═══ POLLS ═══
-function renderPolls(){
-  const polls=DB.get('polls');const c=document.getElementById('polls-list');if(!c)return;
-  c.innerHTML=polls.map(poll=>{const total=poll.votes.reduce((a,b)=>a+b,0);
-    return `<div class="poll-card"><div class="poll-question">${poll.q}</div>
-    ${poll.opts.map((o,i)=>{const pct=total?Math.round(poll.votes[i]/total*100):0;return `<div class="poll-opt" onclick="castVote('${poll.id}',${i})"><div class="poll-fill" style="transform:scaleX(${pct/100})"></div><div class="poll-inner"><span>${o}</span><span class="poll-pct">${pct}%</span></div></div>`;}).join('')}
-    <div style="display:flex;gap:.8rem;margin-top:.5rem;font-size:.75rem;color:var(--textD);align-items:center">
-      <span style="color:${poll.active?'var(--green)':'var(--textD)'}">● ${poll.active?'Open':'Closed'}</span><span>${total} votes</span>
-      ${ADM?`<button class="btn btn-danger btn-xs" onclick="closePoll('${poll.id}')">Close</button><button class="btn btn-danger btn-xs" onclick="delPoll('${poll.id}')"><i class="fa-solid fa-trash"></i></button>`:''}
-    </div></div>`;
-  }).join('')||'<div class="text-dim" style="font-size:.85rem;padding:1rem">No polls yet.</div>';
-}
-function castVote(id,idx){const polls=DB.get('polls');const p=polls.find(x=>x.id===id);if(!p||!p.active)return notify('Poll closed','','n-bad');p.votes[idx]++;DB.set('polls',polls);renderPolls();notify('Vote recorded!','','n-ok');}
-function createPoll(){const q=v('pq'),opts=v('po').split('\n').map(o=>o.trim()).filter(Boolean);if(!q||opts.length<2)return notify('Question + 2+ options needed','','n-bad');const polls=DB.get('polls');polls.push({id:'pol'+Date.now(),q,opts,votes:opts.map(()=>0),active:true});DB.set('polls',polls);renderPolls();renderAPolls();document.getElementById('pq').value='';document.getElementById('po').value='';notify('Poll posted!','','n-ok');}
-function closePoll(id){const polls=DB.get('polls');const p=polls.find(x=>x.id===id);if(p)p.active=false;DB.set('polls',polls);renderPolls();renderAPolls();}
-function delPoll(id){let polls=DB.get('polls');polls=polls.filter(p=>p.id!==id);DB.set('polls',polls);renderPolls();renderAPolls();}
-
 // ═══ SUGGESTIONS ═══
 function renderSugs(){
   const sug=DB.get('suggestions');const c=document.getElementById('sug-list');if(!c)return;
@@ -8723,6 +8602,7 @@ function clearMatchResults(id){
   const ms=DB.get('matches');const m=ms.find(x=>x.id===id);
   if(m){m.status='upcoming';DB.set('matches',ms);}
   renderAMatches();renderMatches();renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();renderTeams();if(ADM)renderAdminOverview();
+  if(document.getElementById('an-content'))renderAnalytics(AN_TAB);
   logAdminAction('Match results cleared',`${m?m.name||m.id:id} — ${mine.length} log(s) removed, stats rolled back`);
   notify('Results cleared','Stats rolled back — match reset to Upcoming','n-ok');
 }
@@ -8740,7 +8620,6 @@ function delMatch(id){
   if(target)logAdminAction('Match removed',`${target.name||target.id} was removed${mine.length?` along with ${mine.length} result log(s)`:''}`);
   notify('Match removed',mine.length?`${mine.length} result log(s) deleted, stats rolled back`:'','n-ok');
 }
-function renderAPolls(){const polls=DB.get('polls');const el=document.getElementById('apo-list');if(!el)return;el.innerHTML=polls.map(p=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><div><div style="font-weight:600;font-size:.87rem">${p.q}</div><div class="text-dim" style="font-size:.72rem">${p.votes.reduce((a,b)=>a+b,0)} votes · ${p.active?'Open':'Closed'}</div></div><div style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="closePoll('${p.id}')"><i class="fa-solid fa-lock"></i></button><button class="btn btn-danger btn-xs" onclick="delPoll('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')||'<div class="text-dim" style="font-size:.82rem">No polls.</div>';}
 function copyOverlayLink(){
   const el=document.getElementById('ov-link');if(!el)return;
   if(!el.value)el.value=location.origin+location.pathname+'?overlay=1';
@@ -9136,8 +9015,12 @@ function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))ret
     DB.set('matches',[]);DB.set('rlogs5',[]);DB.set('matchRequests',[]);
     renderAMatches();renderMatches();renderResultLogs();
   }
+  // Analytics reads straight from DB every render, but its DOM stays mounted even while hidden,
+  // so if an admin clears data while sitting on the Analytics tab it would otherwise keep showing
+  // the pre-reset numbers until they manually navigated away and back. Re-render it here too.
+  if(document.getElementById('an-content'))renderAnalytics(AN_TAB);
   renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, polls, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','polls','suggestions','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','suggestions','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
@@ -9156,7 +9039,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     // ever touches a small, specific set of DB.get() collections (traced directly from
     // renderOverlay/renderOverlayLb/renderOverlayScore below) — so instead of one shared list,
     // each overlay type requests only what it actually renders. It never needs adminLog,
-    // playerReports, transferRequests, joinRequests, teamRequests, bracket, groups, polls,
+    // playerReports, transferRequests, joinRequests, teamRequests, bracket, groups,
     // suggestions, h2hRecords, tdmQueue, matchRequests, tdmTournament(Requests), rlogs5, teams.
     const overlayKind = overlayParams.get('overlay');
     const lbType = (overlayParams.get('type')==='tdm'||overlayParams.get('type')==='ranking') ? overlayParams.get('type') : 'scrims';
@@ -9171,8 +9054,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
       OVERLAY_SYNC = lbType==='ranking' ? ['rankingBoards'] : (lbType==='tdm' ? ['players','tdmBoards'] : ['players']);
     }else{
       // Default ticker (renderOverlay + its helpers): live TDM/scrims standings, live/upcoming
-      // match info, sponsor shoutouts, and pinned clips.
-      OVERLAY_SYNC=['players','matches','tdmMatches','cfg','sponsors','clips'];
+      // match info, and sponsor shoutouts.
+      OVERLAY_SYNC=['players','matches','tdmMatches','cfg','sponsors'];
     }
     if(sbR){await sbLoad(OVERLAY_SYNC);}
     sbHideOverlay();
