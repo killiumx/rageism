@@ -7500,7 +7500,7 @@ function renderMatches(filter='all'){
     const slotsFilled=(m.teams||[]).length;
     // Signup button: only for upcoming matches with openSignups enabled and slots remaining, only shown to captains/managers of a team not yet in/pending for this match.
     let signupBtn='';
-    if(m.status==='upcoming'&&m.openSignups!==false&&myTeams.length){
+    if((m.status==='upcoming'||m.status==='live')&&m.openSignups!==false&&myTeams.length){
       const myPending=myTeams.filter(t=>{
         const inMatch=(m.teams||[]).some(x=>x.teamId===t.id);
         const hasReq=myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status!=='denied');
