@@ -657,18 +657,6 @@ tr:last-child td{border-bottom:none}
 .act-text{font-size:.83rem;flex:1;color:var(--textM)}<br>.act-text strong{color:var(--text);font-weight:600}
 .act-time{font-size:.7rem;color:var(--textD);font-family:'DM Mono',monospace}
 
-/* ── GROUPS ────────────────────────── */
-.group-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.group-header{padding:.75rem 1rem;background:linear-gradient(90deg,rgba(99,102,241,.08),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.7rem}
-.group-badge{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accentD),var(--accent));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#fff}
-.group-title{font-weight:700;font-size:.87rem}
-.group-count{font-size:.72rem;color:var(--textM);margin-top:.05rem}
-.group-body{padding:.5rem}
-.group-team-row{display:flex;align-items:center;gap:.6rem;padding:.35rem .5rem;border-radius:6px;transition:background .15s;cursor:pointer;font-size:.85rem}
-.group-team-row:hover{background:var(--surface)}
-.group-pos{width:18px;font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;text-align:center;flex-shrink:0}
-.gp1{color:var(--amber)}.gp2{color:#94a3b8}.gp3{color:#cd7f32}
-
 /* ── TEAM CARDS ────────────────────── */
 .team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .2s}
 .team-card:hover{border-color:var(--borderH);box-shadow:var(--shadow);transform:translateY(-2px)}
@@ -682,14 +670,6 @@ tr:last-child td{border-bottom:none}
 .member-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
 
-
-/* ── SUGGESTIONS ───────────────────── */
-.sug-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;margin-bottom:.65rem;position:relative;transition:border-color .2s}
-.sug-item:hover{border-color:var(--borderH)}
-.sug-text{font-size:.87rem;line-height:1.55;padding-right:3rem;color:var(--textM)}
-.vote-btn{background:none;border:1px solid var(--border);color:var(--textD);cursor:pointer;
-  width:28px;height:28px;border-radius:7px;font-size:.72rem;transition:all .2s;display:flex;align-items:center;justify-content:center}
-.vote-btn:hover{border-color:var(--accent);color:var(--accentL)}
 
 /* ── PROFILE ───────────────────────── */
 .profile-banner{height:110px;background:linear-gradient(135deg,rgba(99,102,241,.35),rgba(6,182,212,.18),rgba(168,85,247,.2));border-radius:var(--r) var(--r) 0 0;position:relative;overflow:hidden}
@@ -1187,7 +1167,6 @@ tr:last-child td{border-bottom:none}
       <div class="sb-section-label">Tournament</div>
       <button class="sb-item active" onclick="showPage('dashboard')"><i class="fa-solid fa-house"></i> Dashboard</button>
       <button class="sb-item" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i> Leaderboard</button>
-      <button class="sb-item" onclick="showPage('groups')"><i class="fa-solid fa-layer-group"></i> Groups</button>
       <button class="sb-item" onclick="showPage('teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
       <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Schedule</button>
       <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM <span class="sb-badge" id="tdm-live-badge" style="display:none;background:var(--red)">LIVE</span></button>
@@ -1198,7 +1177,6 @@ tr:last-child td{border-bottom:none}
       <div class="sb-section-label">Player</div>
       <button class="sb-item" onclick="showPage('profile')"><i class="fa-solid fa-id-card"></i> My Profile</button>
       <button class="sb-item" onclick="showPage('compare')"><i class="fa-solid fa-code-compare"></i> Compare</button>
-      <button class="sb-item" onclick="showPage('community')"><i class="fa-solid fa-comments"></i> Community</button>
     </div>
 
     <div class="sb-bottom">
@@ -1342,14 +1320,6 @@ tr:last-child td{border-bottom:none}
 
         <div class="g3">
           <div class="card">
-            <div class="card-title"><i class="fa-solid fa-chart-line"></i> Season Progress</div>
-            <div class="progress-row"><div class="progress-label"><span>Matches</span><span>12 / 20</span></div><div class="progress-track"><div class="progress-fill" style="width:60%"></div></div></div>
-            <div class="progress-row"><div class="progress-label"><span>Teams</span><span id="p-teams">—</span></div><div class="progress-track"><div class="progress-fill" id="pb-teams"></div></div></div>
-            <div class="progress-row"><div class="progress-label"><span>Players</span><span id="p-players">—</span></div><div class="progress-track"><div class="progress-fill" id="pb-players"></div></div></div>
-            <div class="progress-row"><div class="progress-label"><span>Group Stage</span><span class="text-green">Complete</span></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-            <div class="progress-row"><div class="progress-label"><span>Knockout Stage</span><span>40%</span></div><div class="progress-track"><div class="progress-fill" style="width:40%"></div></div></div>
-          </div>
-          <div class="card">
             <div class="card-title"><i class="fa-solid fa-dollar-sign"></i> Prize Pool</div>
             <div style="text-align:center;padding:.5rem 0 1rem">
               <div class="font-syne text-amber" style="font-size:2.4rem;font-weight:800;letter-spacing:-.5px">$5,000</div>
@@ -1444,11 +1414,6 @@ tr:last-child td{border-bottom:none}
             <div class="quick-action" onclick="openNewMatchModal()">
               <div class="qa-icon" style="background:rgba(99,102,241,.1);color:var(--accentL)"><i class="fa-solid fa-plus"></i></div>
               <div><div class="qa-label">Create New Scrim</div><div class="qa-sub">Plan matches, maps &amp; scoring up front</div></div>
-              <i class="fa-solid fa-chevron-right qa-arrow"></i>
-            </div>
-            <div class="quick-action" onclick="drawGroups()">
-              <div class="qa-icon" style="background:rgba(16,185,129,.1);color:var(--green)"><i class="fa-solid fa-shuffle"></i></div>
-              <div><div class="qa-label">Draw Groups</div><div class="qa-sub">Randomly assign teams to groups</div></div>
               <i class="fa-solid fa-chevron-right qa-arrow"></i>
             </div>
             <div class="quick-action master-only" onclick="openModal('grant-admin-modal');renderAdminRolesList()">
@@ -1961,23 +1926,6 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <!-- ░ GROUPS ░ -->
-      <div class="page" id="page-groups">
-        <div class="sh-row">
-          <div class="sh"><div class="sh-title">Group <span style="color:var(--accentL)">Stage</span></div></div>
-          <div style="display:flex;gap:.5rem">
-            <button class="btn btn-ghost btn-sm admin-only" onclick="drawGroups()" style="display:none"><i class="fa-solid fa-shuffle"></i> Random Draw</button>
-            <button class="btn btn-danger btn-sm admin-only" onclick="clearGroups()" style="display:none"><i class="fa-solid fa-broom"></i> Clear</button>
-          </div>
-        </div>
-        <div class="g4" id="groups-grid"></div>
-        <div id="groups-empty" style="text-align:center;padding:3rem;color:var(--textD);display:none">
-          <i class="fa-solid fa-layer-group" style="font-size:2rem;display:block;margin-bottom:.7rem;opacity:.3"></i>
-          <div style="font-weight:600;margin-bottom:.4rem">No groups yet</div>
-          <div style="font-size:.85rem">Admin can draw groups from registered teams</div>
-        </div>
-      </div>
-
       <!-- ░ TEAMS ░ -->
       <div class="page" id="page-teams">
         <div class="sh-row"><div class="sh"><div class="sh-title">Registered <span style="color:var(--accentL)">Teams</span></div><div class="sh-sub" id="teams-count">0 teams</div></div>
@@ -2042,21 +1990,6 @@ tr:last-child td{border-bottom:none}
           </div>
           <div id="cmp-team-result"></div>
         </div>
-      </div>
-
-      <!-- ░ COMMUNITY ░ -->
-      <div class="page" id="page-community">
-        <div>
-            <div class="sh-row mb2"><div class="sh"><div class="sh-title"><span style="color:var(--accentL)">Suggestions</span></div></div></div>
-            <div class="card mb2">
-              <div class="card-title"><i class="fa-solid fa-comment-dots"></i> Submit a Suggestion</div>
-              <div class="fg"><label class="fl">Your IGN</label><input class="fi" id="sug-ign" list="ign-dl2" placeholder="Your IGN"/><datalist id="ign-dl2"></datalist></div>
-              <div class="fg"><label class="fl">Category</label><select class="fi fsel" id="sug-cat"><option>Tournament Format</option><option>Map Selection</option><option>Rules</option><option>Prize Pool</option><option>Scheduling</option><option>General Feedback</option></select></div>
-              <div class="fg"><label class="fl">Your Idea</label><textarea class="fta" id="sug-text" placeholder="Share your idea or feedback..."></textarea></div>
-              <button class="btn btn-accent btn-fw" onclick="submitSug()"><i class="fa-solid fa-paper-plane"></i> Submit</button>
-            </div>
-            <div id="sug-list"></div>
-          </div>
       </div>
 
       <!-- ░ ANALYTICS ░ -->
@@ -2456,7 +2389,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','suggestions','rlogs5','groups','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','tdmQueue','tdmTournaments','tdmTournamentRequests'];
+const SB_SYNC = ['players','teams','matches','rlogs5','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','tdmQueue','tdmTournaments','tdmTournamentRequests'];
 let SB_OK = false, SB_WRITES = 0, SB_CONFLICTS = 0;
 let SB_LAST_CONFLICT = null;
 let SB_LAST_WRITE_DIAG = null;
@@ -3249,14 +3182,11 @@ function applyScorePreset(name){
   renderScoreSettingsForm();
   notify('Preset loaded','Click "Save Scoring System" below to apply it','n-ok');
 }
-const GL=['A','B','C','D','E','F','G','H'];
-
 function seed(){
   if(DB.get('s5',false))return;
   DB.set('players',[]);
   DB.set('teams',[]);
   DB.set('matches',[]);
-  DB.set('suggestions',[]);
   DB.set('rlogs5',[]);
   DB.set('teamRequests',[]);
   DB.set('joinRequests',[]);
@@ -3902,7 +3832,7 @@ function updateSidebar(){
 // ═══ DATALISTS ═══
 function refreshDLs(){
   const pl=DB.get('players');const igns=pl.map(p=>`<option value="${p.ign}">`).join('');
-  ['ign-dl','ign-dl2'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=igns;});
+  ['ign-dl'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=igns;});
   const teamNamesDl=document.getElementById('ign-dl-teamnames');
   if(teamNamesDl){const tms=DB.get('teams');teamNamesDl.innerHTML=tms.map(t=>`<option value="${t.name}">`).join('');}
   // Populate match dropdown on result page
@@ -3917,7 +3847,7 @@ function refreshDLs(){
 }
 
 // ═══ PAGES ═══
-const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Scrims','admin-settings':'Settings','leaderboard':'Leaderboard','groups':'Group Stage','teams':'Teams','matches':'Schedule','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
+const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Scrims','admin-settings':'Settings','leaderboard':'Leaderboard','teams':'Teams','matches':'Schedule','profile':'My Profile','compare':'Compare Players','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
 function openSidebar(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('mobile-backdrop')?.classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobile-backdrop')?.classList.remove('show');}
 function showPage(n){
@@ -3931,8 +3861,8 @@ function showPage(n){
   const tt=document.getElementById('topbar-title');if(tt)tt.textContent=PAGE_TITLES[n]||n;
   document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.page===n));
   if(n==='leaderboard')renderLB();if(n==='teams')renderTeams();if(n==='matches')renderMatches();
-  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}if(n==='community'){renderSugs();}
-  if(n==='profile')buildMyProfile();if(n==='groups')renderGroups();
+  if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}
+  if(n==='profile')buildMyProfile();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-results'){renderResultLogs();refreshDLs();}
   if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const clu=document.getElementById('cfg-logo-url');if(clu)clu.value=cfg.logoUrl||'';const cbn=document.getElementById('cfg-discord-botname');if(cbn)cbn.value=cfg.discordBotName||'𝐑𝐚𝐠𝐞𝐢𝐬𝐦 𝐄𝐬𝐩𝐨𝐫𝐭𝐬';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
     const oc1=document.getElementById('cfg-ov-c1');if(oc1)oc1.value=cfg.ovC1||'#6366f1';
@@ -6259,27 +6189,6 @@ function startOverlayRotation(){
   },OV_INTERVAL);
 }
 
-// ═══ GROUPS ═══
-function drawGroups(){
-  const teams=DB.get('teams');if(teams.length<2)return notify('Need 2+ teams','','n-bad');
-  const sh=[...teams].sort(()=>Math.random()-.5);const ng=Math.ceil(sh.length/4);
-  const groups=[];for(let i=0;i<ng;i++)groups.push({letter:GL[i],teams:[]});
-  sh.forEach((t,i)=>groups[i%ng].teams.push(t.name));DB.set('groups',groups);renderGroups();notify('Groups drawn!',`${ng} groups created`,'n-ok');
-}
-function clearGroups(){if(!confirm('Clear all groups?'))return;DB.set('groups',[]);renderGroups();notify('Cleared','','n-ok');}
-function renderGroups(){
-  const groups=DB.get('groups');const grid=document.getElementById('groups-grid');const empty=document.getElementById('groups-empty');if(!grid)return;
-  if(!groups||!groups.length){grid.innerHTML='';if(empty)empty.style.display='block';return;}
-  if(empty)empty.style.display='none';
-  const teams=DB.get('teams');
-  grid.innerHTML=groups.map(g=>{const pc=(i)=>i===0?'gp1':i===1?'gp2':i===2?'gp3':'';
-    return `<div class="group-card"><div class="group-header"><div class="group-badge">${g.letter}</div><div><div class="group-title">Group ${g.letter}</div><div class="group-count">${g.teams.length} teams</div></div></div>
-    <div style="padding:.5rem">${g.teams.map((tn,i)=>{const t=teams.find(x=>x.name===tn);
-      return `<div class="group-team-row"><span class="group-pos ${pc(i)}">${i+1}</span><div style="flex:1"><div style="font-weight:600;font-size:.85rem">${tn}</div>${t?`<div class="cell-sub">${t.tag||''} · ${t.wins}W</div>`:''}</div>${t?`<div style="width:8px;height:8px;border-radius:50%;background:${t.color||'var(--accent)'};flex-shrink:0"></div>`:''}</div>`;
-    }).join('')||'<div class="text-dim" style="font-size:.78rem;padding:.3rem">Empty</div>'}</div></div>`;
-  }).join('');
-}
-
 // ═══ RESULT ENTRY ═══
 // A Scrim (one Match entity — renamed "Scrim" in the UI) can span several individual Matches —
 // usually 1-4, sometimes more — each played on a different map, planned up front when the scrim
@@ -8011,24 +7920,6 @@ function doCompareTeams(){
   </div>`;
 }
 
-// ═══ SUGGESTIONS ═══
-function renderSugs(){
-  const sug=DB.get('suggestions');const c=document.getElementById('sug-list');if(!c)return;
-  if(!sug.length){c.innerHTML='<div class="text-dim" style="font-size:.85rem;padding:1rem">No suggestions yet.</div>';return;}
-  c.innerHTML=[...sug].sort((a,b)=>b.votes-a.votes).map(s=>`<div class="sug-item">
-    <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.35rem;font-size:.75rem;flex-wrap:wrap"><span style="font-weight:700">${s.author}</span><span class="chip chip-neutral" style="font-size:.65rem">${s.cat}</span><span class="text-dim">${s.ts}</span></div>
-    <div class="sug-text">${s.text}</div>
-    <div style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:.3rem">
-      <button class="vote-btn" onclick="upvoteSug('${s.id}')"><i class="fa-solid fa-chevron-up"></i></button>
-      <div class="font-mono text-accent" style="font-size:.72rem;font-weight:600">${s.votes}</div>
-      ${ADM?`<button class="vote-btn" onclick="delSug('${s.id}')"><i class="fa-solid fa-trash" style="font-size:.6rem"></i></button>`:''}
-    </div>
-  </div>`).join('');
-}
-function upvoteSug(id){const s=DB.get('suggestions');const sg=s.find(x=>x.id===id);if(sg){sg.votes++;DB.set('suggestions',s);renderSugs();}}
-function delSug(id){let s=DB.get('suggestions');s=s.filter(x=>x.id!==id);DB.set('suggestions',s);renderSugs();}
-function submitSug(){const ign=v('sug-ign'),cat=v('sug-cat'),text=v('sug-text');if(!ign||!text)return notify('IGN & text required','','n-bad');const s=DB.get('suggestions');s.push({id:'s'+Date.now(),author:ign,cat,text,votes:0,ts:'Just now'});DB.set('suggestions',s);document.getElementById('sug-ign').value='';document.getElementById('sug-text').value='';renderSugs();notify('Submitted!','','n-ok');}
-
 // ═══ ADMIN RENDERS ═══
 // Only one player per Discord account is allowed going forward — this surfaces any older duplicates
 // (e.g. from before that rule existed) so an admin can clean them up in one click.
@@ -9030,7 +8921,7 @@ function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))ret
   // the pre-reset numbers until they manually navigated away and back. Re-render it here too.
   if(document.getElementById('an-content'))renderAnalytics(AN_TAB);
   renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','suggestions','rlogs5','groups','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','rlogs5','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
@@ -9049,8 +8940,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     // ever touches a small, specific set of DB.get() collections (traced directly from
     // renderOverlay/renderOverlayLb/renderOverlayScore below) — so instead of one shared list,
     // each overlay type requests only what it actually renders. It never needs adminLog,
-    // playerReports, transferRequests, joinRequests, teamRequests, bracket, groups,
-    // suggestions, h2hRecords, tdmQueue, matchRequests, tdmTournament(Requests), rlogs5, teams.
+    // playerReports, transferRequests, joinRequests, teamRequests, bracket,
+    // h2hRecords, tdmQueue, matchRequests, tdmTournament(Requests), rlogs5, teams.
     const overlayKind = overlayParams.get('overlay');
     const lbType = (overlayParams.get('type')==='tdm'||overlayParams.get('type')==='ranking') ? overlayParams.get('type') : 'scrims';
     let OVERLAY_SYNC;
