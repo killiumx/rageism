@@ -6421,10 +6421,13 @@ function onMatchSelect(){
       else{sb.style.display='none';}
     }
   }
-  // Auto-detect teams in match from bracket/groups or just create 4 empty slots
-  const teams=DB.get('teams').filter(t=>t.approved);
-  // Pre-populate with teams that were registered (up to 4 for a typical PUBG match)
-  const firstSlots = teams.slice(0,4).map((t,i)=>({placement:i+1,teamId:t.id,players:buildPlayersForTeam(t.id)}));
+  // Pre-populate with only the teams actually ACCEPTED into this scrim — i.e. whose signup
+  // request was approved (resolveMatchSignupRequest) or who were placed here by Smart-Sort
+  // Lobbies. Both are the only two ways a team ever lands in m.teams, so m.teams IS the
+  // accepted-teams list for this scrim; teams that never signed up (or were denied) must not
+  // be selectable when logging results. Sorted by their assigned slot number.
+  const acceptedTeams=(m&&Array.isArray(m.teams)?m.teams:[]).slice().sort((a,b)=>(a.slot||99)-(b.slot||99));
+  const firstSlots = acceptedTeams.map((at,i)=>({placement:i+1,teamId:at.teamId,players:buildPlayersForTeam(at.teamId)}));
   while(firstSlots.length<4) firstSlots.push({placement:firstSlots.length+1,teamId:'',players:[]});
   // Seed RES_GAMES straight from the map sequence planned when the scrim was created, so the
   // full running order the admin (and players) already saw is exactly what's ready to log —
@@ -6634,7 +6637,13 @@ function toggleElim(i,j){
 
 function renderResSlots(){
   const el=document.getElementById('result-rows');if(!el)return;
-  const teams=DB.get('teams').filter(t=>t.approved);
+  // Same restriction as onMatchSelect: the team picker for each slot should only ever offer
+  // teams accepted into THIS scrim (present in the current match's m.teams), not every approved
+  // team on the site.
+  const mid=document.getElementById('res-mid')?.value;
+  const curMatch=DB.get('matches').find(x=>x.id===mid);
+  const acceptedIds=new Set((curMatch&&Array.isArray(curMatch.teams)?curMatch.teams:[]).map(x=>x.teamId));
+  const teams=DB.get('teams').filter(t=>t.approved&&acceptedIds.has(t.id));
   const teamOpts=teams.map(t=>`<option value="${t.id}">${t.name}${t.tag?' ['+t.tag+']':''}</option>`).join('');
   const placeLabel=(n)=>n===1?'<i class="fa-solid fa-trophy"></i> 1st':n===2?'<i class="fa-solid fa-medal"></i> 2nd':n===3?'<i class="fa-solid fa-medal"></i> 3rd':`${n}th`;
   const placeCls=(n)=>n===1?'res-pb-1':n===2?'res-pb-2':n===3?'res-pb-3':'res-pb-n';
@@ -6808,13 +6817,20 @@ function submitResults(){
   renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();buildTicker();renderAdminOverview();renderTeams();
   if(matchObj){
     const topFragger=entries.length?[...entries].sort((a,b)=>b.kills-a.kills)[0]:null;
+    // @mention EVERY player on EVERY team that actually played this scrim — not just the top
+    // fragger — so the whole roster (captain, manager & every linked member) gets pinged with
+    // their Discord id + IGN, same as teamMentionIgns() already does for signup/win pings.
+    const participatingIgns=[...new Set(Object.keys(teamTotals).flatMap(tid=>{
+      const t=teams.find(x=>x.id===tid);
+      return t?teamMentionIgns(t):[];
+    }))];
     fireWebhookEvent('matchResults',{title:`Match Results — ${logEntry.matchName||logEntry.matchId}`,color:6304479,fields:[
       {name:'Match',value:logEntry.matchName||logEntry.matchId,inline:true},
       {name:'Games',value:String(logEntry.gamesCount),inline:true},
       {name:'Maps',value:logEntry.map||'—',inline:true},
       {name:'Winner',value:logEntry.winnerTeam||logEntry.winnerIGN||'—',inline:true},
       {name:'Top Fragger',value:topFragger?`${topFragger.ign} (${topFragger.kills}K)`:'—',inline:true}
-    ]},topFragger?topFragger.ign:null);
+    ]},participatingIgns);
     if(logEntry.winnerTeam){
       const winTeamObj=DB.get('teams',[]).find(t=>t.name===logEntry.winnerTeam);
       fireWebhookEvent('teamWins',{title:`🏆 ${logEntry.winnerTeam} takes the win!`,color:16766720,fields:[
