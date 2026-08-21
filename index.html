@@ -6463,6 +6463,11 @@ function saveGameResult(gi){
   }
   renderGameTabs();
   notify(`Match ${gi+1} saved`,'Progress kept — edit it any time, or move on to the next match. Use "Complete Tournament" once every match is done.','n-ok');
+  fireWebhookEvent('matchSaved',{title:`💾 Match ${gi+1} saved — ${m?m.name:mid}`,color:5793266,fields:[
+    {name:'Scrim',value:m?m.name:mid,inline:true},
+    {name:'Match',value:`#${gi+1} of ${RES_GAMES.length}`,inline:true},
+    {name:'Map',value:RES_GAMES[gi].map||'—',inline:true}
+  ]},null,{scrim:m?m.name:mid,match:`${gi+1}`,map:RES_GAMES[gi].map||''});
 }
 
 // The finale: aggregates every match currently in RES_GAMES (saved or not — anything filled in
@@ -7914,10 +7919,20 @@ function createMatch(){
     scoring={placementPts,killPts:kpEl?(Number(kpEl.value)||0):DEFAULT_KILL_PT};
   }
   const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');
-  ms.push({id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]});
+  const newScrim={id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]};
+  ms.push(newScrim);
   DB.set('matches',ms);
   closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();
   notify(`Scrim #${id} created!`,`${mapSequence.length} match${mapSequence.length===1?'':'es'} planned · ${v('mm-mt')} team slots for ${v('mm-players')} players`,'n-ok');
+  logAdminAction('Scrim created',`${name} — ${mapSequence.length} match${mapSequence.length===1?'':'es'} planned (${mapSequence.map(mp=>mp||'TBD').join(' → ')})${scoring?' · custom scoring':''}`);
+  fireWebhookEvent('scrimCreated',{title:`📅 New Scrim — ${name}`,color:3900151,fields:[
+    {name:'Matches',value:mapSequence.map((mp,i)=>`${i+1}. ${mp||'TBD'}`).join('\n')||'—',inline:true},
+    {name:'Date',value:newScrim.date,inline:true},
+    {name:'Time',value:newScrim.time,inline:true},
+    {name:'Mode',value:newScrim.mode||'—',inline:true},
+    {name:'Team Slots',value:String(newScrim.maxTeams),inline:true},
+    {name:'Signups',value:newScrim.openSignups?'Open':'Closed',inline:true}
+  ]},null,{scrim:name,matches:mapSequence.map((mp,i)=>`${i+1}. ${mp||'TBD'}`).join(', '),date:newScrim.date,time:newScrim.time,mode:newScrim.mode||''});
   return id;
 }
 
@@ -8729,7 +8744,9 @@ async function pullFromSheet(){
 //     each get their own feed. Posting a highlight (e.g. top fragger) auto-@mentions the
 //     Discord account linked to that player, if they've signed in with Discord at least once. ═══
 const WEBHOOK_EVENTS={
+  scrimCreated:{label:'New Scrim Created',icon:'fa-calendar-plus',defaultScope:'none',tokens:'{scrim} {matches} {date} {time} {mode}'},
   matchResults:{label:'Match Results',icon:'fa-trophy'},
+  matchSaved:{label:'Individual Match Saved (in-progress)',icon:'fa-floppy-disk',defaultScope:'none',tokens:'{scrim} {match} {map}'},
   tdmResults:{label:'TDM Results',icon:'fa-skull-crossbones'},
   teamWins:{label:'Team Wins',icon:'fa-crown'},
   playerRegistration:{label:'Player Registrations',icon:'fa-user-plus'},
