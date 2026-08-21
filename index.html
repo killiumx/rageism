@@ -1185,11 +1185,10 @@ tr:last-child td{border-bottom:none}
     <div class="sb-section admin-only" style="display:none">
       <div class="sb-section-label">Admin</div>
       <button class="sb-item" onclick="showPage('admin-overview')"><i class="fa-solid fa-gauge-high"></i> Overview <span class="sb-badge" id="alert-badge" style="display:none">0</span></button>
-      <button class="sb-item" onclick="showPage('admin-results')"><i class="fa-solid fa-trophy"></i> Log Results</button>
       <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM Control <span class="sb-badge" id="tdm-live-badge2" style="display:none;background:var(--red)">LIVE</span></button>
       <button class="sb-item" onclick="showPage('admin-players')"><i class="fa-solid fa-users-gear"></i> Players</button>
       <button class="sb-item" onclick="showPage('admin-teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
-      <button class="sb-item" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Matches</button>
+      <button class="sb-item" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Scrims</button>
       <button class="sb-item" onclick="showPage('admin-polls')"><i class="fa-solid fa-chart-bar"></i> Polls</button>
       <button class="sb-item" onclick="showPage('admin-settings')"><i class="fa-solid fa-gear"></i> Settings</button>
       <button class="sb-item" onclick="showPage('debug')"><i class="fa-solid fa-bug"></i> Debug</button>
@@ -1201,7 +1200,7 @@ tr:last-child td{border-bottom:none}
       <button class="sb-item" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i> Leaderboard</button>
       <button class="sb-item" onclick="showPage('groups')"><i class="fa-solid fa-layer-group"></i> Groups</button>
       <button class="sb-item" onclick="showPage('teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
-      <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Matches</button>
+      <button class="sb-item" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i> Schedule</button>
       <button class="sb-item" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> TDM <span class="sb-badge" id="tdm-live-badge" style="display:none;background:var(--red)">LIVE</span></button>
       <button class="sb-item" onclick="showPage('analytics')"><i class="fa-solid fa-chart-mixed"></i> Analytics</button>
       <button class="sb-item" onclick="showPage('clips')"><i class="fa-solid fa-clapperboard"></i> Clips</button>
@@ -1229,7 +1228,7 @@ tr:last-child td{border-bottom:none}
   <!-- Mobile-only bottom nav — the 5 most-used pages, always one tap away regardless of where you are -->
   <div class="mobile-bottom-nav" id="mobile-bottom-nav">
     <button class="mbn-item active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fa-solid fa-house"></i><span>Home</span></button>
-    <button class="mbn-item" data-page="matches" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i><span>Matches</span></button>
+    <button class="mbn-item" data-page="matches" onclick="showPage('matches')"><i class="fa-solid fa-gamepad"></i><span>Schedule</span></button>
     <button class="mbn-item" data-page="tdm" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i><span>TDM</span></button>
     <button class="mbn-item" data-page="leaderboard" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i><span>Ranks</span></button>
     <button class="mbn-item" data-page="profile" onclick="showPage('profile')"><i class="fa-solid fa-id-card"></i><span>Profile</span></button>
@@ -1240,7 +1239,7 @@ tr:last-child td{border-bottom:none}
 
     <nav id="bottom-nav">
       <button class="bn-item active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fa-solid fa-house"></i><span>Home</span></button>
-      <button class="bn-item" data-page="matches" onclick="showPage('matches')"><i class="fa-solid fa-calendar-days"></i><span>Matches</span></button>
+      <button class="bn-item" data-page="matches" onclick="showPage('matches')"><i class="fa-solid fa-calendar-days"></i><span>Schedule</span></button>
       <button class="bn-item bn-item-cta" data-page="tdm" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i><span>TDM</span></button>
       <button class="bn-item" data-page="leaderboard" onclick="showPage('leaderboard')"><i class="fa-solid fa-ranking-star"></i><span>Ranks</span></button>
       <button class="bn-item" data-page="profile" onclick="showPage('profile')"><i class="fa-solid fa-id-card"></i><span>Profile</span></button>
@@ -1398,11 +1397,11 @@ tr:last-child td{border-bottom:none}
         <div class="card mb3" style="padding:.9rem 1rem">
           <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--textD);margin-bottom:.6rem">Quick Actions</div>
           <div style="display:flex;flex-wrap:wrap;gap:.5rem">
-            <button class="btn btn-accent btn-sm" onclick="showPage('admin-results')"><i class="fa-solid fa-trophy"></i> Log Match Results</button>
+            <button class="btn btn-accent btn-sm" onclick="showPage('admin-matches')"><i class="fa-solid fa-trophy"></i> Scrims &amp; Results</button>
             <button class="btn btn-ghost btn-sm" onclick="showPage('tdm')"><i class="fa-solid fa-skull-crossbones"></i> Start / Manage TDM</button>
             <button class="btn btn-ghost btn-sm" onclick="showPage('admin-teams')"><i class="fa-solid fa-shield-halved"></i> Approve Teams</button>
             <button class="btn btn-ghost btn-sm" onclick="showPage('admin-players')"><i class="fa-solid fa-users-gear"></i> Manage Players</button>
-            <button class="btn btn-ghost btn-sm" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Schedule Match</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('admin-matches')"><i class="fa-solid fa-calendar-days"></i> Schedule Scrim</button>
             <button class="btn btn-ghost btn-sm" onclick="showPage('admin-settings')"><i class="fa-solid fa-gear"></i> Settings & Overlay</button>
           </div>
         </div>
@@ -1416,7 +1415,7 @@ tr:last-child td{border-bottom:none}
             <div class="kpi-value text-accent" id="ak-players">—</div>
             <div class="kpi-sub">Click to manage →</div>
           </div>
-          <div class="kpi" style="cursor:pointer" onclick="showPage('admin-results')">
+          <div class="kpi" style="cursor:pointer" onclick="showPage('admin-matches')">
             <div class="kpi-glow" style="background:var(--red)"></div>
             <div class="kpi-icon" style="background:rgba(239,68,68,.1);color:var(--red)"><i class="fa-solid fa-skull-crossbones"></i></div>
             <div class="kpi-label">Total Kills</div>
@@ -1449,14 +1448,14 @@ tr:last-child td{border-bottom:none}
           <!-- Quick Actions -->
           <div class="card">
             <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
-            <div class="quick-action" onclick="showPage('admin-results')">
+            <div class="quick-action" onclick="showPage('admin-matches')">
               <div class="qa-icon" style="background:rgba(245,158,11,.1);color:var(--amber)"><i class="fa-solid fa-trophy"></i></div>
               <div><div class="qa-label">Log Match Results</div><div class="qa-sub">Update kills, placements & stats</div></div>
               <i class="fa-solid fa-chevron-right qa-arrow"></i>
             </div>
-            <div class="quick-action" onclick="openModal('match-modal')">
+            <div class="quick-action" onclick="openNewMatchModal()">
               <div class="qa-icon" style="background:rgba(99,102,241,.1);color:var(--accentL)"><i class="fa-solid fa-plus"></i></div>
-              <div><div class="qa-label">Create New Match</div><div class="qa-sub">Schedule upcoming tournament match</div></div>
+              <div><div class="qa-label">Create New Scrim</div><div class="qa-sub">Plan matches, maps &amp; scoring up front</div></div>
               <i class="fa-solid fa-chevron-right qa-arrow"></i>
             </div>
             <div class="quick-action" onclick="drawGroups()">
@@ -1483,7 +1482,7 @@ tr:last-child td{border-bottom:none}
           <div class="card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
               <div class="card-title" style="margin:0"><i class="fa-solid fa-gamepad"></i> Match Status</div>
-              <button class="btn btn-ghost btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New</button>
+              <button class="btn btn-ghost btn-sm" onclick="openNewMatchModal()"><i class="fa-solid fa-plus"></i> New</button>
             </div>
             <div id="ao-matches"></div>
           </div>
@@ -1497,13 +1496,15 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <!-- ░ ADMIN LOG RESULTS ░ -->
+      <!-- ░ ADMIN LOG RESULTS — always reached FROM a specific scrim in Scrim Management, never a standalone destination ░ -->
       <div class="page" id="page-admin-results">
         <div class="sh-row">
-          <div class="sh"><div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">Log results per tournament — add as many matches as you played, a different map each, team placements &amp; individual kills per match</div></div>
+          <div class="sh">
+            <button class="btn btn-ghost btn-xs" style="margin-bottom:.4rem" onclick="showPage('admin-matches')"><i class="fa-solid fa-arrow-left"></i> Back to Scrims</button>
+            <div class="sh-title">Log <span style="color:var(--accentL)">Results</span></div><div class="sh-sub">Log results for one scrim — add as many matches as you played, a different map each, team placements &amp; individual kills per match</div></div>
           <div style="display:flex;gap:.5rem;align-items:center">
             <select class="fi fsel" id="res-mid" style="min-width:180px" onchange="onMatchSelect()">
-              <option value="">— Select Tournament —</option>
+              <option value="">— Select Scrim —</option>
             </select>
           </div>
         </div>
@@ -1513,9 +1514,11 @@ tr:last-child td{border-bottom:none}
           <div id="res-meta-name" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem"></div>
           <div id="res-meta-map" class="chip chip-neutral" style="font-size:.72rem"></div>
           <div id="res-meta-status" class="chip" style="font-size:.72rem;cursor:pointer" onclick="cycleResMatchStatus()" title="Click to cycle: Upcoming → Live → Ended"></div>
+          <div id="res-meta-scoring" class="chip chip-accent" style="font-size:.68rem;display:none" title="This scrim uses its own custom scoring instead of the site-wide default"><i class="fa-solid fa-star"></i></div>
           <div style="margin-left:auto;display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="addResTeamSlot()"><i class="fa-solid fa-plus"></i> Add Team Slot</button>
-            <button class="btn btn-accent btn-sm" onclick="submitResults()" title="Tallies every kill entered above and marks the tournament Ended"><i class="fa-solid fa-flag-checkered"></i> End Tournament &amp; Save</button>
+            <button class="btn btn-accent btn-sm" onclick="saveGameResult(RES_GIDX)" title="Saves just the match you're currently on — you can keep going and save each match as you finish it"><i class="fa-solid fa-floppy-disk"></i> Save This Match</button>
+            <button class="btn btn-ghost btn-sm" style="border-color:var(--green);color:var(--green)" onclick="completeTournament()" title="Marks the whole scrim as finished once every match is logged"><i class="fa-solid fa-flag-checkered"></i> Complete Tournament</button>
           </div>
         </div>
         <!-- match tabs: a tournament is usually 1-4 matches, sometimes more, each a different map -->
@@ -1534,8 +1537,9 @@ tr:last-child td{border-bottom:none}
             </div>
             <div id="result-rows" style="display:flex;flex-direction:column;gap:.6rem"></div>
             <div id="res-save-row" style="display:none;margin-top:.8rem">
-              <button class="btn btn-accent btn-fw" onclick="submitResults()" title="Tallies every kill entered above and marks the tournament Ended"><i class="fa-solid fa-flag-checkered"></i> End Tournament &amp; Save Results</button>
-              <div style="font-size:.68rem;color:var(--textD);text-align:center;margin-top:.4rem">Add kills live with the <i class="fa-solid fa-plus"></i> button as the match plays out — this just tallies and closes it out when you're ready.</div>
+              <button class="btn btn-accent btn-fw" onclick="saveGameResult(RES_GIDX)" title="Saves just the match you're currently on"><i class="fa-solid fa-floppy-disk"></i> Save This Match's Results</button>
+              <button class="btn btn-ghost btn-fw" style="margin-top:.4rem;border-color:var(--green);color:var(--green)" onclick="completeTournament()" title="Marks the whole scrim as finished once every match is logged"><i class="fa-solid fa-flag-checkered"></i> Complete Tournament</button>
+              <div style="font-size:.68rem;color:var(--textD);text-align:center;margin-top:.4rem">Add kills live with the <i class="fa-solid fa-plus"></i> button as the match plays out. Save each match as it finishes, edit any of them any time, then Complete Tournament once you're done.</div>
             </div>
           </div>
 
@@ -1591,14 +1595,14 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ADMIN MATCHES ░ -->
       <div class="page" id="page-admin-matches">
         <div class="sh-row">
-          <div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Management</span></div><div class="sh-sub">Each tournament can hold as many matches as you like — add/remove them and set a different map per match while logging results</div></div>
+          <div class="sh"><div class="sh-title">Scrim <span style="color:var(--accentL)">Management</span></div><div class="sh-sub">Everything for one scrim lives here: plan its matches &amp; maps, approve team signups, reveal the lobby, and log results — one place, start to finish.</div></div>
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')"><i class="fa-solid fa-clipboard-list"></i> Signup Requests <span id="match-signup-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
             <button class="btn btn-ghost btn-sm" onclick="renderSmartSortModal();openModal('smart-sort-modal')"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</button>
-            <button class="btn btn-accent btn-sm" onclick="openModal('match-modal')"><i class="fa-solid fa-plus"></i> New Tournament</button>
+            <button class="btn btn-accent btn-sm" onclick="openNewMatchModal()"><i class="fa-solid fa-plus"></i> New Scrim</button>
           </div>
         </div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Tournament</th><th>Map</th><th>Status</th><th>Date/Time</th><th></th></tr></thead><tbody id="am-body"></tbody></table></div></div>
+        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Scrim</th><th>Matches</th><th>Status</th><th>Date/Time</th><th></th></tr></thead><tbody id="am-body"></tbody></table></div></div>
       </div>
 
       <!-- ░ ADMIN POLLS ░ -->
@@ -1823,7 +1827,7 @@ tr:last-child td{border-bottom:none}
                 <button class="btn btn-danger btn-fw" onclick="resetSec('players')"><i class="fa-solid fa-users-slash"></i> Clear All Players</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('teams')"><i class="fa-solid fa-shield-slash"></i> Clear All Teams</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('stats')"><i class="fa-solid fa-chart-simple"></i> Reset All Stats (Scrims + TDM)</button>
-                <button class="btn btn-danger btn-fw" onclick="resetSec('matchesOnly')"><i class="fa-solid fa-trophy"></i> Delete All Tournament Data (Matches + Results)</button>
+                <button class="btn btn-danger btn-fw" onclick="resetSec('matchesOnly')"><i class="fa-solid fa-trophy"></i> Delete All Scrim Data (Scrims + Results)</button>
                 <button class="btn btn-danger btn-fw" onclick="resetSec('tdmOnly')"><i class="fa-solid fa-skull-crossbones"></i> Clear TDM Stats Only</button>
                 <button class="btn btn-ghost btn-fw" onclick="resetSec('weekly')" style="border-color:rgba(99,102,241,.3)"><i class="fa-solid fa-calendar-week"></i> Reset Weekly Stats (for Player of the Week)</button>
                 <button class="btn btn-ghost btn-fw" onclick="postPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post Scrims Player of the Week Now</button>
@@ -1898,7 +1902,7 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><label class="fl">Date</label><input class="fi" id="tt-date" type="date"/></div>
               <div class="fg"><label class="fl">Time</label><input class="fi" id="tt-time" type="time"/></div>
             </div>
-            <button class="btn btn-accent btn-sm" onclick="createTdmTournament()"><i class="fa-solid fa-plus"></i> Create Tournament</button>
+            <button class="btn btn-accent btn-sm" onclick="createTdmTournament()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
           </div>
           <div id="tdm-tourney-list"></div>
         </div>
@@ -2025,7 +2029,7 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('done',this)">Ended</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('tdm',this)"><i class="fa-solid fa-skull-crossbones"></i> TDM</button>
             <button class="btn btn-ghost btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
-            <button class="btn btn-ghost btn-sm admin-only" onclick="openModal('match-modal')" style="display:none"><i class="fa-solid fa-plus"></i> New</button>
+            <button class="btn btn-ghost btn-sm admin-only" onclick="openNewMatchModal()" style="display:none"><i class="fa-solid fa-plus"></i> New</button>
           </div>
         </div>
         <div id="matches-list"></div>
@@ -2105,7 +2109,7 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ANALYTICS ░ -->
       <div class="page" id="page-analytics">
         <div class="sh-row" style="margin-bottom:.9rem">
-          <div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Analytics</span></div><div class="sh-sub">Deep stats across maps, teams, players & matches</div></div>
+          <div class="sh"><div class="sh-title">Scrims <span style="color:var(--accentL)">Analytics</span></div><div class="sh-sub">Deep stats across maps, teams, players & matches</div></div>
         </div>
         <div class="an-top-tabs" id="an-top-tabs">
           <button class="an-top-tab active" onclick="renderAnalytics('overview',this)"><i class="fa-solid fa-gauge-high"></i> Overview</button>
@@ -2210,18 +2214,29 @@ tr:last-child td{border-bottom:none}
 <div class="modal-overlay" id="match-modal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('match-modal')"><i class="fa-solid fa-xmark"></i></button>
-    <div class="modal-title">Create Tournament</div>
-    <div class="fg"><label class="fl">Tournament Name</label><input class="fi" id="mm-n" placeholder="Erangel Grand Finals"/></div>
-    <div class="frow"><div class="fg"><label class="fl">Map <span style="font-weight:400;color:var(--textD)">(match 1 — add more matches, each on its own map, while logging results)</span></label><select class="fi fsel" id="mm-map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Livik</option><option>Karakin</option><option>Taego</option><option>Deston</option><option>Rondo</option><option>Nusa</option></select></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div></div>
-    <div class="frow"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div></div>
-    <div class="frow"><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md" onchange="mmSyncTeamSize()"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div><div class="fg"><label class="fl">Total Player Slots</label><input class="fi" id="mm-players" type="number" value="80" min="1" oninput="mmAutoCalc()"/></div></div>
-    <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem">
-      <div style="flex-shrink:0"><div class="fl" style="margin-bottom:.3rem">Players / team</div><input class="fi" id="mm-teamsize" type="number" value="4" min="1" style="width:64px;text-align:center" oninput="mmAutoCalc()"/></div>
-      <div style="flex:1;text-align:right"><div style="font-size:.65rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Team slots (auto)</div><div id="mm-mt-display" style="font-size:1.35rem;font-weight:800;color:var(--accentL);line-height:1.2">20 teams</div></div>
+    <div class="modal-title" id="mm-modal-title">Create Scrim</div>
+    <div class="fg"><label class="fl">Scrim Name</label><input class="fi" id="mm-n" placeholder="Erangel Grand Finals"/></div>
+    <div class="fg">
+      <label class="fl">Matches in this Scrim <span style="font-weight:400;color:var(--textD)">(plan the map for each match up front, in order — players see the full sequence before it starts. You can still add/remove matches later while logging results.)</span></label>
+      <div id="mm-matches-list" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.5rem"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="mmAddMatchRow()"><i class="fa-solid fa-plus"></i> Add Match</button>
     </div>
+    <div class="frow"><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md" onchange="mmSyncTeamSize()"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div></div>
+    <div class="frow"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div></div>
+    <div class="frow"><div class="fg"><label class="fl">Total Player Slots</label><input class="fi" id="mm-players" type="number" value="80" min="1" oninput="mmAutoCalc()"/></div><div class="fg" style="display:flex;align-items:flex-end"><div style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.55rem .9rem;display:flex;align-items:center;gap:.8rem">
+      <div style="flex-shrink:0"><div class="fl" style="margin-bottom:.3rem">Players / team</div><input class="fi" id="mm-teamsize" type="number" value="4" min="1" style="width:64px;text-align:center" oninput="mmAutoCalc()"/></div>
+      <div style="flex:1;text-align:right"><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Team slots (auto)</div><div id="mm-mt-display" style="font-size:1.15rem;font-weight:800;color:var(--accentL);line-height:1.2">20 teams</div></div>
+    </div></div></div>
     <input type="hidden" id="mm-mt" value="20"/>
-    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this tournament</label>
-    <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Tournament</button>
+    <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:1rem">
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;cursor:pointer"><input type="checkbox" id="mm-custom-scoring" onchange="toggleMMScoring()" style="width:16px;height:16px"/> Custom scoring for this scrim <span style="font-weight:400;color:var(--textD)">(otherwise it uses the site-wide default in Settings)</span></label>
+      <div id="mm-scoring-wrap" style="display:none;margin-top:.8rem">
+        <div class="fg" style="max-width:160px"><label class="fl">Points per Kill</label><input class="fi" id="mm-kill-pt" type="number" step="0.5" min="0"/></div>
+        <div id="mm-placement-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:.5rem"></div>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this scrim</label>
+    <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
   </div>
 </div>
 
@@ -3512,7 +3527,7 @@ function anMaps(el){
     ${anKpi(matchCount>0?Math.round(totalKills/matchCount):0,'Avg Kills / Match','var(--amber)','chart-bar')}
     ${anKpi(fraggers.length,'Players Competed','var(--green)','users')}
   </div>
-  ${matchCount===0?`<div class="card" style="text-align:center;padding:2.5rem"><i class="fa-solid fa-map" style="font-size:2rem;opacity:.2;display:block;margin-bottom:.8rem"></i><div style="font-weight:700;margin-bottom:.3rem">No data for ${AN_MAP} yet</div><div class="text-dim" style="font-size:.85rem">Log match results on this map to see analytics</div><button class="btn btn-accent btn-sm" style="margin-top:1rem" onclick="showPage('admin-results')"><i class="fa-solid fa-plus"></i> Log Results</button></div>`:`
+  ${matchCount===0?`<div class="card" style="text-align:center;padding:2.5rem"><i class="fa-solid fa-map" style="font-size:2rem;opacity:.2;display:block;margin-bottom:.8rem"></i><div style="font-weight:700;margin-bottom:.3rem">No data for ${AN_MAP} yet</div><div class="text-dim" style="font-size:.85rem">Log match results on this map to see analytics</div><button class="btn btn-accent btn-sm" style="margin-top:1rem" onclick="showPage('admin-matches')"><i class="fa-solid fa-plus"></i> Log Results</button></div>`:`
   <!-- Spotlights -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.2rem">
     ${topFragger?`<div class="mab-card red"><div style="font-size:.65rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.9px;margin-bottom:.4rem"><i class="fa-solid fa-crosshairs"></i> Top Fragger on ${AN_MAP}</div>
@@ -3931,13 +3946,13 @@ function refreshDLs(){
   if(mSel){
     const cur=mSel.value;
     const opts=ms.map(m=>`<option value="${m.id}">${m.name||m.id} · ${m.map||''}${m.status?' ('+m.status+')':''}</option>`).join('');
-    mSel.innerHTML='<option value="">— Select Match —</option>'+opts;
+    mSel.innerHTML='<option value="">— Select Scrim —</option>'+opts;
     if(cur)mSel.value=cur;
   }
 }
 
 // ═══ PAGES ═══
-const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Match Management','admin-polls':'Poll Management','admin-settings':'Settings','leaderboard':'Leaderboard','groups':'Group Stage','teams':'Teams','matches':'Matches','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
+const PAGE_TITLES={'dashboard':'Dashboard','admin-overview':'Admin Overview','admin-results':'Log Results','admin-players':'Player Management','admin-teams':'Team Management','admin-matches':'Scrims','admin-polls':'Poll Management','admin-settings':'Settings','leaderboard':'Leaderboard','groups':'Group Stage','teams':'Teams','matches':'Schedule','profile':'My Profile','compare':'Compare Players','community':'Community','analytics':'Analytics','tdm':'Team Deathmatch','debug':'Debug Panel'};
 function openSidebar(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('mobile-backdrop')?.classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('mobile-backdrop')?.classList.remove('show');}
 function showPage(n){
@@ -6360,13 +6375,22 @@ function renderGroups(){
 }
 
 // ═══ RESULT ENTRY ═══
-// A scrims "session" (one Match entity) can span several individual games — usually 1-4, sometimes
-// more — each played on a different map. RES_GAMES holds all of them; RES_SLOTS (below) always
-// points at whichever game is currently being edited. Ending the match sums placement+kill points
-// for every player/team across every game into a single combined log entry.
+// A Scrim (one Match entity — renamed "Scrim" in the UI) can span several individual Matches —
+// usually 1-4, sometimes more — each played on a different map, planned up front when the scrim
+// is created (mm-matches-list) so players can see the full running order before it starts.
+// RES_GAMES holds all of them; RES_SLOTS (below) always points at whichever one is currently
+// being edited. Ending the scrim sums placement+kill points for every player/team across every
+// match into a single combined log entry.
 let RES_GAMES = []; // [{map, slots:[{placement,teamId,players:[{ign,kills,elim}]}]}]
 let RES_GIDX = 0;   // index into RES_GAMES currently shown
 let RES_SLOTS = []; // convenience alias -> RES_GAMES[RES_GIDX].slots
+// The scoring actually in effect for whichever scrim is currently selected in Log Results — a
+// scrim created with "Custom scoring" checked carries its own {placementPts,killPts} on the
+// match record (m.scoring) which overrides the site-wide default for every match inside it.
+let CUR_PLACEMENT_PTS = PLACEMENT_PTS;
+let CUR_KILL_PT = KILL_PT;
+function scrimPlacementPts(m){return (m&&m.scoring&&Array.isArray(m.scoring.placementPts)&&m.scoring.placementPts.length===20)?m.scoring.placementPts:PLACEMENT_PTS;}
+function scrimKillPt(m){return (m&&m.scoring&&typeof m.scoring.killPts==='number')?m.scoring.killPts:KILL_PT;}
 
 function onMatchSelect(){
   const mid = document.getElementById('res-mid')?.value;
@@ -6379,9 +6403,11 @@ function onMatchSelect(){
     if(metaBar){metaBar.style.display='none';}
     if(saveRow){saveRow.style.display='none';}
     if(rr){rr.innerHTML='';}
-    RES_GAMES=[];RES_SLOTS=[];renderGameTabs();return;
+    RES_GAMES=[];RES_SLOTS=[];CUR_PLACEMENT_PTS=PLACEMENT_PTS;CUR_KILL_PT=KILL_PT;renderGameTabs();return;
   }
   const ms=DB.get('matches');const m=ms.find(x=>x.id===mid);
+  CUR_PLACEMENT_PTS=scrimPlacementPts(m);
+  CUR_KILL_PT=scrimKillPt(m);
   if(noMatch)noMatch.style.display='none';
   if(metaBar)metaBar.style.display='flex';
   if(saveRow)saveRow.style.display='block';
@@ -6389,18 +6415,62 @@ function onMatchSelect(){
     const nn=document.getElementById('res-meta-name');if(nn)nn.textContent=m.name||m.id;
     const nm=document.getElementById('res-meta-map');if(nm)nm.textContent=(MI[m.map]||'🗺')+' '+(m.map||'—');
     const ns=document.getElementById('res-meta-status');if(ns){const sc=m.status==='live'?'chip-red':m.status==='done'?'chip-accent':'chip-neutral';ns.className='chip '+sc;ns.style.fontSize='.72rem';ns.style.cursor='pointer';ns.textContent=m.status||'scheduled';}
+    const sb=document.getElementById('res-meta-scoring');
+    if(sb){
+      if(m.scoring){sb.style.display='inline-flex';sb.innerHTML=`<i class="fa-solid fa-star"></i> Custom scoring · ${m.scoring.killPts}pt/kill`;}
+      else{sb.style.display='none';}
+    }
   }
   // Auto-detect teams in match from bracket/groups or just create 4 empty slots
   const teams=DB.get('teams').filter(t=>t.approved);
   // Pre-populate with teams that were registered (up to 4 for a typical PUBG match)
   const firstSlots = teams.slice(0,4).map((t,i)=>({placement:i+1,teamId:t.id,players:buildPlayersForTeam(t.id)}));
   while(firstSlots.length<4) firstSlots.push({placement:firstSlots.length+1,teamId:'',players:[]});
-  RES_GAMES = [{map:m?m.map:'',slots:firstSlots}];
+  // Seed RES_GAMES straight from the map sequence planned when the scrim was created, so the
+  // full running order the admin (and players) already saw is exactly what's ready to log —
+  // creating the scrim and logging its results happen in the same planned sequence. If some
+  // matches were already saved in a previous session (m.draftGames), resume from that instead
+  // of rebuilding blank slots, so nothing entered earlier is lost.
+  if(m&&Array.isArray(m.draftGames)&&m.draftGames.length){
+    RES_GAMES = m.draftGames.map(g=>({map:g.map||'',saved:!!g.saved,slots:(g.slots||[]).map(s=>({placement:s.placement,teamId:s.teamId||'',players:(s.players||[]).map(p=>({...p}))}))}));
+  }else{
+    const seq=(m&&Array.isArray(m.mapSequence)&&m.mapSequence.length)?m.mapSequence:[m?m.map:''];
+    RES_GAMES = seq.map((mapName,i)=>i===0
+      ?{map:mapName||'',slots:firstSlots}
+      :{map:mapName||'',slots:firstSlots.map((s,j)=>({placement:j+1,teamId:s.teamId,players:buildPlayersForTeam(s.teamId)}))});
+  }
   RES_GIDX = 0;
   RES_SLOTS = RES_GAMES[0].slots;
   renderGameTabs();
   renderResSlots();
 }
+
+// Persists whichever match tab is currently open onto the scrim itself (m.draftGames) — nothing
+// here touches player/team stats, that only happens once, in completeTournament() below. This is
+// what lets a host save Match 1 right after it happens, close the tab, and come back later to
+// log Match 2 without losing anything — and lets any saved match be reopened and edited freely.
+function saveGameResult(gi){
+  const mid = document.getElementById('res-mid')?.value;
+  if(!mid)return notify('No scrim selected','Pick a scrim first','n-bad');
+  if(!RES_GAMES[gi])return;
+  const filled=RES_GAMES[gi].slots.some(s=>s.teamId&&s.players.length);
+  if(!filled)return notify('Nothing to save','Add at least one team with players to this match first','n-bad');
+  RES_GAMES[gi].saved=true;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===mid);
+  if(m){
+    m.draftGames=RES_GAMES.map(g=>({map:g.map||'',saved:!!g.saved,slots:g.slots.map(s=>({placement:s.placement,teamId:s.teamId||'',players:s.players.map(p=>({...p}))}))}));
+    DB.set('matches',ms);
+  }
+  renderGameTabs();
+  notify(`Match ${gi+1} saved`,'Progress kept — edit it any time, or move on to the next match. Use "Complete Tournament" once every match is done.','n-ok');
+}
+
+// The finale: aggregates every match currently in RES_GAMES (saved or not — anything filled in
+// counts) into one combined result, applies the points to every player/team exactly once, marks
+// the scrim Ended, and clears the in-progress draft since it's now been folded into the
+// permanent result log. This is the same aggregation submitResults() always did — just reachable
+// under the name/button the host actually sees ("Complete Tournament").
+function completeTournament(){ submitResults(); }
 
 // Adds the next game in this scrims session — same team roster carried over (placements/kills
 // reset), different map. Nothing here touches the previous game's data.
@@ -6444,7 +6514,7 @@ function renderGameTabs(){
   wrap.innerHTML=`
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;flex:1">
       ${RES_GAMES.map((g,gi)=>`<button class="btn ${gi===RES_GIDX?'btn-accent':'btn-ghost'} btn-sm" onclick="switchResGame(${gi})" style="position:relative">
-        Match ${gi+1}${g.map?` · ${MI[g.map]||''} ${g.map}`:''}
+        ${g.saved?'<i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:.25rem"></i>':''}Match ${gi+1}${g.map?` · ${MI[g.map]||''} ${g.map}`:''}
         ${RES_GAMES.length>1?`<span onclick="event.stopPropagation();removeResGame(${gi})" style="margin-left:.4rem;opacity:.7" title="Remove match"><i class="fa-solid fa-xmark"></i></span>`:''}
       </button>`).join('')}
       <button class="btn btn-ghost btn-sm" onclick="addResGame()" title="Add the next match in this tournament — 1-4 matches is typical, add as many as you like, each with its own map"><i class="fa-solid fa-plus"></i> Add Match</button>
@@ -6454,7 +6524,7 @@ function renderGameTabs(){
         <option value="">— Map for Match ${RES_GIDX+1} —</option>${mapOpts}
       </select>
     </div>
-    ${RES_GAMES.length>1?`<div style="font-size:.68rem;color:var(--textD);width:100%;margin-top:.3rem"><i class="fa-solid fa-circle-info"></i> Ending the tournament sums placement + kill points across all ${RES_GAMES.length} matches into one combined result.</div>`:''}
+    <div style="font-size:.68rem;color:var(--textD);width:100%;margin-top:.3rem"><i class="fa-solid fa-circle-info"></i> Save each match's results as you go (<i class="fa-solid fa-circle-check" style="color:var(--green)"></i> marks a saved match) — you can come back and edit any of them any time. Use "Complete Tournament" once every match here is done.</div>
   `;
   const sel=document.getElementById(`res-game-map-${RES_GIDX}`);
   if(sel&&RES_GAMES[RES_GIDX])sel.value=RES_GAMES[RES_GIDX].map||'';
@@ -6482,9 +6552,18 @@ function onResTeamChange(i){
   const tid=sel.value;
   RES_SLOTS[i].teamId=tid;
   RES_SLOTS[i].players=buildPlayersForTeam(tid);
+  markResGameUnsaved();
   renderResSlots();
   // focus kills of first player
   setTimeout(()=>{const k=document.getElementById(`res-k-${i}-0`);if(k)k.focus();},50);
+}
+
+// Editing anything in a match that was already Saved un-marks it (clears the checkmark on its
+// tab) so it's obvious that match now has changes waiting to be saved again — "edit any of them
+// any time" shouldn't silently leave the checkmark showing stale data.
+function markResGameUnsaved(){
+  const g=RES_GAMES[RES_GIDX];
+  if(g&&g.saved){g.saved=false;renderGameTabs();}
 }
 
 // Tap-to-add, exactly like the TDM live scoring buttons — for logging kills as they happen
@@ -6499,8 +6578,9 @@ function onResKillChange(i,j){
   const k=document.getElementById(`res-k-${i}-${j}`);
   if(!k||!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
   RES_SLOTS[i].players[j].kills=parseInt(k.value)||0;
+  markResGameUnsaved();
   // Update this player's pts display
-  const pPts=(RES_SLOTS[i].players[j].kills||0)*KILL_PT;
+  const pPts=(RES_SLOTS[i].players[j].kills||0)*CUR_KILL_PT;
   const pp=document.getElementById(`res-ppts-${i}-${j}`);
   if(pp)pp.textContent=pPts||'—';
   // Live-update the team card's header (Team Kills / Total Pts) and the breakdown line at the
@@ -6508,8 +6588,8 @@ function onResKillChange(i,j){
   // does the team have in total" number only ever refreshed on the next full re-render (i.e. not
   // as you typed each kill).
   const teamKills=RES_SLOTS[i].players.reduce((a,p)=>a+(p.kills||0),0);
-  const placePts=PLACEMENT_PTS[RES_SLOTS[i].placement-1]||0;
-  const killPts=teamKills*KILL_PT;
+  const placePts=CUR_PLACEMENT_PTS[RES_SLOTS[i].placement-1]||0;
+  const killPts=teamKills*CUR_KILL_PT;
   const totalPts=placePts+killPts;
   const tk=document.getElementById(`res-teamkills-${i}`);if(tk)tk.textContent=teamKills;
   const tp=document.getElementById(`res-totalpts-${i}`);if(tp)tp.textContent=totalPts;
@@ -6531,8 +6611,8 @@ function updateResPointsBar(){
       const tn=t?t.name:'?';
       const tcolor=t?.color||'var(--accent)';
       const kills=slot.players.reduce((a,p)=>a+(p.kills||0),0);
-      const placePts=PLACEMENT_PTS[slot.placement-1]||0;
-      const total=placePts+kills*KILL_PT;
+      const placePts=CUR_PLACEMENT_PTS[slot.placement-1]||0;
+      const total=placePts+kills*CUR_KILL_PT;
       const pl=slot.placement;const plLabel=pl===1?'🥇':pl===2?'🥈':pl===3?'🥉':`#${pl}`;
       return `<span style="background:var(--bg3);border:1px solid ${tcolor}25;border-radius:5px;padding:.2rem .5rem;font-size:.7rem;display:inline-flex;align-items:center;gap:.3rem"><span style="color:${tcolor};font-weight:700">${plLabel} ${tn}</span><span style="color:var(--accentL);font-family:'DM Mono',monospace;font-weight:700">${total}pts</span></span>`;
     }).join('')}
@@ -6542,6 +6622,7 @@ function updateResPointsBar(){
 function toggleElim(i,j){
   if(!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
   RES_SLOTS[i].players[j].elim=!RES_SLOTS[i].players[j].elim;
+  markResGameUnsaved();
   const btn=document.getElementById(`res-e-${i}-${j}`);
   if(btn){btn.classList.toggle('elim',RES_SLOTS[i].players[j].elim);btn.textContent=RES_SLOTS[i].players[j].elim?'☠ Dead':'Alive';}
 }
@@ -6556,8 +6637,8 @@ function renderResSlots(){
     const t=teams.find(x=>x.id===slot.teamId);
     const players=slot.players;
     const teamKills=players.reduce((a,p)=>a+(p.kills||0),0);
-    const placePts=PLACEMENT_PTS[slot.placement-1]||0;
-    const killPts=teamKills*KILL_PT;
+    const placePts=CUR_PLACEMENT_PTS[slot.placement-1]||0;
+    const killPts=teamKills*CUR_KILL_PT;
     const totalPts=placePts+killPts;
     return `<div class="res-team-card">
       <div class="res-team-header">
@@ -6588,7 +6669,7 @@ function renderResSlots(){
           <span style="font-size:.6rem;font-weight:700;color:var(--accentL);text-transform:uppercase;letter-spacing:.5px;width:40px;text-align:center">Pts</span>
         </div>
         ${players.length?players.map((p,j)=>{
-          const pPts=(p.kills||0)*KILL_PT;
+          const pPts=(p.kills||0)*CUR_KILL_PT;
           return `<div style="display:grid;grid-template-columns:1fr 46px 26px 60px 40px;gap:.3rem;margin-bottom:.3rem;align-items:center">
             <div class="res-ign-label" onclick="openProfileByIgn('${p.ign}')">${p.ign}</div>
             <input class="res-kills-in" id="res-k-${i}-${j}" type="number" min="0" max="99" value="${p.kills||''}" placeholder="0" oninput="onResKillChange(${i},${j})" ${p.elim?'style="opacity:.4"':''}/>
@@ -6638,6 +6719,10 @@ function submitResults(){
   const pl=DB.get('players');const logs=DB.get('rlogs5',[]);
   const ms=DB.get('matches');const matchObj=ms.find(x=>x.id===mid);
   const teams=DB.get('teams');
+  // Score with whatever this scrim's own scoring is (custom, if it was set when the scrim was
+  // created) rather than always the site-wide default — matches CUR_PLACEMENT_PTS/CUR_KILL_PT,
+  // which onMatchSelect() already loaded for this exact scrim.
+  const scPts=scrimPlacementPts(matchObj), scKill=scrimKillPt(matchObj);
 
   // Combined totals across every game in this session — teamId -> {name, placePts, killPts, kills, wins, gamesCount, placements:[]}
   const teamTotals={};
@@ -6654,9 +6739,9 @@ function submitResults(){
       const t=teams.find(x=>x.id===slot.teamId);
       const tn=t?t.name:'';
       const place=slot.placement;
-      const placePts=PLACEMENT_PTS[place-1]||0;
+      const placePts=scPts[place-1]||0;
       const teamKills=slot.players.reduce((a,sp)=>a+(sp.kills||0),0);
-      const killPts=teamKills*KILL_PT;
+      const killPts=teamKills*scKill;
       const totalTeamPts=placePts+killPts;
 
       if(!teamTotals[slot.teamId])teamTotals[slot.teamId]={teamId:slot.teamId,teamName:tn,placePts:0,killPts:0,totalPts:0,kills:0,wins:0,games:0,placements:[]};
@@ -6668,14 +6753,14 @@ function submitResults(){
 
       slot.players.forEach(sp=>{
         if(!sp.ign)return;
-        const playerPts=(sp.kills||0)*KILL_PT+(place===1?Math.round(placePts/Math.max(slot.players.length,1)):0);
+        const playerPts=(sp.kills||0)*scKill+(place===1?Math.round(placePts/Math.max(slot.players.length,1)):0);
         if(!playerTotals[sp.ign])playerTotals[sp.ign]={ign:sp.ign,team:tn,kills:0,pts:0,wins:0,deaths:0,games:0,bestGameKills:0};
         const pt=playerTotals[sp.ign];
         pt.kills+=(sp.kills||0);pt.pts+=playerPts;pt.games+=1;pt.bestGameKills=Math.max(pt.bestGameKills,sp.kills||0);
         if(!sp.elim&&place===1)pt.wins+=1;
         if(sp.elim||place>1)pt.deaths+=1;
         if(place===1&&!pt.firstWinInSession)pt.firstWinInSession=true;
-        entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*KILL_PT,pts:playerPts,team:tn,map:game.map,game:gi+1,ts:new Date().toLocaleTimeString()});
+        entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*scKill,pts:playerPts,team:tn,map:game.map,game:gi+1,ts:new Date().toLocaleTimeString()});
       });
     });
     perGameSummaries.push({map:game.map,summary:gameSummary});
@@ -6712,9 +6797,9 @@ function submitResults(){
   const mapsPlayed=RES_GAMES.map(g=>g.map).filter(Boolean);
 
   DB.set('players',pl);DB.set('teams',teams);
-  const logEntry={id:'log'+Date.now(),matchId:mid,matchName:matchObj?matchObj.name:mid,map:mapsPlayed.join(', ')||(matchObj?matchObj.map:''),gamesCount:RES_GAMES.length,maps:mapsPlayed,winnerIGN,winnerTeam,entries,matchSummary,perGameSummaries,slots:matchSummary.map(s=>({...s})),ts:new Date().toLocaleString()};
+  const logEntry={id:'log'+Date.now(),matchId:mid,matchName:matchObj?matchObj.name:mid,map:mapsPlayed.join(', ')||(matchObj?matchObj.map:''),gamesCount:RES_GAMES.length,maps:mapsPlayed,winnerIGN,winnerTeam,entries,matchSummary,perGameSummaries,slots:matchSummary.map(s=>({...s})),scoringUsed:{placementPts:scPts.slice(),killPts:scKill},ts:new Date().toLocaleString()};
   logs.unshift(logEntry);if(logs.length>100)logs.pop();DB.set('rlogs5',logs);
-  if(matchObj){matchObj.status='done';DB.set('matches',ms);}
+  if(matchObj){matchObj.status='done';delete matchObj.draftGames;DB.set('matches',ms);}
   renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();buildTicker();renderAdminOverview();renderTeams();
   if(matchObj){
     const topFragger=entries.length?[...entries].sort((a,b)=>b.kills-a.kills)[0]:null;
@@ -6812,7 +6897,7 @@ function renderResultLogs(){
               ${gamesCount>1&&e.map?`<span style="font-size:.6rem;color:var(--textD)">G${e.game} ${MI[e.map]||''}${e.map}</span>`:''}
               <span class="chip chip-red" style="font-size:.6rem">${e.kills}K</span>
               ${e.elim?'<span style="font-size:.65rem;color:var(--red)">☠</span>':'<span style="font-size:.65rem;color:var(--green)">✓</span>'}
-              <span style="font-size:.62rem;color:var(--accentL);font-family:'DM Mono',monospace">${(e.kills||0)*KILL_PT}pts</span>
+              <span style="font-size:.62rem;color:var(--accentL);font-family:'DM Mono',monospace">${e.killPts!=null?e.killPts:(e.kills||0)*KILL_PT}pts</span>
             </div>`).join('')}
           </div>`;
         }).join('')}
@@ -6930,7 +7015,7 @@ function profileMatchHistoryHTML(p){
     const totalKills=myEntries.reduce((a,e)=>a+e.kills,0);
     const pl=myEntries[0]?.placement;const plLabel=pl===1?'🥇 1st':pl===2?'🥈 2nd':pl===3?'🥉 3rd':pl?`#${pl}`:'—';
     const plColor=pl===1?'var(--amber)':pl===2?'#94a3b8':pl===3?'#cd7f32':'var(--textD)';
-    const pts=(myEntries[0]?.placePts||0)+(totalKills*KILL_PT);
+    const pts=myEntries.reduce((a,e)=>a+(e.pts!=null?e.pts:(e.placePts||0)+(e.kills||0)*KILL_PT),0);
     return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem .7rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);margin-bottom:.4rem">
       <div style="font-size:.82rem;font-weight:700;color:${plColor};width:50px;flex-shrink:0">${plLabel}</div>
       <div style="flex:1;min-width:0">
@@ -7414,7 +7499,7 @@ function renderLB(){
     return((b.gamesPlayed||b.kills+b.deaths)||0)-((a.gamesPlayed||a.kills+a.deaths)||0);
   });
   const pod=document.getElementById('podium');
-  if(pod){const t3=s.slice(0,3);const co=['#94a3b8','#f59e0b','#cd7f32'];const podH=['120px','155px','100px'];const order=[t3[1],t3[0],t3[2]];
+  if(pod){const t3=s.slice(0,3);const co=['#f59e0b','#94a3b8','#cd7f32'];const podH=['155px','120px','100px'];const order=[t3[1],t3[0],t3[2]];
     pod.innerHTML=order.filter(Boolean).map((p,vi)=>{const rk=vi===1?1:vi===0?2:3;const cl=co[rk-1];const em=rk===1?'<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>':rk===2?'<i class="fa-solid fa-medal" style="color:#94a3b8"></i>':'<i class="fa-solid fa-medal" style="color:#cd7f32"></i>';
       const metric=f==='points'?`${p.points||0}pts`:f==='kd'?(p.kills/(p.deaths||1)).toFixed(1)+'K/D':f==='wins'?p.wins+'W':`${p.kills}K`;
       return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${p.ign[0]}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||p.rank||''}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${metric}</div></div></div>`;
@@ -7593,7 +7678,9 @@ function renderMatches(filter='all'){
         signupBtn=`<span class="chip chip-accent" style="font-size:.66rem">Requested</span>`;
       }
     }
-    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
+    const seq=(Array.isArray(m.mapSequence)&&m.mapSequence.length>1)?m.mapSequence:null;
+    const seqLine=seq?`<div class="match-meta" style="margin-top:.15rem;font-size:.72rem"><i class="fa-solid fa-list-ol" style="opacity:.6;margin-right:.3rem"></i>${seq.map((mp,i)=>`${i+1}. ${mp||'TBD'}`).join('  →  ')}</div>`:'';
+    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
 }
 // ═══ TEAM LOBBY — a visual chart of every team registered for a match, in either a slot Grid
@@ -7812,7 +7899,78 @@ function mmAutoCalc(){
   const disp=document.getElementById('mm-mt-display');if(disp)disp.textContent=`${teams} team${teams===1?'':'s'}`;
   const hidden=document.getElementById('mm-mt');if(hidden)hidden.value=teams;
 }
-function createMatch(){const name=v('mm-n');if(!name)return notify('Name required','','n-bad');mmAutoCalc();const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');ms.push({id,name,map:v('mm-map'),status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]});DB.set('matches',ms);closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();notify(`Tournament #${id} created!`,`${v('mm-mt')} team slots for ${v('mm-players')} players`,'n-ok');}
+function createMatch(){
+  const name=v('mm-n');if(!name)return notify('Name required','','n-bad');
+  mmAutoCalc();
+  // Read the planned map sequence straight from the rows the admin built — this is the full
+  // running order players will see before the scrim starts (Match 1, Match 2, ...).
+  const mapSequence=MM_MATCHES.map(r=>r.map||'');
+  if(!mapSequence.length)mapSequence.push('');
+  let scoring=null;
+  if(document.getElementById('mm-custom-scoring')?.checked){
+    const placementPts=[];
+    for(let i=0;i<20;i++){const el=document.getElementById(`mm-place-${i}`);placementPts.push(el?(Number(el.value)||0):0);}
+    const kpEl=document.getElementById('mm-kill-pt');
+    scoring={placementPts,killPts:kpEl?(Number(kpEl.value)||0):DEFAULT_KILL_PT};
+  }
+  const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');
+  ms.push({id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]});
+  DB.set('matches',ms);
+  closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();
+  notify(`Scrim #${id} created!`,`${mapSequence.length} match${mapSequence.length===1?'':'es'} planned · ${v('mm-mt')} team slots for ${v('mm-players')} players`,'n-ok');
+  return id;
+}
+
+// ── "Matches in this Scrim" builder — lets the host lay out the full map sequence (Match 1,
+// Match 2, ...) before the scrim starts, so players can see the whole running order up front.
+// MM_MATCHES only exists while the Create Scrim modal is open; createMatch() reads it into the
+// new scrim's mapSequence when saving.
+let MM_MATCHES=[];
+function openNewMatchModal(){
+  MM_MATCHES=[{map:''}];
+  const nameEl=document.getElementById('mm-n');if(nameEl)nameEl.value='';
+  const cs=document.getElementById('mm-custom-scoring');if(cs)cs.checked=false;
+  const wrap=document.getElementById('mm-scoring-wrap');if(wrap)wrap.style.display='none';
+  mmRenderMatchesList();
+  openModal('match-modal');
+}
+function mmAddMatchRow(){MM_MATCHES.push({map:''});mmRenderMatchesList();}
+function mmRemoveMatchRow(i){
+  if(MM_MATCHES.length<=1)return notify('Need at least one match','A scrim needs at least one planned match','n-bad');
+  MM_MATCHES.splice(i,1);mmRenderMatchesList();
+}
+function mmSetMatchMap(i,val){if(MM_MATCHES[i])MM_MATCHES[i].map=val;}
+function mmRenderMatchesList(){
+  const wrap=document.getElementById('mm-matches-list');if(!wrap)return;
+  const mapOpts=Object.keys(MI||{}).map(mk=>`<option value="${mk}">${MI[mk]} ${mk}</option>`).join('');
+  wrap.innerHTML=MM_MATCHES.map((r,i)=>`
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span style="font-size:.7rem;font-weight:700;color:var(--textD);width:56px;flex-shrink:0">Match ${i+1}</span>
+      <select class="fi fsel" style="margin:0" onchange="mmSetMatchMap(${i},this.value)">
+        <option value="">— Pick map —</option>${mapOpts}
+      </select>
+      ${MM_MATCHES.length>1?`<button type="button" class="btn btn-ghost btn-xs" onclick="mmRemoveMatchRow(${i})" title="Remove"><i class="fa-solid fa-xmark"></i></button>`:'<span style="width:26px"></span>'}
+    </div>`).join('');
+  MM_MATCHES.forEach((r,i)=>{
+    const sel=wrap.children[i]?.querySelector('select');
+    if(sel)sel.value=r.map||'';
+  });
+}
+function toggleMMScoring(){
+  const on=!!document.getElementById('mm-custom-scoring')?.checked;
+  const wrap=document.getElementById('mm-scoring-wrap');if(!wrap)return;
+  wrap.style.display=on?'block':'none';
+  if(on)mmRenderPlacementGrid();
+}
+function mmRenderPlacementGrid(){
+  const grid=document.getElementById('mm-placement-grid');if(!grid)return;
+  grid.innerHTML=PLACEMENT_PTS.map((pts,i)=>`
+    <div class="fg" style="margin:0">
+      <label class="fl" style="font-size:.62rem">${ordinal(i+1)}</label>
+      <input class="fi" id="mm-place-${i}" type="number" step="0.5" min="0" value="${pts}" style="padding:.4rem .5rem;text-align:center;font-size:.8rem"/>
+    </div>`).join('');
+  const kp=document.getElementById('mm-kill-pt');if(kp)kp.value=KILL_PT;
+}
 
 // ═══ COMPARE ═══
 function renderCmpSelects(){const pl=DB.get('players');['cmp1','cmp2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— Select Player —</option>'+pl.map(p=>`<option value="${p.id}">${p.ign} (${p.team||p.rank})</option>`).join('');if(cur)s.value=cur;});}
@@ -8442,7 +8600,46 @@ function saveProfileWebhook(){
   p.webhook=wh;DB.set('players',players);notify('Webhook saved!','','n-ok');
 }
 function delTeam(id){if(!ADM)return;let t=DB.get('teams');const target=t.find(x=>x.id===id);t=t.filter(x=>x.id!==id);DB.set('teams',t);renderATeams();renderTeams();if(target)logAdminAction('Team removed',`${target.name} was removed/rejected`);notify('Team removed','','n-ok');}
-function renderAMatches(){const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;const logs=DB.get('rlogs5',[]);body.innerHTML=ms.map(m=>{const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';const hasResults=logs.some(l=>l.matchId===m.id);return `<tr><td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td><td style="font-weight:600">${m.name}</td><td>${MI[m.map]||''} ${m.map}</td><td><span class="chip ${sc}">${m.status}</span></td><td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')" title="Cycle status"><i class="fa-solid fa-arrows-rotate"></i></button>${hasResults?`<button class="btn btn-ghost btn-xs" onclick="clearMatchResults('${m.id}')" title="Clear logged results & roll back stats, keep the match"><i class="fa-solid fa-eraser"></i></button>`:''}<button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')" title="Delete match &amp; its results"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');}
+function renderAMatches(){
+  const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;const logs=DB.get('rlogs5',[]);
+  const reqs=DB.get('matchRequests',[]).filter(r=>r.status==='pending');
+  body.innerHTML=ms.map(m=>{
+    const sc=m.status==='live'?'chip-red':m.status==='upcoming'?'chip-blue':'chip-green';
+    const hasResults=logs.some(l=>l.matchId===m.id);
+    const seq=(Array.isArray(m.mapSequence)&&m.mapSequence.length)?m.mapSequence:[m.map];
+    const seqHtml=seq.map((mp,i)=>`<span title="Match ${i+1}">${MI[mp]||'🗺'} ${mp||'—'}</span>`).join('<span style="opacity:.35;margin:0 .3rem">→</span>');
+    const pending=reqs.filter(r=>r.matchId===m.id).length;
+    const teamsIn=(m.teams||[]).length;
+    return `<tr>
+      <td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td>
+      <td style="font-weight:600">${m.name}${m.scoring?' <i class="fa-solid fa-star" style="color:var(--amber);font-size:.7rem" title="Custom scoring"></i>':''}<div style="font-size:.68rem;color:var(--textD);font-weight:400">${teamsIn}/${m.maxTeams||20} teams${pending?` · <span style="color:var(--amber)">${pending} pending request${pending===1?'':'s'}</span>`:''}</div></td>
+      <td style="font-size:.78rem;white-space:nowrap">${seqHtml}</td>
+      <td><span class="chip ${sc}">${m.status}</span></td>
+      <td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td>
+      <td style="display:flex;gap:.3rem;flex-wrap:wrap">
+        <button class="btn btn-accent btn-xs" onclick="startAndLogMatch('${m.id}')" title="Start this scrim &amp; jump straight into logging its results"><i class="fa-solid fa-flag-checkered"></i></button>
+        <button class="btn btn-ghost btn-xs" style="position:relative" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')" title="Signup requests (all scrims)">${pending?`<span style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.55rem;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center">${pending}</span>`:''}<i class="fa-solid fa-clipboard-list"></i></button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleSlotsRevealed('${m.id}')" title="${m.slotsRevealed?'Hide lobby from players':'Reveal lobby to players'}"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button>
+        <button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')" title="Cycle status"><i class="fa-solid fa-arrows-rotate"></i></button>
+        ${hasResults?`<button class="btn btn-ghost btn-xs" onclick="clearMatchResults('${m.id}')" title="Clear logged results & roll back stats, keep the match"><i class="fa-solid fa-eraser"></i></button>`:''}
+        <button class="btn btn-danger btn-xs" onclick="delMatch('${m.id}')" title="Delete match &amp; its results"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+// Same spot, one click: flips an Upcoming scrim to Live (leaves Live/Ended as-is) then jumps
+// straight to Log Results with it pre-selected — creating the scrim and logging it happen in
+// the same flow instead of two disconnected pages.
+function startAndLogMatch(id){
+  if(!ADM)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;
+  if(m.status==='upcoming'){m.status='live';DB.set('matches',ms);renderAMatches();renderMatches();renderDashboardData();if(ADM)renderAdminOverview();}
+  showPage('admin-results');
+  setTimeout(()=>{
+    const sel=document.getElementById('res-mid');
+    if(sel){sel.value=id;onMatchSelect();}
+  },30);
+}
 // Undoes everything submitResults() added to player/team records for a given logged result,
 // using the totals already saved on the log itself (log.matchSummary = combined per-team totals,
 // log.entries = per-player-per-game lines). Streaks (win/kill streak counters) aren't reversed
