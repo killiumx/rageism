@@ -2562,7 +2562,7 @@ async function checkDiscordSession(){
       const rr = resolveRole(session.user.id, p.ign);
       ADM = rr.isAdmin;
       SESSION_SOURCE='discord';
-      CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: discordName, discAvatar: discordAvatar, authId: session.user.id, isMaster: rr.isMaster };
+      CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: avatarInitial(p.name || p.ign), disc: discordName, discAvatar: discordAvatar, authId: session.user.id, isMaster: rr.isMaster };
       window._myDiscordId = discordId; window._myDiscordName = discordName; // cached so any later form (e.g. the extended Sign Up profile) can attach the REAL Discord identity instead of a free-typed username
       finishLogin();
       return true;
@@ -2672,7 +2672,7 @@ async function completeDiscordLink(){
 
   const rr = resolveRole(session.user.id, ign);
   ADM = rr.isAdmin;
-  CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: (p.name || p.ign)[0].toUpperCase(), disc: window._dlsName, discAvatar: window._dlsAvatar, authId: session.user.id, isMaster: rr.isMaster };
+  CU = { name: p.name || p.ign, ign: p.ign, role: rr.role, avatar: avatarInitial(p.name || p.ign), disc: window._dlsName, discAvatar: window._dlsAvatar, authId: session.user.id, isMaster: rr.isMaster };
   window._myDiscordId = discordId; window._myDiscordName = window._dlsName;
   finishLogin();
 }
@@ -3173,7 +3173,7 @@ function playerFlag(p){return p.country?flagEmoji(p.country):regionFlag(p.region
 // Small avatar circle used in tables/leaderboards — shows the player's set profile picture if
 // they have one, otherwise falls back to the initial-letter circle exactly like before.
 function miniAvHTML(p,extraStyle=''){
-  const letter=p&&p.ign?p.ign[0].toUpperCase():'?';
+  const letter=p&&p.ign?avatarInitial(p.ign):'?';
   if(p&&p.avatarUrl)return `<div class="cell-av" style="overflow:hidden;padding:0;${extraStyle}"><img src="${esc(p.avatarUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${letter}'"/></div>`;
   return `<div class="cell-av" style="${extraStyle}">${letter}</div>`;
 }
@@ -3407,7 +3407,7 @@ function anOverview(el){
     ${bestTeam?`<div class="mab-card">
       <div style="font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.9px;margin-bottom:.45rem"><i class="fa-solid fa-shield-halved"></i> Top Team Overall</div>
       <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
-        <div style="width:32px;height:32px;border-radius:8px;background:${bestTeam.color||'var(--accent)'}22;border:1px solid ${bestTeam.color||'var(--accent)'}44;display:flex;align-items:center;justify-content:center;font-weight:800;color:${bestTeam.color||'var(--accent)'};font-size:.78rem;flex-shrink:0">${bestTeam.tag||bestTeam.name[0]}</div>
+        <div style="width:32px;height:32px;border-radius:8px;background:${bestTeam.color||'var(--accent)'}22;border:1px solid ${bestTeam.color||'var(--accent)'}44;display:flex;align-items:center;justify-content:center;font-weight:800;color:${bestTeam.color||'var(--accent)'};font-size:.78rem;flex-shrink:0">${bestTeam.tag||avatarInitial(bestTeam.name)}</div>
         <div style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800">${bestTeam.name}</div>
       </div>
       <div style="display:flex;gap:1rem">
@@ -3494,7 +3494,7 @@ function anMaps(el){
     </div>`:''}
     ${bestWinTeam?`<div class="mab-card"><div style="font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.9px;margin-bottom:.4rem"><i class="fa-solid fa-trophy"></i> Dominant Team on ${AN_MAP}</div>
       <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
-        <div style="width:30px;height:30px;border-radius:7px;background:${bestWinTeam.color||'var(--accent)'}22;border:1px solid ${bestWinTeam.color||'var(--accent)'}44;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:${bestWinTeam.color||'var(--accent)'}">${bestWinTeam.tag||bestWinTeam.name[0]}</div>
+        <div style="width:30px;height:30px;border-radius:7px;background:${bestWinTeam.color||'var(--accent)'}22;border:1px solid ${bestWinTeam.color||'var(--accent)'}44;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:${bestWinTeam.color||'var(--accent)'}">${bestWinTeam.tag||avatarInitial(bestWinTeam.name)}</div>
         <div style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800">${bestWinTeam.name}</div>
       </div>
       <div style="display:flex;gap:1rem">
@@ -3633,7 +3633,7 @@ function anTeams(el){
       <div class="card-title"><i class="fa-solid fa-users" style="color:var(--accentL)"></i> Roster Deep Dive</div>
       ${selMembers.length?selMembers.sort((a,b)=>b.kills-a.kills).map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);const lvl=Math.floor((p.xp||0)/500)+1;return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:.5rem">
         <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem">
-          <div style="width:34px;height:34px;border-radius:8px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${p.ign[0]}</div>
+          <div style="width:34px;height:34px;border-radius:8px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${avatarInitial(p.ign)}</div>
           <div style="flex:1"><div style="font-weight:700;font-size:.88rem">${p.ign}</div><div style="font-size:.73rem;color:var(--textM)">${p.role} · <span style="color:${RC[p.rank]||'var(--textM)'}">${p.rank}</span> · Lv${lvl}</div></div>
           <div style="text-align:right"><div class="font-mono" style="font-size:1rem;color:var(--red)">${p.kills}</div><div style="font-size:.6rem;color:var(--textD)">KILLS</div></div>
         </div>
@@ -3694,7 +3694,7 @@ function anPlayers(el){
     const lvl=Math.floor((p.xp||0)/500)+1;
     return `<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
       <span style="color:var(--textD);font-size:.7rem;width:18px;text-align:right;flex-shrink:0">${i+1}.</span>
-      <div style="width:28px;height:28px;border-radius:7px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${p.ign[0]}</div>
+      <div style="width:28px;height:28px;border-radius:7px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${avatarInitial(p.ign)}</div>
       <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openProfile('${p.id}')" style="cursor:pointer">${p.ign}</div><div style="font-size:.7rem;color:var(--textM)">${p.team||'No Team'}</div></div>
       <div style="text-align:right;flex-shrink:0"><div class="font-mono" style="font-size:.95rem;color:${color}">${val}</div><div style="font-size:.58rem;color:var(--textD);text-transform:uppercase">K/D: ${kd} · Lv${lvl}</div></div>
     </div>`;
@@ -3704,7 +3704,7 @@ function anPlayers(el){
   const fullTable=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Role</th><th>Rank</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Damage</th><th>Level</th></tr></thead><tbody>
   ${byKills.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(2);const lvl=Math.floor((p.xp||0)/500)+1;return `<tr>
     <td><span class="font-mono" style="color:var(--textD);font-size:.78rem">${i+1}</span></td>
-    <td><div style="display:flex;align-items:center;gap:.5rem"><div style="width:24px;height:24px;border-radius:6px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${BAR_COLS[i]||'var(--accent)'}">${p.ign[0]}</div><span style="font-weight:600;font-size:.85rem" onclick="openProfile('${p.id}')" class="text-accent" style="cursor:pointer">${p.ign}</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:.5rem"><div style="width:24px;height:24px;border-radius:6px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${BAR_COLS[i]||'var(--accent)'}">${avatarInitial(p.ign)}</div><span style="font-weight:600;font-size:.85rem" onclick="openProfile('${p.id}')" class="text-accent" style="cursor:pointer">${p.ign}</span></div></td>
     <td style="font-size:.82rem;color:var(--textM)">${p.team||'—'}</td>
     <td><span class="chip chip-neutral" style="font-size:.65rem">${p.role}</span></td>
     <td><span style="color:${RC[p.rank]||'var(--textM)'};font-size:.82rem">${p.rank}</span></td>
@@ -3833,14 +3833,25 @@ function doGlobalSearch(q){
   const matches=DB.get('matches').filter(m=>m.name.toLowerCase().includes(ql)||m.id.toLowerCase().includes(ql));
   if(!players.length&&!teams.length&&!matches.length){el.innerHTML='<div style="padding:.7rem 1rem;color:var(--textD);font-size:.83rem">No results found.</div>';return;}
   let html='';
-  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
-  if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||t.name[0]).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
+  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
+  if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||avatarInitial(t.name)).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
   if(matches.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Matches</div>`;html+=matches.slice(0,3).map(m=>`<div style="padding:.5rem 1rem;cursor:pointer;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('matches')"><div style="font-weight:600">${m.name}</div><div style="font-size:.7rem;color:var(--textD)">${m.map} · ${m.status}</div></div>`).join('');}
   el.innerHTML=html;
 }
 
 // ═══ NOTIFY ═══
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+// Picks a sensible avatar-badge initial from an IGN/display name. Lots of stylized esports tags
+// lead with decorative bracket/symbol characters (e.g. "】KIYRO", "『NK』Player") — grabbing the raw
+// first character for those renders as a garbled glyph instead of a readable letter. This skips
+// past any leading non-alphanumeric characters to find the first real letter/digit, and only
+// falls back to the raw first character if the whole string has no alphanumerics at all.
+function avatarInitial(str){
+  if(!str)return '?';
+  const s=String(str);
+  const m=s.match(/[\p{L}\p{N}]/u);
+  return (m?m[0]:s[0]).toUpperCase();
+}
 function notify(title,msg='',type='n-info',dur=3200){
   const c=document.getElementById('notifs');const n=document.createElement('div');n.className='notif '+type;
   const iconMap={'n-ok':'circle-check','n-bad':'circle-xmark','n-info':'bell'};
@@ -3880,10 +3891,10 @@ function updateSidebar(){
   if(urole)urole.textContent=ADM?(CU.isMaster?'Master Admin':'Host / Admin'):(CU.role||'Player');
   if(av){
     if(CU.discAvatar){
-      av.innerHTML=`<img src="${CU.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:7px" onerror="this.parentElement.textContent='${(CU.name||'?')[0].toUpperCase()}'"/>`;
+      av.innerHTML=`<img src="${CU.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:7px" onerror="this.parentElement.textContent='${avatarInitial(CU.name)}'"/>`;
       av.style.background='transparent';av.style.padding='0';av.style.overflow='hidden';
     } else {
-      av.textContent=(CU.name||'?')[0].toUpperCase();
+      av.textContent=avatarInitial(CU.name);
     }
   }
 }
@@ -4312,7 +4323,7 @@ function renderAdminOverview(){
   const actEl=document.getElementById('admin-activity');if(actEl){
     const activities=[];
     const recentLogs=logs.slice(0,3);recentLogs.forEach(l=>activities.push({av:l.matchId[0],text:`Match <strong>#${l.matchId}</strong> results logged`,time:l.ts}));
-    const recentPl=[...pl].sort((a,b)=>b.id?.localeCompare?.(a.id)||0).slice(0,3);recentPl.forEach(p=>activities.push({av:p.ign[0],text:`<strong>${p.ign}</strong> registered`,time:'Recently'}));
+    const recentPl=[...pl].sort((a,b)=>b.id?.localeCompare?.(a.id)||0).slice(0,3);recentPl.forEach(p=>activities.push({av:avatarInitial(p.ign),text:`<strong>${p.ign}</strong> registered`,time:'Recently'}));
     actEl.innerHTML=activities.length?activities.map(a=>`<div class="activity-item"><div class="act-av">${a.av}</div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join(''):'<div class="text-dim" style="font-size:.83rem;padding:.5rem">No recent activity.</div>';
   }
   // Announcement bar
@@ -4341,7 +4352,7 @@ function trSearchPlayers(){
   const results=DB.get('players').filter(p=>!taken.has(p.uid)&&(p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q))).slice(0,6);
   box.style.display='block';
   if(!results.length){box.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching registered players</div>';return;}
-  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.uid}')"><div class="cell-av">${p.ign[0]}</div><div><div style="font-weight:600">${esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}</div></div></div>`).join('');
+  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.uid}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}</div></div></div>`).join('');
 }
 function trAddPlayer(uid){
   const p=trFindByUid(uid);if(!p)return;
@@ -4454,7 +4465,7 @@ function tdmSearchPlayers(side){
     !roster.find(r=>r.id===p.id) && !otherRoster.find(r=>r.id===p.id)
   ).slice(0,8);
   if(!players.length){resEl.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching players</div>';return;}
-  resEl.innerHTML=players.map(p=>`<div class="tdm-search-row" onclick="tdmAddPlayer('${side}','${p.id}')"><div class="cell-av">${p.ign[0]}</div><div><div style="font-weight:600">${p.name}</div><div class="text-dim" style="font-size:.72rem">${p.ign}${p.team?' · '+p.team:''}</div></div></div>`).join('');
+  resEl.innerHTML=players.map(p=>`<div class="tdm-search-row" onclick="tdmAddPlayer('${side}','${p.id}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.name}</div><div class="text-dim" style="font-size:.72rem">${p.ign}${p.team?' · '+p.team:''}</div></div></div>`).join('');
 }
 
 function tdmAddPlayer(side,id){
@@ -4476,7 +4487,7 @@ function tdmRenderRoster(side){
   const el=document.getElementById('tdm-'+side+'-roster');if(!el)return;
   const roster=side==='a'?TDM_A:TDM_B;
   if(!roster.length){el.innerHTML='<div class="text-dim" style="font-size:.78rem;padding:.3rem 0">No players added yet.</div>';return;}
-  el.innerHTML=roster.map(p=>`<div class="tdm-roster-row"><div class="cell-av">${p.ign[0]}</div><div>${p.name} <span class="text-dim" style="font-size:.72rem">(${p.ign})</span></div><i class="fa-solid fa-xmark rm" onclick="tdmRemovePlayer('${side}','${p.id}')"></i></div>`).join('');
+  el.innerHTML=roster.map(p=>`<div class="tdm-roster-row"><div class="cell-av">${avatarInitial(p.ign)}</div><div>${p.name} <span class="text-dim" style="font-size:.72rem">(${p.ign})</span></div><i class="fa-solid fa-xmark rm" onclick="tdmRemovePlayer('${side}','${p.id}')"></i></div>`).join('');
 }
 
 function tdmQuickFill(side){
@@ -5596,7 +5607,7 @@ function renderTdmLive(){
   const rosterBtns=(side,roster)=>roster.map(p=>{
     const kc=tdmPlayerKillCount(m,p.ign);
     return `<div class="tdm-roster-row" style="justify-content:space-between;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:.5rem"><div class="cell-av">${p.ign[0]}</div>${p.ign}</div>
+      <div style="display:flex;align-items:center;gap:.5rem"><div class="cell-av">${avatarInitial(p.ign)}</div>${p.ign}</div>
       ${ADM?`<div style="display:flex;align-items:center;gap:.35rem">
         <input type="number" min="0" value="${kc}" id="tdm-kc-${side}-${p.id}" class="fi" style="width:52px;padding:.25rem .3rem;text-align:center;font-size:.78rem" onkeydown="if(event.key==='Enter'){event.preventDefault();tdmSetPlayerKills('${side}','${p.id}');}"/>
         <button class="btn btn-ghost btn-xs" title="Save this player's kill count" onclick="tdmSetPlayerKills('${side}','${p.id}')"><i class="fa-solid fa-check"></i></button>
@@ -6078,7 +6089,7 @@ function drawShareCard(p){
   // Avatar circle with initial
   ctx.fillStyle='#6366f1';ctx.beginPath();ctx.arc(W/2,190,70,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff';ctx.font='700 64px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText((p.ign||'?')[0].toUpperCase(),W/2,196);
+  ctx.fillText(avatarInitial(p.ign),W/2,196);
   // Name
   ctx.fillStyle='#fff';ctx.font='800 40px Arial';ctx.fillText(p.ign||'',W/2,300);
   if(p.team){ctx.fillStyle='#9ca3af';ctx.font='20px Arial';ctx.fillText(p.team,W/2,335);}
@@ -6088,7 +6099,7 @@ function drawShareCard(p){
   stats.forEach((s,i)=>{
     const cx=(i%2)*gw+gw/2, cy=gy+Math.floor(i/2)*gh;
     ctx.fillStyle='#67e8f9';ctx.font='800 44px Arial';ctx.fillText(String(s[1]),cx,cy);
-    ctx.fillStyle='#9ca3af';ctx.font='16px Arial';ctx.fillText(s[0].toUpperCase(),cx,cy+34);
+    ctx.fillStyle='#9ca3af';ctx.font='16px Arial';ctx.fillText(avatarInitial(s),cx,cy+34);
   });
   // Footer
   ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='16px Arial';
@@ -6147,7 +6158,7 @@ function tdmBoardSearchPlayers(boardId){
     (p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q)) && !(board.playerIds||[]).includes(p.id)
   ).slice(0,8);
   if(!players.length){resEl.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching players</div>';return;}
-  resEl.innerHTML=players.map(p=>`<div class="tdm-search-row" onclick="tdmBoardAddPlayer('${boardId}','${p.id}')"><div class="cell-av">${p.ign[0]}</div><div><div style="font-weight:600">${p.name}</div><div class="text-dim" style="font-size:.72rem">${p.ign}${p.team?' · '+p.team:''}</div></div></div>`).join('');
+  resEl.innerHTML=players.map(p=>`<div class="tdm-search-row" onclick="tdmBoardAddPlayer('${boardId}','${p.id}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.name}</div><div class="text-dim" style="font-size:.72rem">${p.ign}${p.team?' · '+p.team:''}</div></div></div>`).join('');
 }
 function tdmBoardAddPlayer(boardId,playerId){
   if(!ADM)return;
@@ -6856,7 +6867,7 @@ function saveEditLog(id){
 // ═══ PROFILE HELPERS ═══
 function profileAvHTML(p,size=72){
   const lvl=Math.floor((p.xp||0)/500)+1;
-  const av=p.ign?p.ign[0].toUpperCase():'?';
+  const av=p.ign?avatarInitial(p.ign):'?';
   const img=p.avatarUrl?`<img src="${esc(p.avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;position:absolute;top:0;left:0" onerror="this.remove()"/>`:'';
   return `<div class="profile-av" style="width:${size}px;height:${size}px;font-size:${size*0.45}px;overflow:hidden;position:relative">${av}${img}<div class="lvl-tag">LV${lvl}</div></div>`;
 }
@@ -6908,7 +6919,7 @@ function profileTeamHTML(p){
   const tc=t.color||'var(--accent)';
   return `<div class="prf-team-card" onclick="showPage('teams')">
     <div style="display:flex;align-items:center;gap:.8rem">
-      <div style="width:42px;height:42px;border-radius:10px;background:${tc}20;border:2px solid ${tc}40;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:${tc}">${(t.tag||t.name[0]).substring(0,3)}</div>
+      <div style="width:42px;height:42px;border-radius:10px;background:${tc}20;border:2px solid ${tc}40;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:${tc}">${(t.tag||avatarInitial(t.name)).substring(0,3)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:.95rem">${t.name}</div>
         <div style="font-size:.73rem;color:var(--textD)">${t.captain?'Captain: '+t.captain:''} · ${t.members?.length||0} players</div>
@@ -7171,7 +7182,7 @@ function updatePendingBadges(){
 
 // ═══ PLAYER LOOKUP (autocomplete dropdown by IGN, name, or UID) ═══
 function playerLookupRowHTML(p){
-  return `<div class="xfer-lookup-row" data-id="${p.id}"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${p.ign[0]}</div>
+  return `<div class="xfer-lookup-row" data-id="${p.id}"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${avatarInitial(p.ign)}</div>
     <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ign}</div>
     <div style="font-size:.68rem;color:var(--textD)">UID ${p.uid||'—'} ${p.team?'· '+p.team:''}</div></div></div>`;
 }
@@ -7281,7 +7292,7 @@ function buildMyProfile(){
     el.innerHTML=`
     <div style="max-width:500px;margin:0 auto">
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:2rem;text-align:center;margin-bottom:1rem">
-        <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--accentD),var(--accent));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;font-size:1.6rem;font-weight:700;color:#fff;font-family:'DM Mono',monospace">${(CU.name||'?')[0].toUpperCase()}</div>
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--accentD),var(--accent));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;font-size:1.6rem;font-weight:700;color:#fff;font-family:'DM Mono',monospace">${avatarInitial(CU.name)}</div>
         <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:.25rem">${CU.name||'Guest'}</div>
         <div style="font-size:.82rem;color:var(--textM);margin-bottom:1.2rem">${CU.disc||CU.role||'Player'}</div>
         <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:var(--rS);padding:.75rem 1rem;margin-bottom:1rem;font-size:.84rem;color:var(--textM)">
@@ -7311,7 +7322,7 @@ function buildMyProfile(){
       <div class="profile-banner"></div>
       <div style="padding:0 1.25rem 1.25rem">
         <div class="profile-av-wrap">
-          <div class="profile-av" style="${p.discAvatar?'padding:0;overflow:hidden':''}">${p.discAvatar?`<img src="${p.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:11px" onerror="this.parentElement.textContent='${p.ign[0]}'"/>`:p.ign[0]}<div class="lvl-tag">LV${lvl}</div></div>
+          <div class="profile-av" style="${p.discAvatar?'padding:0;overflow:hidden':''}">${p.discAvatar?`<img src="${p.discAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:11px" onerror="this.parentElement.textContent='${avatarInitial(p.ign)}'"/>`:avatarInitial(p.ign)}<div class="lvl-tag">LV${lvl}</div></div>
           <div style="flex:1;padding-bottom:.2rem">
             <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.3px">${p.ign}</div>
             <div class="text-muted" style="font-size:.83rem">${p.name||''}</div>
@@ -7418,7 +7429,7 @@ function renderLB(){
   if(pod){const t3=s.slice(0,3);const co=['#f59e0b','#94a3b8','#cd7f32'];const podH=['155px','120px','100px'];const order=[t3[1],t3[0],t3[2]];
     pod.innerHTML=order.filter(Boolean).map((p,vi)=>{const rk=vi===1?1:vi===0?2:3;const cl=co[rk-1];const em=rk===1?'<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>':rk===2?'<i class="fa-solid fa-medal" style="color:#94a3b8"></i>':'<i class="fa-solid fa-medal" style="color:#cd7f32"></i>';
       const metric=f==='points'?`${p.points||0}pts`:f==='kd'?(p.kills/(p.deaths||1)).toFixed(1)+'K/D':f==='wins'?p.wins+'W':`${p.kills}K`;
-      return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${p.ign[0]}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||p.rank||''}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${metric}</div></div></div>`;
+      return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${avatarInitial(p.ign)}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||p.rank||''}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${metric}</div></div></div>`;
     }).join('');}
   const body=document.getElementById('lb-body');if(!body)return;
   if(!s.length){body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:2.5rem;color:var(--textD)">No players registered.</td></tr>';return;}
@@ -7913,9 +7924,9 @@ function doCompare(){
       <div><span class="chip font-mono" style="${!w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v2}</span></div>
     </div>`;};
   el.innerHTML=`<div class="card"><div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:center;text-align:center;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border)">
-    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem">${p1.ign[0]}</div><div style="font-weight:700;font-size:.9rem">${p1.ign}</div><div class="text-dim" style="font-size:.75rem">${p1.team||p1.rank}</div></div>
+    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem">${avatarInitial(p1.ign)}</div><div style="font-weight:700;font-size:.9rem">${p1.ign}</div><div class="text-dim" style="font-size:.75rem">${p1.team||p1.rank}</div></div>
     <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
-    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,#a855f7,#ec4899)">${p2.ign[0]}</div><div style="font-weight:700;font-size:.9rem">${p2.ign}</div><div class="text-dim" style="font-size:.75rem">${p2.team||p2.rank}</div></div>
+    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,#a855f7,#ec4899)">${avatarInitial(p2.ign)}</div><div style="font-weight:700;font-size:.9rem">${p2.ign}</div><div class="text-dim" style="font-size:.75rem">${p2.team||p2.rank}</div></div>
   </div>${row('Kills',p1.kills,p2.kills)}${row('K / D',kd1,kd2)}${row('Wins',p1.wins,p2.wins)}${row('Damage',p1.damage||0,p2.damage||0)}${row('XP',p1.xp||0,p2.xp||0)}${row('Deaths',p1.deaths,p2.deaths,false)}</div>${h2hCardHTML(p1,p2)}`;
 }
 
@@ -8828,7 +8839,7 @@ function resetThemeColors(){
   notify('Theme reset to default','','n-ok');
 }
 function avInner(p){
-  const letter=esc(p.ign?p.ign[0].toUpperCase():'?');
+  const letter=esc(p.ign?avatarInitial(p.ign):'?');
   if(!p.avatarUrl)return letter;
   return `${letter}<img src="${esc(p.avatarUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.remove()"/>`;
 }
