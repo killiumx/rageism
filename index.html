@@ -7435,7 +7435,7 @@ function renderTeams(){
         <span class="text-muted">Kills: <span class="text-accent font-mono fw6">${t.kills||0}</span></span>
         <div style="display:flex;gap:.4rem">
           ${(t.recruiting&&CU&&!isManagerOf(t.id)&&!(t.members||[]).includes(CU.ign))?`<button class="btn btn-accent btn-xs" onclick="applyToOpenTeam('${t.id}')"><i class="fa-solid fa-hand"></i> Apply</button>`:''}
-          ${isManagerOf(t.id)?`<button class="btn btn-ghost btn-xs" onclick="openManageTeam('${t.id}')"><i class="fa-solid fa-gear"></i> Manage</button>`:''}
+          ${isManagerOf(t.id)?`<button class="btn btn-ghost btn-xs" onclick="openManageTeam('${t.id}')"><i class="fa-solid fa-gear"></i> Manage${(()=>{const p=DB.get('joinRequests',[]).filter(r=>r.teamId===t.id&&r.status==='pending').length;return p?` <span class="chip chip-accent" style="font-size:.6rem;margin-left:.2rem">${p}</span>`:'';})()}</button>`:''}
         </div>
       </div>
     </div>
@@ -7506,7 +7506,7 @@ function renderMatches(filter='all'){
         const hasReq=myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status!=='denied');
         return inMatch||hasReq;
       });
-      if(myPending.length<myTeams.length&&slotsFilled<(m.maxTeams||20)){
+      if(myPending.length<myTeams.length&&slotsFilled<matchSlotCap(m)){
         signupBtn=`<button class="btn btn-accent btn-xs" onclick="openMatchSignupModal('${m.id}')"><i class="fa-solid fa-hand"></i> Request Slot</button>`;
       }else if(myTeams.some(t=>(m.teams||[]).some(x=>x.teamId===t.id))){
         signupBtn=`<span class="chip chip-green" style="font-size:.66rem">You're in</span>`;
@@ -7581,7 +7581,14 @@ function buildLobbyGridHTML(matchId){
   const cells=[];
   for(let i=1;i<=cap;i++){
     const slot=bySlot[i];
-    if(slot){
+    if(i<=MATCH_SLOT_RESERVED){
+      // Slots 1 & 2 are always held back — teams never get auto-assigned here, registration starts at slot 3.
+      cells.push(`<div class="lobby-slot open" style="opacity:.4">
+        <div class="lobby-slot-num">Slot ${i}</div>
+        <i class="fa-solid fa-lock" style="color:var(--textD);font-size:.9rem;margin:.2rem 0"></i>
+        <div class="lobby-slot-sub">Reserved</div>
+      </div>`);
+    }else if(slot){
       const t=teams.find(x=>x.id===slot.teamId);
       const color=t?.color||'var(--accent)';
       cells.push(`<div class="lobby-slot filled" onclick="${t?`openTeamProfile('${t.id}')`:''}" style="border-color:${color}55">
@@ -7991,10 +7998,33 @@ function openManageTeam(id){
   ${canEditRoster(id)?`
   <div id="mt-members">${t.members.map((m,i)=>`<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.35rem"><input class="fi" style="flex:1" value="${m}" id="mt-m-${i}" list="ign-dl"/><button class="btn btn-danger btn-xs" onclick="removeMtMember(${i})"><i class="fa-solid fa-trash"></i></button></div>`).join('')}</div>
   <button class="btn btn-ghost btn-sm" onclick="addMtMember()" style="margin-bottom:.7rem"><i class="fa-solid fa-plus"></i> Add Member</button>`:`
-  <div style="font-size:.78rem;color:var(--textM);background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.7rem"><i class="fa-solid fa-lock" style="margin-right:.35rem"></i> Only this team's <strong>Manager</strong> (or an admin) can add or remove roster players. As Captain you can assign a Manager above — new players otherwise join via a Join Request that a Manager or admin approves.</div>
+  <div style="font-size:.78rem;color:var(--textM);background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .8rem;margin-bottom:.7rem"><i class="fa-solid fa-lock" style="margin-right:.35rem"></i> Only this team's <strong>Manager</strong> (or an admin) can add or remove roster players. As Captain you can assign a Manager above — new players otherwise join via a Join Request that you (as Captain), a Manager, or an admin can approve below.</div>
   <div id="mt-members-readonly" style="margin-bottom:.7rem">${t.members.map(m=>`<span class="chip chip-neutral" style="font-size:.78rem;margin:.15rem .3rem .15rem 0">${esc(m)}</span>`).join('')||'<span class="text-dim" style="font-size:.8rem">No roster listed</span>'}</div>`}
+  <div id="mt-join-requests-wrap" style="margin-top:.9rem"></div>
   <button class="btn btn-accent btn-fw" onclick="saveManageTeam('${id}')"><i class="fa-solid fa-floppy-disk"></i> Save Team</button>`;
+  renderTeamJoinRequestsInline(id);
   openModal('manage-team-modal');
+}
+
+// Captain/Manager-facing join-request list, scoped to just this one team, shown inline inside the
+// Manage Team modal — previously Join Requests could only be seen/resolved from the Admin panel,
+// so a team's own Captain had no way to accept new members requesting to join. isManagerOf() already
+// covers Captain + Manager + admin, so it's reused here as the visibility/authorization gate.
+function renderTeamJoinRequestsInline(teamId){
+  const wrap=document.getElementById('mt-join-requests-wrap');if(!wrap)return;
+  if(!isManagerOf(teamId)){wrap.innerHTML='';return;}
+  const requests=DB.get('joinRequests',[]).filter(r=>r.teamId===teamId&&r.status==='pending');
+  wrap.innerHTML=`<div class="card-title" style="margin-bottom:.5rem"><i class="fa-solid fa-person-walking-arrow-right"></i> Pending Join Requests ${requests.length?`<span class="chip chip-accent" style="font-size:.65rem">${requests.length}</span>`:''}</div>
+  ${requests.length?requests.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.55rem .8rem;margin-bottom:.4rem;gap:.6rem">
+    <div style="min-width:0"><div style="font-weight:600;font-size:.85rem">${esc(r.ign)}</div><div style="font-size:.72rem;color:var(--textM)">Requested ${r.ts}</div></div>
+    <div style="display:flex;gap:.3rem;flex-shrink:0">
+      <button class="btn btn-success btn-xs" onclick="resolveTeamJoinRequestInline('${r.id}',true,'${teamId}')"><i class="fa-solid fa-check"></i> Accept</button>
+      <button class="btn btn-danger btn-xs" onclick="resolveTeamJoinRequestInline('${r.id}',false,'${teamId}')"><i class="fa-solid fa-xmark"></i> Deny</button>
+    </div>
+  </div>`).join(''):'<div class="text-dim" style="font-size:.78rem;padding:.3rem 0 .1rem">No pending requests to join this team right now.</div>'}`;
+}
+function resolveTeamJoinRequestInline(id,approve,teamId){
+  resolveJoinRequest(id,approve,()=>{renderTeamJoinRequestsInline(teamId);openManageTeam(teamId);});
 }
 
 let _mtMemberCount=0;
@@ -8069,10 +8099,15 @@ function renderJoinRequests(){
   </div>`).join('');
 }
 
-function resolveJoinRequest(id,approve){
+// approve/deny a request to join a team. Callable from the Admin panel (renderJoinRequests) or from
+// a team's own Captain/Manager inline in the Manage Team modal (renderTeamJoinRequestsInline) — either
+// way isManagerOf() is the authorization check, so only that team's Captain/Manager or an admin can
+// resolve it. `onDone` is an optional extra refresh callback for whichever UI triggered this.
+function resolveJoinRequest(id,approve,onDone){
   guardedAction('resolveJoinRequest:'+id,async()=>{
     await sbRefreshKey('joinRequests');
     const requests=DB.get('joinRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
+    if(!isManagerOf(r.teamId))return notify('Not authorized','Only that team\'s captain, manager, or an admin can resolve this','n-bad');
     r.status=approve?'approved':'denied';
     if(approve){
       await sbRefreshKey('teams');
@@ -8083,6 +8118,7 @@ function resolveJoinRequest(id,approve){
     }
     DB.set('joinRequests',requests);renderJoinRequests();notify(approve?'Request approved!':'Request denied','','n-ok');
     renderATeams();renderTeams();
+    if(typeof onDone==='function')onDone();
   });
 }
 
@@ -8201,6 +8237,11 @@ function canEditRoster(teamId){
 // Admin approves/denies from the Match Management page; approving both books the slot AND fires the
 // matchSignupAccepted webhook, @mentioning the whole roster with the match's time, map & mode.
 // Only the signed-in captain/manager of the team itself can request for it — not the generic ADM/manager-role override in isManagerOf().
+// Slots 1 & 2 are reserved/unavailable for every match (e.g. held for casters/host) — team signups
+// only ever get auto-assigned slot 3 onward, so the number of teams a match can actually hold is
+// (maxTeams - 2). MATCH_SLOT_RESERVED is the count of slots held back from the start.
+const MATCH_SLOT_RESERVED=2;
+function matchSlotCap(m){return Math.max(0,(m.maxTeams||20)-MATCH_SLOT_RESERVED);}
 function myOwnedTeams(){
   if(!CU)return[];
   return DB.get('teams').filter(t=>t.approved&&(t.captain===CU.ign||t.manager===CU.ign));
@@ -8229,7 +8270,7 @@ function submitMatchSignup(){
   const requests=DB.get('matchRequests',[]);
   if(requests.find(r=>r.matchId===matchId&&r.teamId===teamId&&r.status!=='denied'))return notify('Already requested','','n-bad');
   if((m.teams||[]).some(x=>x.teamId===teamId))return notify('Already in this match','','n-bad');
-  if((m.teams||[]).length>=(m.maxTeams||20))return notify('Match is full','No open slots left for this match','n-bad');
+  if((m.teams||[]).length>=matchSlotCap(m))return notify('Match is full','No open slots left for this match','n-bad');
   requests.push({id:'mr'+Date.now(),matchId,matchName:m.name,teamId,teamName:t.name,requestedBy:CU.ign,status:'pending',ts:new Date().toLocaleString()});
   DB.set('matchRequests',requests);closeModal('match-signup-modal');updateMatchSignupBadge();
   fireWebhookEvent('matchSignupRequest',{title:'📋 New Scrim/Match Signup Request',color:3900151,fields:[
@@ -8264,12 +8305,13 @@ function resolveMatchSignupRequest(id,approve){
     if(approve&&m){
       m.teams=m.teams||[];
       const cap=m.maxTeams||20;
-      if(m.teams.length>=cap)return notify('Match is full','Deny this or bump Max Teams first','n-bad');
+      if(m.teams.length>=matchSlotCap(m))return notify('Match is full','Deny this or bump Max Teams first','n-bad');
       if(!m.teams.some(x=>x.teamId===r.teamId)){
-        // Auto-select the lowest open slot number (1..cap) rather than just appending — this way
-        // slot numbers stay stable and meaningful even if an earlier team is later removed.
+        // Auto-select the lowest open slot number rather than just appending — this way slot numbers
+        // stay stable and meaningful even if an earlier team is later removed. Slots 1 & 2 are always
+        // reserved/unavailable, so the search starts at slot 3.
         const taken=new Set(m.teams.map(x=>x.slot).filter(Boolean));
-        assignedSlot=1;while(taken.has(assignedSlot)&&assignedSlot<=cap)assignedSlot++;
+        assignedSlot=MATCH_SLOT_RESERVED+1;while(taken.has(assignedSlot)&&assignedSlot<=cap)assignedSlot++;
         m.teams.push({teamId:r.teamId,teamName:r.teamName,slot:assignedSlot});
       }
       DB.set('matches',ms);
@@ -8324,7 +8366,7 @@ function renderSmartSortModal(){
   const tgtEl=document.getElementById('ss-target-list');
   const lobbies=ms.filter(m=>m.status!=='done');
   tgtEl.innerHTML=lobbies.length?lobbies.map(m=>{
-    const filled=(m.teams||[]).length,cap=m.maxTeams||20,full=filled>=cap;
+    const filled=(m.teams||[]).length,cap=matchSlotCap(m),full=filled>=cap;
     return `<label style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.83rem;cursor:${full?'not-allowed':'pointer'};padding:.25rem .3rem;opacity:${full?.5:1}">
       <span style="display:flex;align-items:center;gap:.5rem;min-width:0"><input type="checkbox" class="ss-tgt" value="${m.id}" ${full?'disabled':''} onchange="ssUpdatePreview()"/> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span></span>
       <span class="chip ${full?'chip-neutral':'chip-green'}" style="font-size:.65rem;flex-shrink:0">${filled}/${cap}${full?' full':''}</span>
@@ -8339,7 +8381,7 @@ function ssUpdatePreview(){
   const targetIds=[...document.querySelectorAll('.ss-tgt:checked')].map(el=>el.value);
   const el=document.getElementById('ss-preview');if(!el)return;
   const pendingCount=DB.get('matchRequests',[]).filter(r=>r.status==='pending'&&sourceIds.includes(r.matchId)).length;
-  const totalCap=targetIds.reduce((sum,id)=>{const m=ms.find(x=>x.id===id);if(!m)return sum;return sum+Math.max(0,(m.maxTeams||20)-(m.teams||[]).length);},0);
+  const totalCap=targetIds.reduce((sum,id)=>{const m=ms.find(x=>x.id===id);if(!m)return sum;return sum+Math.max(0,matchSlotCap(m)-(m.teams||[]).length);},0);
   if(!pendingCount||!targetIds.length){el.innerHTML='Pick at least one source and one target lobby above to preview the split.';return;}
   const placed=Math.min(pendingCount,totalCap),left=pendingCount-placed;
   el.innerHTML=`<i class="fa-solid fa-circle-info"></i> ${pendingCount} pending team${pendingCount===1?'':'s'} · ${totalCap} open slot${totalCap===1?'':'s'} across ${targetIds.length} lobby${targetIds.length===1?'':'s'} → <strong style="color:var(--green)">${placed} will be placed</strong>${left?`, <strong style="color:var(--amber)">${left} will stay pending</strong> (no room left — add another lobby or raise Max Teams)`:''}.`;
@@ -8359,7 +8401,7 @@ function smartSortRun(){
     if(!pending.length)return notify('Nothing to sort','No pending signups in the selected source matches','n-bad');
     const targets=targetIds.map(id=>ms.find(m=>m.id===id)).filter(Boolean);
     targets.forEach(m=>{m.teams=m.teams||[];});
-    const cap=new Map(targets.map(m=>[m.id,Math.max(0,(m.maxTeams||20)-m.teams.length)]));
+    const cap=new Map(targets.map(m=>[m.id,Math.max(0,matchSlotCap(m)-m.teams.length)]));
     const placements=[];const unplaced=[];let ti=0;
     for(const r of pending){
       let placed=false;
@@ -8378,7 +8420,7 @@ function smartSortRun(){
     const perMatchCount={};
     placements.forEach(({r,m})=>{
       const taken=new Set(m.teams.map(x=>x.slot).filter(Boolean));
-      let slot=1;while(taken.has(slot)&&slot<=(m.maxTeams||20))slot++;
+      let slot=MATCH_SLOT_RESERVED+1;while(taken.has(slot)&&slot<=(m.maxTeams||20))slot++;
       m.teams.push({teamId:r.teamId,teamName:r.teamName,slot});
       r.status='approved';r.matchId=m.id;r.matchName=m.name;r.assignedSlot=slot;
       perMatchCount[m.name]=(perMatchCount[m.name]||0)+1;
