@@ -7969,14 +7969,19 @@ function renderATeams(){
 
 function approveTeam(id){
   guardedAction('approveTeam:'+id,async()=>{
-    await sbRefreshKey('teams');
-    const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
-    t.approved=true;DB.set('teams',teams);renderATeams();renderTeams();logAdminAction('Team approved',`${t.name} was approved`);notify(`${t.name} approved!`,'','n-ok');
+    let approvedTeam=null;
+    const result=await sbAtomicUpdate('teams',teams=>{
+      const t=teams.find(x=>x.id===id);if(!t)return teams;
+      t.approved=true;approvedTeam=t;
+      return teams;
+    });
+    if(result===null||!approvedTeam)return;
+    renderATeams();renderTeams();logAdminAction('Team approved',`${approvedTeam.name} was approved`);notify(`${approvedTeam.name} approved!`,'','n-ok');
     fireWebhookEvent('teamApproved',{title:'Team Approved ✅',color:3066993,fields:[
-      {name:'Team',value:`${t.name}${t.tag?' ['+t.tag+']':''}`,inline:true},
-      {name:'Captain',value:t.captain||'—',inline:true},
-      {name:'Roster',value:(t.members||[]).join(', ')||'—',inline:false}
-    ]},teamMentionIgns(t),{team:t.name});
+      {name:'Team',value:`${approvedTeam.name}${approvedTeam.tag?' ['+approvedTeam.tag+']':''}`,inline:true},
+      {name:'Captain',value:approvedTeam.captain||'—',inline:true},
+      {name:'Roster',value:(approvedTeam.members||[]).join(', ')||'—',inline:false}
+    ]},teamMentionIgns(approvedTeam),{team:approvedTeam.name});
   });
 }
 
@@ -8013,7 +8018,7 @@ function openManageTeam(id){
 function renderTeamJoinRequestsInline(teamId){
   const wrap=document.getElementById('mt-join-requests-wrap');if(!wrap)return;
   if(!isManagerOf(teamId)){wrap.innerHTML='';return;}
-  const requests=DB.get('joinRequests',[]).filter(r=>r.teamId===teamId&&r.status==='pending');
+  const requests=dedupePendingJoinRequests(DB.get('joinRequests',[]).filter(r=>r.teamId===teamId&&r.status==='pending'));
   wrap.innerHTML=`<div class="card-title" style="margin-bottom:.5rem"><i class="fa-solid fa-person-walking-arrow-right"></i> Pending Join Requests ${requests.length?`<span class="chip chip-accent" style="font-size:.65rem">${requests.length}</span>`:''}</div>
   ${requests.length?requests.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.55rem .8rem;margin-bottom:.4rem;gap:.6rem">
     <div style="min-width:0"><div style="font-weight:600;font-size:.85rem">${esc(r.ign)}</div><div style="font-size:.72rem;color:var(--textM)">Requested ${r.ts}</div></div>
@@ -8039,23 +8044,45 @@ function addMtMember(){
 function removeMtMember(i){const el=document.getElementById('mt-m-'+i);if(el)el.parentElement.remove();}
 
 function saveManageTeam(id){
-  const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
-  t.name=document.getElementById('mt-name')?.value||t.name;
-  t.tag=document.getElementById('mt-tag')?.value||t.tag;
-  t.captain=document.getElementById('mt-cap')?.value||t.captain;
-  t.color=document.getElementById('mt-color')?.value||t.color;
-  t.logoUrl=document.getElementById('mt-logo')?.value||'';
-  t.manager=document.getElementById('mt-mgr')?.value||'';
-  t.recruiting=!!document.getElementById('mt-recruit')?.checked;
-  t.recruitNote=document.getElementById('mt-roles')?.value.trim()||'';
-  // Roster edits only ever get applied if the saving user still passes canEditRoster — the inputs
-  // simply aren't rendered for a Captain-only viewer (see openManageTeam), but this re-check guards
-  // against a stale/tampered DOM trying to smuggle roster changes through anyway.
-  if(canEditRoster(id)){
-    const mems=[];document.querySelectorAll('#mt-members input').forEach(i=>{if(i.value.trim())mems.push(i.value.trim());});
-    if(mems.length)t.members=mems;
+  // Read every form value up front (before the async round-trip) since the DOM inputs may be gone
+  // by the time the write actually lands, and use sbAtomicUpdate so this edit merges into the
+  // freshest server copy rather than blindly overwriting the whole 'teams' array with a possibly
+  // stale local snapshot (the same class of bug that let a deleted team "come back").
+  const vals={
+    name:document.getElementById('mt-name')?.value,
+    tag:document.getElementById('mt-tag')?.value,
+    captain:document.getElementById('mt-cap')?.value,
+    color:document.getElementById('mt-color')?.value,
+    logoUrl:document.getElementById('mt-logo')?.value||'',
+    manager:document.getElementById('mt-mgr')?.value||'',
+    recruiting:!!document.getElementById('mt-recruit')?.checked,
+    recruitNote:document.getElementById('mt-roles')?.value.trim()||''
+  };
+  const canRoster=canEditRoster(id);
+  let mems=null;
+  if(canRoster){
+    mems=[];document.querySelectorAll('#mt-members input').forEach(i=>{if(i.value.trim())mems.push(i.value.trim());});
   }
-  DB.set('teams',teams);closeModal('manage-team-modal');renderATeams();renderTeams();notify('Team saved!','','n-ok');
+  guardedAction('saveManageTeam:'+id,async()=>{
+    const result=await sbAtomicUpdate('teams',teams=>{
+      const t=teams.find(x=>x.id===id);if(!t)return teams;
+      t.name=vals.name||t.name;
+      t.tag=vals.tag||t.tag;
+      t.captain=vals.captain||t.captain;
+      t.color=vals.color||t.color;
+      t.logoUrl=vals.logoUrl;
+      t.manager=vals.manager;
+      t.recruiting=vals.recruiting;
+      t.recruitNote=vals.recruitNote;
+      // Roster edits only ever get applied if the saving user still passes canEditRoster — the inputs
+      // simply aren't rendered for a Captain-only viewer (see openManageTeam), but this re-check guards
+      // against a stale/tampered DOM trying to smuggle roster changes through anyway.
+      if(canRoster&&mems&&mems.length)t.members=mems;
+      return teams;
+    });
+    if(result===null)return;
+    closeModal('manage-team-modal');renderATeams();renderTeams();notify('Team saved!','','n-ok');
+  });
 }
 
 // ═══ TEAM JOIN REQUESTS ═══
@@ -8076,7 +8103,11 @@ function filterProfileTeamSearch(){
 function applyToOpenTeam(teamId){
   if(!CU)return notify('Login required','','n-bad');
   const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return;
+  if((t.members||[]).includes(CU.ign))return notify('Already on this team','','n-bad');
   const requests=DB.get('joinRequests',[]);
+  // Block a second request for the same player+team while one's already pending — this is the
+  // single-tab guard. It can still be raced by two different devices/tabs both submitting before
+  // either sees the other's write, which is what resolveJoinRequest's duplicate-cleanup below is for.
   if(requests.find(r=>r.ign===CU.ign&&r.teamId===teamId&&r.status==='pending'))return notify('Already requested','','n-bad');
   requests.push({id:'jr'+Date.now(),ign:CU.ign,teamId,teamName:t.name,status:'pending',ts:new Date().toLocaleString()});
   DB.set('joinRequests',requests);
@@ -8086,8 +8117,22 @@ function applyToOpenTeam(teamId){
   renderTeams();
 }
 
+// Dedupes a list of pending join requests down to one row per ign+team pair (keeps the oldest),
+// used as a display-level safety net in case older duplicate rows already exist in the data —
+// e.g. from before this guard existed, or from two devices both submitting before either saw the
+// other's write.
+function dedupePendingJoinRequests(requests){
+  const seen=new Set();const out=[];
+  requests.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id))).forEach(r=>{
+    const k=r.ign+'|'+r.teamId;
+    if(seen.has(k))return;
+    seen.add(k);out.push(r);
+  });
+  return out;
+}
+
 function renderJoinRequests(){
-  const requests=DB.get('joinRequests',[]).filter(r=>r.status==='pending');
+  const requests=dedupePendingJoinRequests(DB.get('joinRequests',[]).filter(r=>r.status==='pending'));
   const el=document.getElementById('join-request-list');if(!el)return;
   if(!requests.length){el.innerHTML='<div class="text-dim" style="padding:1rem">No pending join requests.</div>';return;}
   el.innerHTML=requests.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .9rem;margin-bottom:.4rem">
@@ -8109,10 +8154,18 @@ function resolveJoinRequest(id,approve,onDone){
     const requests=DB.get('joinRequests',[]);const r=requests.find(x=>x.id===id);if(!r)return;
     if(!isManagerOf(r.teamId))return notify('Not authorized','Only that team\'s captain, manager, or an admin can resolve this','n-bad');
     r.status=approve?'approved':'denied';
+    // Clean up any OTHER pending requests for this exact same player+team pair (duplicate rows,
+    // usually created by the same request being submitted more than once from different
+    // devices/tabs) so accepting/denying one doesn't leave an identical entry stuck in the list.
+    requests.filter(x=>x.id!==r.id&&x.ign===r.ign&&x.teamId===r.teamId&&x.status==='pending')
+      .forEach(dupe=>{dupe.status=r.status;});
     if(approve){
-      await sbRefreshKey('teams');
-      const teams=DB.get('teams');const t=teams.find(x=>x.id===r.teamId);
-      if(t){if(!t.members)t.members=[];if(!t.members.includes(r.ign)){t.members.push(r.ign);DB.set('teams',teams);}}
+      const teamsResult=await sbAtomicUpdate('teams',teams=>{
+        const t=teams.find(x=>x.id===r.teamId);
+        if(t){if(!t.members)t.members=[];if(!t.members.includes(r.ign))t.members.push(r.ign);}
+        return teams;
+      });
+      if(teamsResult===null)return; // conflict — bail out without marking the request resolved so it can be retried
       const players=DB.get('players');const p=players.find(x=>x.ign===r.ign);
       if(p){p.team=r.teamName;DB.set('players',players);}
     }
@@ -8452,7 +8505,31 @@ function saveProfileWebhook(){
   if(!p)return notify('Register first','','n-bad');
   p.webhook=wh;DB.set('players',players);notify('Webhook saved!','','n-ok');
 }
-function delTeam(id){if(!ADM)return;let t=DB.get('teams');const target=t.find(x=>x.id===id);t=t.filter(x=>x.id!==id);DB.set('teams',t);renderATeams();renderTeams();if(target)logAdminAction('Team removed',`${target.name} was removed/rejected`);notify('Team removed','','n-ok');}
+// Delete/reject a team. This used to read the LOCAL cached copy of 'teams', remove the target, and
+// write the WHOLE array straight back — the classic race with any other write to this same
+// key ('teams' holds every team as one JSON blob). If another admin/captain's browser still had the
+// now-deleted team in ITS local copy and saved something else (approve a team, edit a roster, accept
+// a join request) shortly after, THEIR full-array write would silently include the "deleted" team
+// again, and the very next refresh anywhere pulls that resurrected copy back down — looking exactly
+// like "the deleted team came back after a while." sbAtomicUpdate fixes this the same way it already
+// does for the TDM queue: it re-reads the freshest server copy right before writing, and only commits
+// if nothing else changed the row in between (retrying against fresh data if it did), so a genuinely
+// deleted team can't come back from a stale write elsewhere.
+function delTeam(id){
+  if(!ADM)return;
+  guardedAction('delTeam:'+id,async()=>{
+    let removedName=null;
+    const result=await sbAtomicUpdate('teams',teams=>{
+      const target=teams.find(x=>x.id===id);
+      removedName=target?target.name:null;
+      return teams.filter(x=>x.id!==id);
+    });
+    if(result===null)return; // conflict — sbAtomicUpdate already showed "please try again"
+    renderATeams();renderTeams();
+    if(removedName)logAdminAction('Team removed',`${removedName} was removed/rejected by ${CU?CU.name:'Admin'}`);
+    notify('Team removed','','n-ok');
+  });
+}
 function renderAMatches(){
   const ms=DB.get('matches');const body=document.getElementById('am-body');if(!body)return;const logs=DB.get('rlogs5',[]);
   const reqs=DB.get('matchRequests',[]).filter(r=>r.status==='pending');
