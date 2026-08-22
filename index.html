@@ -1130,7 +1130,7 @@ tr:last-child td{border-bottom:none}
           <div><label class="lf-label">Region</label><select class="lf-input" id="dls-region"><option>Asia — South</option><option>Asia — East</option><option>Middle East</option><option>Europe</option><option>North America</option></select></div>
           <div><label class="lf-label">Platform</label><select class="lf-input" id="dls-platform"><option>PC (PUBG)</option><option>Mobile (BGMI)</option><option>Mobile (PUBG Mobile)</option></select></div>
         </div>
-        <div style="font-size:.72rem;color:var(--textD);margin:.2rem 0 .8rem">Name, IGN &amp; UID are required. Everything else — bio, socials, rank, team — can be filled in or changed anytime from your Profile.</div>
+        <div style="font-size:.72rem;color:var(--textD);margin:.2rem 0 .8rem">Name, IGN &amp; UID are required. Everything else — bio, socials, team — can be filled in or changed anytime from your Profile.</div>
         <button class="btn btn-accent btn-fw" onclick="completeDiscordLink()">
           <i class="fa-solid fa-right-to-bracket"></i> Enter Arena
         </button>
@@ -1529,7 +1529,7 @@ tr:last-child td{border-bottom:none}
           </div>
         </div>
         <div id="ap-dupe-warning" style="display:none"></div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>IGN</th><th>Discord</th><th>UID</th><th>Team</th><th>Kills</th><th>K/D</th><th>Rank</th><th></th></tr></thead><tbody id="ap-body"></tbody></table></div></div>
+        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>IGN</th><th>Discord</th><th>UID</th><th>Team</th><th>Kills</th><th>K/D</th><th></th></tr></thead><tbody id="ap-body"></tbody></table></div></div>
       </div>
 
       <!-- ░ ADMIN TEAMS ░ -->
@@ -2340,7 +2340,6 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">PUBG UID <span class="text-dim" style="font-weight:400">(needed so a captain can add you to a team)</span></label><input class="fi" id="ep-uid" placeholder="Your PUBG UID"/></div>
-      <div class="fg"><label class="fl">Rank <span class="text-dim" style="font-weight:400">(optional)</span></label><select class="fi fsel" id="ep-rk"><option value="">Not set</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Conqueror</option></select></div>
       <div class="fg"><label class="fl">Role</label><select class="fi fsel" id="ep-role"><option value="Fragger">Fragger</option><option value="IGL">IGL</option><option value="Support">Support</option><option value="Scout">Scout</option><option value="Flex">Flex</option></select></div>
       <div class="fg"><label class="fl">Country <span class="text-dim" style="font-weight:400">(shows your flag)</span></label><select class="fi fsel" id="ep-country"></select></div>
       <div class="fg"><label class="fl">Profile Picture URL</label><input class="fi" id="ep-avatar" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/pic.png"/></div>
@@ -3076,7 +3075,6 @@ function findDiscordOwner(discord, authId, excludeId){
   })||null;
 }
 let CU=null,ADM=false;
-const RC={Bronze:'#cd7f32',Silver:'#94a3b8',Gold:'#f59e0b',Platinum:'#06b6d4',Diamond:'#3b82f6',Master:'#a855f7',Conqueror:'#ef4444'};
 // Region is a broad PUBGM server group, not a country, so this maps each to a representative
 // flag/globe emoji rather than trying to guess anyone's actual nationality.
 const REGION_FLAGS={'Asia — South':'🇮🇳','Asia — East':'🌏','Middle East':'🇦🇪','Europe':'🇪🇺','North America':'🌎'};
@@ -3281,9 +3279,6 @@ function anOverview(el){
   const roles={};players.forEach(p=>{if(!roles[p.role])roles[p.role]=0;roles[p.role]++;});
   const roleMax=Math.max(...Object.values(roles),1);
 
-  // Rank distribution
-  const ranks={};players.forEach(p=>{if(!ranks[p.rank])ranks[p.rank]=0;ranks[p.rank]++;});
-
   // Kill leaders season
   const seasonKills=[...players].sort((a,b)=>b.kills-a.kills).slice(0,6);
   const killMax=seasonKills[0]?seasonKills[0].kills:1;
@@ -3307,7 +3302,7 @@ function anOverview(el){
     ${topPlayer?`<div class="mab-card red">
       <div style="font-size:.65rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.9px;margin-bottom:.45rem"><i class="fa-solid fa-crosshairs"></i> Season Top Fragger</div>
       <div style="font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:.35rem">${topPlayer.ign}</div>
-      <div style="font-size:.75rem;color:var(--textM);margin-bottom:.6rem">${topPlayer.team||'No Team'} · ${topPlayer.rank}</div>
+      <div style="font-size:.75rem;color:var(--textM);margin-bottom:.6rem">${topPlayer.team||'No Team'}</div>
       <div style="display:flex;gap:1rem">
         <div><div class="font-mono" style="font-size:1.1rem;color:var(--red)">${topPlayer.kills}</div><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Kills</div></div>
         <div><div class="font-mono" style="font-size:1.1rem;color:var(--amber)">${(topPlayer.kills/(topPlayer.deaths||1)).toFixed(1)}</div><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">K/D</div></div>
@@ -3327,7 +3322,7 @@ function anOverview(el){
     ${topWins?`<div class="mab-card green">
       <div style="font-size:.65rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.9px;margin-bottom:.45rem"><i class="fa-solid fa-trophy"></i> Most Match Wins</div>
       <div style="font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:.35rem">${topWins.ign}</div>
-      <div style="font-size:.75rem;color:var(--textM);margin-bottom:.6rem">${topWins.team||'No Team'} · ${topWins.rank}</div>
+      <div style="font-size:.75rem;color:var(--textM);margin-bottom:.6rem">${topWins.team||'No Team'}</div>
       <div style="display:flex;gap:1rem">
         <div><div class="font-mono" style="font-size:1.1rem;color:var(--green)">${topWins.wins}</div><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Wins</div></div>
         <div><div class="font-mono" style="font-size:1.1rem;color:var(--textM)">${topWins.kills}</div><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.5px">Kills</div></div>
@@ -3365,9 +3360,6 @@ function anOverview(el){
     <div class="card">
       <div class="card-title"><i class="fa-solid fa-person-rifle" style="color:var(--accentL)"></i> Role Distribution</div>
       ${Object.entries(roles).sort((a,b)=>b[1]-a[1]).map(([role,cnt],i)=>anBar(role,cnt,roleMax,BAR_COLS[i],i+1)).join('')}
-      <div style="margin-top:1rem"><div class="card-title" style="margin-bottom:.6rem"><i class="fa-solid fa-ranking-star"></i> Rank Distribution</div>
-      ${Object.entries(ranks).map(([rank,cnt])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem"><span style="color:${RC[rank]||'var(--textM)'}">${rank}</span><span class="font-mono" style="color:${RC[rank]||'var(--textM)'};font-size:.78rem">${cnt} player${cnt!==1?'s':''}</span></div>`).join('')}
-      </div>
     </div>
   </div>`;
 }
@@ -3416,7 +3408,7 @@ function anMaps(el){
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.2rem">
     ${topFragger?`<div class="mab-card red"><div style="font-size:.65rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.9px;margin-bottom:.4rem"><i class="fa-solid fa-crosshairs"></i> Top Fragger on ${AN_MAP}</div>
       <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800">${topFragger[0]}</div>
-      ${(()=>{const p=players.find(x=>x.ign===topFragger[0]);return p?`<div style="font-size:.75rem;color:var(--textM);margin:.25rem 0 .55rem">${p.team||'—'} · ${p.rank} · ${p.role}</div>`:''})()}
+      ${(()=>{const p=players.find(x=>x.ign===topFragger[0]);return p?`<div style="font-size:.75rem;color:var(--textM);margin:.25rem 0 .55rem">${p.team||'—'} · ${p.role}</div>`:''})()}
       <div style="display:flex;gap:1rem">
         <div><div class="font-mono" style="font-size:1.1rem;color:var(--red)">${topFragger[1]}</div><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase">Kills</div></div>
         ${pwins[topFragger[0]]?`<div><div class="font-mono" style="font-size:1.1rem;color:var(--amber)">${pwins[topFragger[0]]}</div><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase">Wins</div></div>`:''}
@@ -3564,7 +3556,7 @@ function anTeams(el){
       ${selMembers.length?selMembers.sort((a,b)=>b.kills-a.kills).map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);const lvl=Math.floor((p.xp||0)/500)+1;return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:.5rem">
         <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem">
           <div style="width:34px;height:34px;border-radius:8px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-weight:700;color:${BAR_COLS[i]||'var(--accent)'};flex-shrink:0">${avatarInitial(p.ign)}</div>
-          <div style="flex:1"><div style="font-weight:700;font-size:.88rem">${p.ign}</div><div style="font-size:.73rem;color:var(--textM)">${p.role} · <span style="color:${RC[p.rank]||'var(--textM)'}">${p.rank}</span> · Lv${lvl}</div></div>
+          <div style="flex:1"><div style="font-weight:700;font-size:.88rem">${p.ign}</div><div style="font-size:.73rem;color:var(--textM)">${p.role} · Lv${lvl}</div></div>
           <div style="text-align:right"><div class="font-mono" style="font-size:1rem;color:var(--red)">${p.kills}</div><div style="font-size:.6rem;color:var(--textD)">KILLS</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem;text-align:center">
@@ -3631,13 +3623,12 @@ function anPlayers(el){
   }
 
   // All players full table
-  const fullTable=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Role</th><th>Rank</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Damage</th><th>Level</th></tr></thead><tbody>
+  const fullTable=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Role</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Damage</th><th>Level</th></tr></thead><tbody>
   ${byKills.map((p,i)=>{const kd=(p.kills/(p.deaths||1)).toFixed(2);const lvl=Math.floor((p.xp||0)/500)+1;return `<tr>
     <td><span class="font-mono" style="color:var(--textD);font-size:.78rem">${i+1}</span></td>
     <td><div style="display:flex;align-items:center;gap:.5rem"><div style="width:24px;height:24px;border-radius:6px;background:${BAR_COLS[i]||'var(--accent)'}22;border:1px solid ${BAR_COLS[i]||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${BAR_COLS[i]||'var(--accent)'}">${avatarInitial(p.ign)}</div><span style="font-weight:600;font-size:.85rem" onclick="openProfile('${p.id}')" class="text-accent" style="cursor:pointer">${p.ign}</span></div></td>
     <td style="font-size:.82rem;color:var(--textM)">${p.team||'—'}</td>
     <td><span class="chip chip-neutral" style="font-size:.65rem">${p.role}</span></td>
-    <td><span style="color:${RC[p.rank]||'var(--textM)'};font-size:.82rem">${p.rank}</span></td>
     <td><span class="chip chip-red">${p.kills}</span></td>
     <td><span class="font-mono" style="font-size:.8rem;color:var(--textM)">${p.deaths}</span></td>
     <td><span class="chip chip-accent">${kd}</span></td>
@@ -3763,7 +3754,7 @@ function doGlobalSearch(q){
   const matches=DB.get('matches').filter(m=>m.name.toLowerCase().includes(ql)||m.id.toLowerCase().includes(ql));
   if(!players.length&&!teams.length&&!matches.length){el.innerHTML='<div style="padding:.7rem 1rem;color:var(--textD);font-size:.83rem">No results found.</div>';return;}
   let html='';
-  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||p.rank}</div></div></div>`).join('');}
+  if(players.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Players</div>`;html+=players.slice(0,5).map(p=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="openProfile('${p.id}')"><div class="cell-av" style="width:26px;height:26px;font-size:.7rem">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.ign}</div><div style="font-size:.7rem;color:var(--textD)">${p.team||''}</div></div></div>`).join('');}
   if(teams.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Teams</div>`;html+=teams.slice(0,3).map(t=>`<div style="padding:.5rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('teams')"><div style="width:26px;height:26px;border-radius:6px;background:${t.color||'var(--accent)'}22;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:${t.color||'var(--accent)'}">${(t.tag||avatarInitial(t.name)).slice(0,3)}</div><div><div style="font-weight:600">${t.name}</div><div style="font-size:.7rem;color:var(--textD)">${t.members.length} members</div></div></div>`).join('');}
   if(matches.length){html+=`<div style="padding:.35rem .8rem;font-size:.65rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:1px;background:var(--bg3)">Matches</div>`;html+=matches.slice(0,3).map(m=>`<div style="padding:.5rem 1rem;cursor:pointer;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="showPage('matches')"><div style="font-weight:600">${m.name}</div><div style="font-size:.7rem;color:var(--textD)">${m.map} · ${m.status}</div></div>`).join('');}
   el.innerHTML=html;
@@ -4354,8 +4345,7 @@ function renderReg(){
     <td><span class="chip chip-accent">${p.ign}</span></td>
     <td><span class="chip chip-disc">${p.discord||'—'}</span></td>
     <td>${p.team||'<span class="text-dim">—</span>'}</td>
-    <td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td>
-    <td><span class="chip chip-neutral">${p.role}</span></td>
+        <td><span class="chip chip-neutral">${p.role}</span></td>
     <td class="text-muted" style="font-size:.78rem">${playerFlag(p)} ${p.country?countryName(p.country):(p.region||'')}</td>
     <td style="display:flex;gap:.3rem">
       <button class="btn btn-ghost btn-xs" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button>
@@ -6884,7 +6874,6 @@ function playerBadgesHTML(p){
   </div>`;
 }
 function buildProfileCardHTML(p,isOwn=false){
-  const rankColor=RC[p.rank]||'var(--textM)';
   const hasSocials=p.discord||p.youtube||p.tiktok||p.twitch||p.twitter||p.instagram;
   return `
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
@@ -6905,7 +6894,6 @@ function buildProfileCardHTML(p,isOwn=false){
       <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
         ${p.uid?`<span class="chip chip-accent" style="font-size:.63rem"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>`:''}
         ${p.team?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
-        ${p.rank?`<span class="chip" style="font-size:.63rem;color:${rankColor};background:${rankColor}15;border:1px solid ${rankColor}25">${p.rank}</span>`:''}
         ${p.role?`<span class="chip chip-neutral" style="font-size:.63rem">${p.role}</span>`:''}
         ${p.platform?`<span class="chip chip-neutral" style="font-size:.63rem"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
         ${(p.region||p.country)?`<span class="chip chip-neutral" style="font-size:.63rem">${playerFlag(p)} ${p.country?countryName(p.country):p.region}</span>`:''}
@@ -6995,7 +6983,7 @@ function setupEditMe(){
   if(!p)return;
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
-  set('ep-uid',p.uid||'');set('ep-rk',p.rank||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-uid',p.uid||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
   set('ep-tag',p.tag||'');set('ep-region',p.region||'');set('ep-platform',p.platform||'');set('ep-team',p.team||'');
   populateCountrySelect('ep-country',p.country||'');
   const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
@@ -7018,7 +7006,7 @@ function saveEditPlayer(){
     if(dupeUid)return notify('UID already in use',`That PUBG UID is already registered to ${dupeUid.ign}`,'n-bad');
   }
   p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;p.uid=newUid;
-  p.rank=g('ep-rk');p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
+  p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
   p.tag=g('ep-tag');p.region=g('ep-region');p.platform=g('ep-platform');p.team=g('ep-team');
   p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
   p.twitter=g('ep-xt');p.instagram=g('ep-ig');p.webhook=g('ep-wh');
@@ -7068,7 +7056,7 @@ function openEditAdmin(id){
   const p=DB.get('players').find(x=>x.id===id);if(!p)return;
   const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val||'';};
   set('ep-id',p.id);set('ep-ign',p.ign);set('ep-name',p.name||'');set('ep-dc',p.discord||'');
-  set('ep-uid',p.uid||'');set('ep-rk',p.rank||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
+  set('ep-uid',p.uid||'');set('ep-role',p.role||'Fragger');set('ep-bio',p.bio||'');
   populateCountrySelect('ep-country',p.country||'');
   const epav=document.getElementById('ep-avatar');if(epav)epav.value=p.avatarUrl||'';
   set('ep-yt',p.youtube||'');set('ep-tt',p.tiktok||'');set('ep-tw',p.twitch||'');
@@ -7246,7 +7234,6 @@ function buildMyProfile(){
           ${p.uid?`<span class="chip chip-accent"><i class="fa-solid fa-fingerprint"></i> ${p.uid}</span>`:''}
           ${p.tag?`<span class="chip chip-neutral">${p.tag}</span>`:''}
           ${p.team?`<span class="chip chip-neutral"><i class="fa-solid fa-shield-halved"></i> ${p.team}</span>`:''}
-          ${p.rank?`<span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span>`:''}
           ${p.role?`<span class="chip chip-neutral">${p.role}</span>`:''}
           ${p.platform?`<span class="chip chip-neutral"><i class="fa-solid fa-gamepad"></i> ${p.platform}</span>`:''}
           ${(p.region||p.country)?`<span class="chip chip-neutral">${playerFlag(p)} ${p.country?countryName(p.country):p.region}</span>`:''}
@@ -7338,7 +7325,7 @@ function renderLB(){
   if(pod){const t3=s.slice(0,3);const co=['#f59e0b','#94a3b8','#cd7f32'];const podH=['155px','120px','100px'];const order=[t3[1],t3[0],t3[2]];
     pod.innerHTML=order.filter(Boolean).map((p,vi)=>{const rk=vi===1?1:vi===0?2:3;const cl=co[rk-1];const em=rk===1?'<i class="fa-solid fa-trophy" style="color:var(--amber)"></i>':rk===2?'<i class="fa-solid fa-medal" style="color:#94a3b8"></i>':'<i class="fa-solid fa-medal" style="color:#cd7f32"></i>';
       const metric=f==='points'?`${p.points||0}pts`:f==='kd'?(p.kills/(p.deaths||1)).toFixed(1)+'K/D':f==='wins'?p.wins+'W':`${p.kills}K`;
-      return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${avatarInitial(p.ign)}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||p.rank||''}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${metric}</div></div></div>`;
+      return `<div style="text-align:center"><div class="cell-av" style="width:46px;height:46px;font-size:1.2rem;margin:0 auto .5rem;border-color:${cl}50">${avatarInitial(p.ign)}</div><div style="font-weight:700;font-size:.87rem;color:${cl};margin-bottom:.2rem">${playerFlag(p)} ${p.ign}</div><div class="cell-sub">${p.team||''}</div><div style="background:${cl}0d;border:1px solid ${cl}30;border-radius:var(--rS) var(--rS) 0 0;padding:.8rem 1rem;min-height:${podH[rk-1]};margin-top:.5rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;width:80px"><div style="font-size:1.2rem">${em}</div><div class="font-mono fw6" style="font-size:1.35rem;color:${cl}">${metric}</div></div></div>`;
     }).join('');}
   const body=document.getElementById('lb-body');if(!body)return;
   if(!s.length){body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:2.5rem;color:var(--textD)">No players registered.</td></tr>';return;}
@@ -7826,7 +7813,7 @@ function mmRenderPlacementGrid(){
 }
 
 // ═══ COMPARE ═══
-function renderCmpSelects(){const pl=DB.get('players');['cmp1','cmp2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— Select Player —</option>'+pl.map(p=>`<option value="${p.id}">${p.ign} (${p.team||p.rank})</option>`).join('');if(cur)s.value=cur;});}
+function renderCmpSelects(){const pl=DB.get('players');['cmp1','cmp2'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— Select Player —</option>'+pl.map(p=>`<option value="${p.id}">${p.ign} (${p.team||''})</option>`).join('');if(cur)s.value=cur;});}
 function doCompare(){
   const p1id=v('cmp1'),p2id=v('cmp2');const el=document.getElementById('cmp-result');if(!el)return;
   if(!p1id||!p2id){el.innerHTML='<div style="text-align:center;padding:3rem;color:var(--textD)">Select two players to compare.</div>';return;}
@@ -7840,9 +7827,9 @@ function doCompare(){
       <div><span class="chip font-mono" style="${!w?'background:rgba(99,102,241,.12);color:var(--accentL);border:1px solid rgba(99,102,241,.2)':'color:var(--textD)'}">${v2}</span></div>
     </div>`;};
   el.innerHTML=`<div class="card"><div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:center;text-align:center;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border)">
-    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem">${avatarInitial(p1.ign)}</div><div style="font-weight:700;font-size:.9rem">${p1.ign}</div><div class="text-dim" style="font-size:.75rem">${p1.team||p1.rank}</div></div>
+    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem">${avatarInitial(p1.ign)}</div><div style="font-weight:700;font-size:.9rem">${p1.ign}</div><div class="text-dim" style="font-size:.75rem">${p1.team||''}</div></div>
     <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--textD)">VS</div>
-    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,#a855f7,#ec4899)">${avatarInitial(p2.ign)}</div><div style="font-weight:700;font-size:.9rem">${p2.ign}</div><div class="text-dim" style="font-size:.75rem">${p2.team||p2.rank}</div></div>
+    <div><div class="cell-av" style="width:50px;height:50px;font-size:1.3rem;margin:0 auto .5rem;background:linear-gradient(135deg,#a855f7,#ec4899)">${avatarInitial(p2.ign)}</div><div style="font-weight:700;font-size:.9rem">${p2.ign}</div><div class="text-dim" style="font-size:.75rem">${p2.team||''}</div></div>
   </div>${row('Kills',p1.kills,p2.kills)}${row('K / D',kd1,kd2)}${row('Wins',p1.wins,p2.wins)}${row('Damage',p1.damage||0,p2.damage||0)}${row('XP',p1.xp||0,p2.xp||0)}${row('Deaths',p1.deaths,p2.deaths,false)}</div>${h2hCardHTML(p1,p2)}`;
 }
 
@@ -7953,7 +7940,7 @@ function renderAPlayers(){
   const pl=q?all.filter(p=>[p.ign,p.name,p.uid,p.discord,p.team,p.region].filter(Boolean).some(f=>String(f).toLowerCase().includes(q))):all;
   if(!all.length){body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players registered yet.</td></tr>';return;}
   if(!pl.length){body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--textD)">No players match "${q}".</td></tr>`;return;}
-  body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span>${!p.discordId?` <span class="chip chip-red" style="font-size:.6rem" title="Never signed in with Discord (or was added before Discord login existed) — can never be @mentioned in webhook results until they sign in with Discord at least once"><i class="fa-solid fa-triangle-exclamation"></i> not linked</span>`:''}</td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td><span class="chip" style="color:${RC[p.rank]||'var(--textM)'};background:${RC[p.rank]||'#aaa'}15;border:1px solid ${RC[p.rank]||'#aaa'}25">${p.rank}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Edit stats & profile" onclick="openEditStats('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-ghost btn-xs" title="View profile" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-danger btn-xs" title="Delete player" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');
+  body.innerHTML=pl.map(p=>{const kd=(p.kills/(p.deaths||1)).toFixed(1);return `<tr><td><span class="chip chip-accent">${p.ign}</span></td><td><span class="chip chip-disc">${p.discord||'—'}</span>${!p.discordId?` <span class="chip chip-red" style="font-size:.6rem" title="Never signed in with Discord (or was added before Discord login existed) — can never be @mentioned in webhook results until they sign in with Discord at least once"><i class="fa-solid fa-triangle-exclamation"></i> not linked</span>`:''}</td><td class="text-dim font-mono" style="font-size:.72rem">${p.uid}</td><td>${p.team||'—'}</td><td><span class="chip chip-red">${p.kills}</span></td><td class="text-accent font-mono">${kd}</td><td style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-xs" title="Edit stats & profile" onclick="openEditStats('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-ghost btn-xs" title="View profile" onclick="openProfile('${p.id}')"><i class="fa-solid fa-eye"></i></button><button class="btn btn-danger btn-xs" title="Delete player" onclick="delPlayer('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;}).join('');
 }
 
 function renderATeams(){
@@ -8998,7 +8985,7 @@ function doBulkImportPlayers(){
     const ign=parts[0];if(!ign)return;
     if(existingIgns.has(ign.toLowerCase())){skipped++;return;}
     const discord=parts[1]||'',team=parts[2]||'';
-    players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,7),name:ign,ign,discord,team,uid:'',rank:'',role:'',platform:'',bio:'',
+    players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,7),name:ign,ign,discord,team,uid:'',role:'',platform:'',bio:'',
       kills:0,deaths:0,damage:0,wins:0,xp:0,points:0,gamesPlayed:0,tdmKills:0,tdmWins:0,tdmMatches:0,joinedAt:Date.now()});
     existingIgns.add(ign.toLowerCase());
     created++;
