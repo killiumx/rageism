@@ -8,6 +8,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>RAGEISM · PUBG Esports</title>
+<meta name="description" content="RAGEISM PUBG Esports — Tournament Hub. Live scrims, results, leaderboards, team management, and TDM matchmaking for competitive PUBG.">
+<!-- Favicon: inline SVG so there's no extra file to host — a filled circle with the same crosshair
+     glyph used in the sidebar/login logo, on the site's accent color. Browsers that don't support
+     SVG favicons (very old ones) just show no icon, which is a harmless fallback. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236366f1'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='white' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='6' fill='white'/%3E%3Cline x1='50' y1='8' x2='50' y2='26' stroke='white' stroke-width='7'/%3E%3Cline x1='50' y1='74' x2='50' y2='92' stroke='white' stroke-width='7'/%3E%3Cline x1='8' y1='50' x2='26' y2='50' stroke='white' stroke-width='7'/%3E%3Cline x1='74' y1='50' x2='92' y2='50' stroke='white' stroke-width='7'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236366f1'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='white' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='6' fill='white'/%3E%3Cline x1='50' y1='8' x2='50' y2='26' stroke='white' stroke-width='7'/%3E%3Cline x1='50' y1='74' x2='50' y2='92' stroke='white' stroke-width='7'/%3E%3Cline x1='8' y1='50' x2='26' y2='50' stroke='white' stroke-width='7'/%3E%3Cline x1='74' y1='50' x2='92' y2='50' stroke='white' stroke-width='7'/%3E%3C/svg%3E">
+<!-- Open Graph / Twitter Card — controls how the site looks when the link is shared in Discord,
+     Twitter/X, etc. Without these, shared links show a blank/generic preview card. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="RAGEISM · PUBG Esports Tournament Hub">
+<meta property="og:description" content="Live scrims, results, leaderboards, team management, and TDM matchmaking for competitive PUBG.">
+<meta property="og:site_name" content="RAGEISM PUBG Esports">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RAGEISM · PUBG Esports Tournament Hub">
+<meta name="twitter:description" content="Live scrims, results, leaderboards, team management, and TDM matchmaking for competitive PUBG.">
+<!-- Once this is live on a real domain, add these two for a proper link-preview image:
+     <meta property="og:url" content="https://yourdomain.com">
+     <meta property="og:image" content="https://yourdomain.com/preview.png">
+     (a 1200×630 PNG works best — could reuse your Site Logo from Settings → Appearance) -->
 <!-- preconnect: opens the connection to each external host early instead of waiting for the
      <link>/<script> tag to be parsed, so the fonts/icons/SDK start downloading sooner -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1312,16 +1331,6 @@ tr:last-child td{border-bottom:none}
 
         <div class="g3">
           <div class="card">
-            <div class="card-title"><i class="fa-solid fa-dollar-sign"></i> Prize Pool</div>
-            <div style="text-align:center;padding:.5rem 0 1rem">
-              <div class="font-syne text-amber" style="font-size:2.4rem;font-weight:800;letter-spacing:-.5px" id="dash-prize-total">$5,000</div>
-              <div style="font-size:.72rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.9rem">Season 01 Prize Pool</div>
-            </div>
-            <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--rS);padding:.5rem .85rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center"><span style="color:var(--amber);font-weight:600;font-size:.87rem"><i class="fa-solid fa-trophy"></i> 1st Place</span><span class="font-mono text-amber fw6" id="dash-prize-1">$3,000</span></div>
-            <div style="background:rgba(148,163,184,.05);border:1px solid rgba(148,163,184,.1);border-radius:var(--rS);padding:.5rem .85rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center"><span style="color:#94a3b8;font-weight:600;font-size:.87rem"><i class="fa-solid fa-medal" style="color:#94a3b8"></i> 2nd Place</span><span class="font-mono fw6" style="color:#94a3b8" id="dash-prize-2">$1,200</span></div>
-            <div style="background:rgba(205,127,50,.05);border:1px solid rgba(205,127,50,.1);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span style="color:#cd7f32;font-weight:600;font-size:.87rem"><i class="fa-solid fa-medal" style="color:#cd7f32"></i> 3rd Place</span><span class="font-mono fw6" style="color:#cd7f32" id="dash-prize-3">$800</span></div>
-          </div>
-          <div class="card">
             <div class="card-title"><i class="fa-solid fa-scroll"></i> Rules & Info</div>
             <div style="display:flex;flex-direction:column;gap:.55rem;font-size:.85rem">
               <div style="display:flex;align-items:center;gap:.6rem;color:var(--textM)"><span style="color:var(--green);width:16px;text-align:center"><i class="fa-solid fa-check"></i></span> Max 4 players per squad</div>
@@ -1506,7 +1515,6 @@ tr:last-child td{border-bottom:none}
         <div class="sh-row">
           <div class="sh"><div class="sh-title">Player <span style="color:var(--accentL)">Management</span></div><div class="sh-sub">Search, edit any stat, or remove a player</div></div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="openModal('bulk-import-modal')"><i class="fa-solid fa-file-import"></i> Bulk Import</button>
             <button class="btn btn-ghost btn-sm" onclick="renderTransferRequests();openModal('transfer-request-modal')"><i class="fa-solid fa-right-left"></i> Transfer Requests <span id="transfer-req-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
           </div>
         </div>
@@ -1585,8 +1593,6 @@ tr:last-child td{border-bottom:none}
             <div class="fg"><label class="fl">Tournament Name</label><input class="fi" id="cfg-name" value="RAGEISM PUBG ESPORTS — Season 01"/></div>
             <div class="frow"><div class="fg"><label class="fl">Season</label><input class="fi" id="cfg-s" value="01"/></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="cfg-st"><option>Registration Open</option><option>Group Stage</option><option>Knockout Stage</option><option>Finals</option><option>Completed</option></select></div></div>
             <div class="frow"><div class="fg"><label class="fl">Max Players</label><input class="fi" id="cfg-mp" type="number" value="300"/></div><div class="fg"><label class="fl">Max Teams</label><input class="fi" id="cfg-mt" type="number" value="40"/></div></div>
-            <div class="frow"><div class="fg"><label class="fl">Prize Pool ($)</label><input class="fi" id="cfg-pr" type="number" value="5000"/></div>
-            </div>
             <div class="fg"><label class="fl">Discord Invite Link</label><input class="fi" id="cfg-dc" placeholder="https://discord.gg/..."/></div>
             <div class="fg"><label class="fl">Announcement Banner</label><textarea class="fta" id="cfg-ann" placeholder="Broadcast a message to all players..."></textarea></div>
             <button class="btn btn-accent btn-fw" onclick="saveCfg()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
@@ -2277,18 +2283,6 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<div class="modal-overlay" id="bulk-import-modal">
-  <div class="modal-box" style="max-width:600px">
-    <button class="modal-close" onclick="closeModal('bulk-import-modal')"><i class="fa-solid fa-xmark"></i></button>
-    <div class="modal-title">Bulk Import Players</div>
-    <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">
-      Paste one player per line. Just an IGN works, or add more fields separated by commas: <span class="font-mono" style="font-size:.75rem">IGN, Discord, Team</span>. Duplicate IGNs (case-insensitive, matched against existing players) are skipped automatically.
-    </div>
-    <div class="fg"><textarea class="fta" id="bulk-import-text" rows="10" placeholder="Asher, asher#0001, Ghost Squad&#10;Shah&#10;Pakhton, pakhton_yt"></textarea></div>
-    <button class="btn btn-accent btn-fw" onclick="doBulkImportPlayers()"><i class="fa-solid fa-file-import"></i> Import Players</button>
-    <div id="bulk-import-result" style="margin-top:.8rem;font-size:.8rem;color:var(--textM)"></div>
-  </div>
-</div>
 
 <div class="modal-overlay" id="report-player-modal">
   <div class="modal-box" style="max-width:440px">
@@ -3895,7 +3889,7 @@ function showPage(n){
   if(n==='compare'){renderCmpSelects();doCompare();renderCmpTeamSelects();}
   if(n==='profile')buildMyProfile();
   if(n==='admin-overview')renderAdminOverview();if(n==='admin-players'){renderAPlayers();renderPlayerReports();}if(n==='admin-teams'){renderATeams();updatePendingBadges();}if(n==='admin-matches')renderAMatches();if(n==='admin-results'){renderResultLogs();refreshDLs();}
-  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-pr','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const clu=document.getElementById('cfg-logo-url');if(clu)clu.value=cfg.logoUrl||'';const cbn=document.getElementById('cfg-discord-botname');if(cbn)cbn.value=cfg.discordBotName||'𝐑𝐚𝐠𝐞𝐢𝐬𝐦 𝐄𝐬𝐩𝐨𝐫𝐭𝐬';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
+  if(n==='admin-settings'){const cfg=DB.get('cfg',{});['cfg-name','cfg-s','cfg-st','cfg-mp','cfg-mt','cfg-ann'].forEach(id=>{const k=id.replace('cfg-','');const el=document.getElementById(id);if(el&&cfg[k]!==undefined)el.value=cfg[k];});const dc=document.getElementById('cfg-dc');if(dc&&cfg.discInvite)dc.value=cfg.discInvite;const ca=document.getElementById('cfg-color-a');if(ca)ca.value=cfg.themeColorA||'#6366f1';const cb=document.getElementById('cfg-color-b');if(cb)cb.value=cfg.themeColorB||'#ef4444';const clu=document.getElementById('cfg-logo-url');if(clu)clu.value=cfg.logoUrl||'';const cbn=document.getElementById('cfg-discord-botname');if(cbn)cbn.value=cfg.discordBotName||'𝐑𝐚𝐠𝐞𝐢𝐬𝐦 𝐄𝐬𝐩𝐨𝐫𝐭𝐬';const cf=document.getElementById('cfg-font');if(cf)cf.value=cfg.siteFont||'dmsans';const cst=document.getElementById('cfg-site-theme');if(cst)cst.value=cfg.siteTheme||'light';
     const oc1=document.getElementById('cfg-ov-c1');if(oc1)oc1.value=cfg.ovC1||'#6366f1';
     const oc2=document.getElementById('cfg-ov-c2');if(oc2)oc2.value=cfg.ovC2||'#ec4899';
     const oc3=document.getElementById('cfg-ov-c3');if(oc3)oc3.value=cfg.ovC3||'#22d3ee';
@@ -4294,20 +4288,8 @@ function renderDashLive(){
   targets.forEach(t=>t.innerHTML=html);
 }
 
-// Pulls the live Prize Pool total from Settings and splits it 60/24/16 for 1st/2nd/3rd — same ratio the
-// original hardcoded $5,000/$3,000/$1,200/$800 numbers used. Falls back to $5,000 if nothing's configured yet.
-function renderPrizePool(){
-  const cfg=DB.get('cfg',{});
-  const total=Number(cfg.prize)||5000;
-  const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');
-  const totalEl=document.getElementById('dash-prize-total');if(totalEl)totalEl.textContent=fmt(total);
-  const p1=document.getElementById('dash-prize-1');if(p1)p1.textContent=fmt(total*0.6);
-  const p2=document.getElementById('dash-prize-2');if(p2)p2.textContent=fmt(total*0.24);
-  const p3=document.getElementById('dash-prize-3');if(p3)p3.textContent=fmt(total*0.16);
-}
 function renderDashboardData(){
   renderDashLive();
-  renderPrizePool();
   // Matches
   const ms=DB.get('matches');const el=document.getElementById('d-matches');if(el){
     if(!ms.length){el.innerHTML='<div class="text-dim" style="font-size:.84rem;padding:1rem;text-align:center">No matches scheduled yet.</div>';}
@@ -4436,7 +4418,7 @@ function trRenderRoster(){
 
 function regTeam(){
   const name=v('tn');if(!name)return notify('Team name required','','n-bad');
-  if(!TR_CAPTAIN)return notify('Captain required','Look up the captain by PUBG UID first.','n-bad');
+  if(!TR_CAPTAIN)return notify('Captain required','Search and add the captain by name or IGN first.','n-bad');
   const teams=DB.get('teams');if(teams.find(t=>t.name===name))return notify('Name taken','','n-bad');
   const mems=[TR_CAPTAIN.ign,...TR_MEMBERS.map(m=>m.ign)];
   teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:TR_CAPTAIN.ign,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting:!!document.getElementById('t-recruit')?.checked,recruitNote:v('t-roles')||''});
@@ -9345,7 +9327,7 @@ function switchSettingsTab(tab){
   document.querySelectorAll('#page-admin-settings .set-tab').forEach(b=>b.classList.toggle('active', b.dataset.setTab===tab));
   document.querySelectorAll('#page-admin-settings .set-panel').forEach(p=>p.classList.toggle('active', p.dataset.setPanel===tab));
 }
-function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
+function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
   const prev=DB.get('cfg',{});
   DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');
   logAdminAction('Settings updated',`Tournament settings saved by ${CU?CU.name:'Admin'}`);
@@ -9525,33 +9507,6 @@ document.addEventListener('click',e=>{
   if(panel&&panel.classList.contains('open')&&!panel.contains(e.target)&&e.target!==bubble&&!(bubble&&bubble.contains(e.target)))panel.classList.remove('open');
 });
 
-// ── Bulk Player Import — paste "IGN, Discord, Team" lines, skip dupes, create the rest ──
-function doBulkImportPlayers(){
-  if(!ADM)return;
-  const raw=document.getElementById('bulk-import-text')?.value||'';
-  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  const resEl=document.getElementById('bulk-import-result');
-  if(!lines.length){if(resEl)resEl.textContent='Paste at least one line first.';return;}
-  const players=DB.get('players',[]);
-  const existingIgns=new Set(players.map(p=>(p.ign||'').toLowerCase()));
-  let created=0,skipped=0;
-  lines.forEach(line=>{
-    const parts=line.split(',').map(s=>s.trim()).filter(Boolean);
-    const ign=parts[0];if(!ign)return;
-    if(existingIgns.has(ign.toLowerCase())){skipped++;return;}
-    const discord=parts[1]||'',team=parts[2]||'';
-    players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,7),name:ign,ign,discord,team,uid:'',role:'',platform:'',bio:'',
-      kills:0,deaths:0,damage:0,wins:0,xp:0,points:0,gamesPlayed:0,tdmKills:0,tdmWins:0,tdmMatches:0,joinedAt:Date.now()});
-    existingIgns.add(ign.toLowerCase());
-    created++;
-  });
-  DB.set('players',players);
-  renderAPlayers();updateStats();renderReg();refreshDLs();
-  logAdminAction('Bulk player import',`${created} player(s) imported${skipped?`, ${skipped} skipped as duplicates`:''} by ${CU?CU.name:'Admin'}`);
-  if(resEl)resEl.textContent=`Imported ${created} player${created===1?'':'s'}.${skipped?` Skipped ${skipped} duplicate${skipped===1?'':'s'}.`:''}`;
-  notify('Bulk import complete!',`${created} added${skipped?`, ${skipped} skipped`:''}`,'n-ok');
-  document.getElementById('bulk-import-text').value='';
-}
 // "Reset Stats" was only zeroing scrims fields (kills/deaths/wins/xp/points/gamesPlayed) — every
 // TDM field (tdmKills, tdmWins, tdmMatches, streaks) was left untouched, so the TDM leaderboard
 // (which reads those fields straight off the player record) looked completely unchanged afterward.
@@ -9587,6 +9542,13 @@ function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
 function closeModal(id){document.getElementById(id)?.classList.remove('open');}
+// Click-outside-to-close is already wired up at boot (see the modal-overlay click listeners added
+// during init). Escape-to-close was missing, so add it here for all modals at once.
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+  }
+});
 
 // ═══ INIT ═══
 window.addEventListener('DOMContentLoaded',async()=>{
