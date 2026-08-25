@@ -1554,6 +1554,8 @@ tr:last-child td{border-bottom:none}
           <div style="display:flex;gap:.5rem">
             <button class="btn btn-ghost btn-sm" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')"><i class="fa-solid fa-clipboard-list"></i> Signup Requests <span id="match-signup-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
             <button class="btn btn-ghost btn-sm" onclick="renderSmartSortModal();openModal('smart-sort-modal')"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</button>
+            <button class="btn btn-ghost btn-sm" onclick="renderRecurringModal();openModal('recurring-modal')"><i class="fa-solid fa-repeat"></i> Recurring Scrims</button>
+            <button class="btn btn-ghost btn-sm" onclick="openIcsExportModal()"><i class="fa-solid fa-calendar-days"></i> Calendar Feed</button>
             <button class="btn btn-accent btn-sm" onclick="openNewMatchModal()"><i class="fa-solid fa-plus"></i> New Scrim</button>
           </div>
         </div>
@@ -1953,6 +1955,7 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('done',this)">Ended</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('tdm',this)"><i class="fa-solid fa-skull-crossbones"></i> TDM</button>
             <button class="btn btn-ghost btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
+            <button class="btn btn-ghost btn-sm" onclick="openIcsExportModal()"><i class="fa-solid fa-calendar-plus"></i> Add to Calendar</button>
             <button class="btn btn-ghost btn-sm admin-only" onclick="openNewMatchModal()" style="display:none"><i class="fa-solid fa-plus"></i> New</button>
           </div>
         </div>
@@ -2124,6 +2127,12 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this scrim</label>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:.6rem;cursor:pointer"><input type="checkbox" id="mm-checkin" checked onchange="mmToggleCheckinFields()" style="width:16px;height:16px"/> Require check-in before start <span style="font-weight:400;color:var(--textD)">(captains confirm "we're here"; no-shows auto-free their slot)</span></label>
+    <div id="mm-checkin-fields" class="frow" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:1rem">
+      <div class="fg"><label class="fl">Check-in opens (min before start)</label><input class="fi" id="mm-checkin-open" type="number" value="30" min="1"/></div>
+      <div class="fg"><label class="fl">Auto-free no-shows at (min before start)</label><input class="fi" id="mm-checkin-deadline" type="number" value="10" min="0"/></div>
+      <div class="fg"><label class="fl">Self-leave cutoff (min before start)</label><input class="fi" id="mm-leave-cutoff" type="number" value="60" min="0"/></div>
+    </div>
     <button class="btn btn-accent btn-fw" id="mm-save-btn" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
   </div>
 </div>
@@ -2236,6 +2245,47 @@ tr:last-child td{border-bottom:none}
 
     <div id="ss-preview" style="font-size:.78rem;color:var(--textM);margin-bottom:.9rem"></div>
     <button class="btn btn-accent btn-fw" onclick="smartSortRun()"><i class="fa-solid fa-shuffle"></i> Run Smart-Sort</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="recurring-modal">
+  <div class="modal-box" style="max-width:620px">
+    <button class="modal-close" onclick="closeModal('recurring-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-repeat"></i> Recurring Scrims</div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">Set this up once and it keeps generating itself — the next occurrence is created automatically (inheriting these settings) whenever an admin's dashboard loads and the current one has already happened. Edit or delete any individual generated scrim afterward like normal, without affecting future occurrences.</div>
+    <div id="rs-list" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem"></div>
+    <div class="card-title" style="font-size:.85rem;margin-top:.5rem">New Recurring Scrim</div>
+    <div class="fg"><label class="fl">Name</label><input class="fi" id="rs-n" placeholder="Weekly Tuesday Scrims"/></div>
+    <div class="frow" style="grid-template-columns:1fr 1fr 1.3fr">
+      <div class="fg"><label class="fl">Every</label><select class="fi fsel" id="rs-dow"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></div>
+      <div class="fg"><label class="fl">Time</label><input class="fi" id="rs-tm" type="time" value="20:00"/></div>
+      <div class="fg"><label class="fl">Time Zone</label><select class="fi fsel" id="rs-tz"></select></div>
+    </div>
+    <div class="frow"><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="rs-md"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div><div class="fg"><label class="fl">Max Team Slots</label><input class="fi" id="rs-mt" type="number" value="20" min="1"/></div></div>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="rs-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for each generated scrim</label>
+    <button class="btn btn-accent btn-fw" onclick="createRecurringScrim()"><i class="fa-solid fa-plus"></i> Save Recurring Scrim</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ics-export-modal">
+  <div class="modal-box" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('ics-export-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-calendar-days"></i> Calendar Feed</div>
+    <div class="fg" style="margin-bottom:1rem">
+      <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Get every upcoming (and live) scrim into Google/Apple/Outlook Calendar, in each viewer's own time zone automatically.</div>
+      <button class="btn btn-accent btn-fw" onclick="downloadIcsSnapshot()"><i class="fa-solid fa-download"></i> Download .ics (snapshot)</button>
+      <div style="font-size:.7rem;color:var(--textD);margin-top:.4rem">Works instantly — import it into any calendar app. It's a one-time snapshot though: re-download it whenever scrims change.</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Live subscribe URL <span style="font-weight:400;color:var(--textD)">(auto-updates — requires the included Edge Function, see below)</span></label>
+      <div style="display:flex;gap:.4rem">
+        <input class="fi" id="ics-feed-url" readonly style="font-size:.72rem" value=""/>
+        <button class="btn btn-ghost btn-sm" onclick="copyIcsFeedUrl()"><i class="fa-solid fa-copy"></i></button>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:var(--textD);margin-top:.8rem;line-height:1.5">
+      <i class="fa-solid fa-circle-info"></i> The live URL needs a small Supabase Edge Function deployed once (reads the same <span class="font-mono">kv_store</span> this app already uses and serves it as a calendar feed). <button class="btn btn-ghost btn-xs" onclick="downloadIcsEdgeFunction()"><i class="fa-solid fa-download"></i> Download the function source</button> — deploy it with <span class="font-mono">supabase functions deploy ics-feed</span>, then subscribe to the URL above in Google Calendar (Other calendars → From URL) or Apple Calendar (File → New Calendar Subscription). Until it's deployed, that URL will 404 — the snapshot download above works either way.
+    </div>
   </div>
 </div>
 
@@ -2390,7 +2440,7 @@ const SB_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
 };
-const SB_SYNC = ['players','teams','matches','rlogs5','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','tdmQueue','tdmTournaments','tdmTournamentRequests'];
+const SB_SYNC = ['players','teams','matches','rlogs5','cfg','teamRequests','joinRequests','adminRoles','tdmMatches','adminLog','transferRequests','matchRequests','h2hRecords','tdmBoards','rankingBoards','sponsors','playerReports','tdmQueue','tdmTournaments','tdmTournamentRequests','recurringScrims'];
 let SB_OK = false, SB_WRITES = 0, SB_CONFLICTS = 0;
 let SB_LAST_CONFLICT = null;
 let SB_LAST_WRITE_DIAG = null;
@@ -3741,7 +3791,7 @@ function anMatches(el){
         </div>
         <span class="text-dim font-mono" style="font-size:.68rem">${log.ts}</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:.2rem">${log.entries.map(e=>`<span class="chip" style="font-size:.63rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'rgba(255,255,255,.03)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.placement===1?'<i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>':''}${e.ign} ${e.kills}K</span>`).join('')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.2rem">${log.entries.map(e=>`<span class="chip" style="font-size:.63rem;color:${e.placement===1?'var(--amber)':'var(--textM)'};background:${e.placement===1?'rgba(245,158,11,.1)':'rgba(255,255,255,.03)'};border-color:${e.placement===1?'rgba(245,158,11,.2)':'var(--border)'}">${e.placement===1?'<i class="fa-solid fa-trophy" style="margin-right:.2rem"></i>':''}${e.ign} ${e.kills}K${e.sub?' <span style="color:var(--amber)">(Sub)</span>':''}</span>`).join('')}</div>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -4200,7 +4250,7 @@ function updateStats(){
   if(top){set('potw-name',top.ign);set('potw-k',top.weeklyKills||top.kills||0);set('potw-w',top.weeklyWins||top.wins||0);}
   const topTdm=weeklyTdmPotwPlayer();
   if(topTdm){set('potw-tdm-name',topTdm.ign);set('potw-tdm-k',topTdm.weeklyTdmKills||topTdm.tdmKills||0);set('potw-tdm-w',topTdm.weeklyTdmWins||topTdm.tdmWins||0);}
-  if(ADM){maybeAutoPostPotw(top,'scrims');maybeAutoPostPotw(topTdm,'tdm');maybeAutoPostMatchOfWeek();maybeCheckMatchReminders();}
+  if(ADM){maybeAutoPostPotw(top,'scrims');maybeAutoPostPotw(topTdm,'tdm');maybeAutoPostMatchOfWeek();maybeCheckMatchReminders();maybeAutoFreeNoShows();maybeGenerateRecurringScrims();}
   const cfg=DB.get('cfg',{maxP:300,maxT:40});const mp=parseInt(cfg.maxP)||300,mt=parseInt(cfg.maxT)||40;
   set('p-players',`${pl.length}/${mp}`);set('p-teams',`${te.length}/${mt}`);
   const e1=document.getElementById('pb-players');if(e1)e1.style.width=Math.min(pl.length/mp*100,100)+'%';
@@ -6413,7 +6463,7 @@ function renderGameTabs(){
 
 function buildPlayersForTeam(teamId){
   const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return[];
-  return (t.members||[]).map(ign=>({ign,kills:0,elim:false}));
+  return (t.members||[]).map(ign=>({ign,kills:0,elim:false,sub:false}));
 }
 
 function addResTeamSlot(){
@@ -6507,6 +6557,15 @@ function toggleElim(i,j){
   const btn=document.getElementById(`res-e-${i}-${j}`);
   if(btn){btn.classList.toggle('elim',RES_SLOTS[i].players[j].elim);btn.textContent=RES_SLOTS[i].players[j].elim?'☠ Dead':'Alive';}
 }
+// Flags this player as a substitute for THIS match only — purely a label on the logged result,
+// never touches the team's actual roster (t.members). Lets a host record who really played
+// (e.g. a stand-in filling a roster gap) without a permanent roster change.
+function toggleResSub(i,j){
+  if(!RES_SLOTS[i]||!RES_SLOTS[i].players[j])return;
+  RES_SLOTS[i].players[j].sub=!RES_SLOTS[i].players[j].sub;
+  markResGameUnsaved();
+  renderResSlots();
+}
 
 function renderResSlots(){
   const el=document.getElementById('result-rows');if(!el)return;
@@ -6553,15 +6612,17 @@ function renderResSlots(){
           <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:46px;text-align:center">Kills</span>
           <span style="width:26px"></span>
           <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:60px;text-align:center">Status</span>
+          <span style="font-size:.6rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;width:46px;text-align:center" title="Mark a stand-in playing this match without changing the team's roster">Sub</span>
           <span style="font-size:.6rem;font-weight:700;color:var(--accentL);text-transform:uppercase;letter-spacing:.5px;width:40px;text-align:center">Pts</span>
         </div>
         ${players.length?players.map((p,j)=>{
           const pPts=(p.kills||0)*CUR_KILL_PT;
-          return `<div style="display:grid;grid-template-columns:1fr 46px 26px 60px 40px;gap:.3rem;margin-bottom:.3rem;align-items:center">
-            <div class="res-ign-label" onclick="openProfileByIgn('${p.ign}')">${p.ign}</div>
+          return `<div style="display:grid;grid-template-columns:1fr 46px 26px 60px 46px 40px;gap:.3rem;margin-bottom:.3rem;align-items:center">
+            <div class="res-ign-label" onclick="openProfileByIgn('${p.ign}')">${p.ign}${p.sub?' <span class="chip chip-amber" style="font-size:.55rem;vertical-align:middle">SUB</span>':''}</div>
             <input class="res-kills-in" id="res-k-${i}-${j}" type="number" min="0" max="99" value="${p.kills||''}" placeholder="0" oninput="onResKillChange(${i},${j})" ${p.elim?'style="opacity:.4"':''}/>
             <button class="btn btn-ghost btn-xs" title="+1 kill — tap this live as it happens, no need to type a final number" onclick="bumpResKill(${i},${j})" style="padding:.2rem .35rem"><i class="fa-solid fa-plus"></i></button>
             <button class="res-elim-btn ${p.elim?'elim':''}" id="res-e-${i}-${j}" onclick="toggleElim(${i},${j})">${p.elim?'☠ Dead':'Alive'}</button>
+            <button class="btn btn-xs ${p.sub?'btn-accent':'btn-ghost'}" title="Toggle: playing as a substitute this match" onclick="toggleResSub(${i},${j})" style="font-size:.62rem;padding:.2rem .3rem">${p.sub?'Sub':'—'}</button>
             <div id="res-ppts-${i}-${j}" style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accentL);text-align:center;font-weight:600">${pPts||'—'}</div>
           </div>`;
         }).join(''):`<div style="font-size:.78rem;color:var(--textD);padding:.4rem 0">No registered players — <button class="btn btn-ghost btn-xs" onclick="addResManualPlayer(${i})"><i class="fa-solid fa-plus"></i> Add</button></div>`}
@@ -6583,7 +6644,7 @@ function renderResSlots(){
 
 function addResManualPlayer(i){
   if(!RES_SLOTS[i])return;
-  RES_SLOTS[i].players.push({ign:'',kills:0,elim:false,manual:true});
+  RES_SLOTS[i].players.push({ign:'',kills:0,elim:false,manual:true,sub:false});
   renderResSlots();
   // Focus the new ign input — we'll use a modal for manual add
   const j=RES_SLOTS[i].players.length-1;
@@ -6647,7 +6708,7 @@ function submitResults(){
         if(!sp.elim&&place===1)pt.wins+=1;
         if(sp.elim||place>1)pt.deaths+=1;
         if(place===1&&!pt.firstWinInSession)pt.firstWinInSession=true;
-        entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,placement:place,placePts,killPts:(sp.kills||0)*scKill,pts:playerPts,team:tn,map:game.map,game:gi+1,ts:new Date().toLocaleTimeString()});
+        entries.push({ign:sp.ign,kills:sp.kills||0,elim:sp.elim,sub:!!sp.sub,placement:place,placePts,killPts:(sp.kills||0)*scKill,pts:playerPts,team:tn,map:game.map,game:gi+1,ts:new Date().toLocaleTimeString()});
       });
     });
     perGameSummaries.push({map:game.map,summary:gameSummary});
@@ -7553,25 +7614,46 @@ function renderMatches(filter='all'){
   const myRequests=DB.get('matchRequests',[]);
   list.innerHTML=fl.map(m=>{const sc=m.status==='live'?'status-live':m.status==='upcoming'?'status-up':'status-done';const sl=m.status==='live'?`<div class="live-dot"></div>Live`:m.status==='upcoming'?'Upcoming':'Ended';
     const slotsFilled=(m.teams||[]).length;
-    // Signup button: only for upcoming matches with openSignups enabled and slots remaining, only shown to captains/managers of a team not yet in/pending for this match.
+    const isFullNow=slotsFilled>=matchSlotCap(m);
+    // Signup button: only for upcoming matches with openSignups enabled, only shown to captains/managers of a team not yet in/pending/waitlisted for this match. Once full, offer the waitlist instead of hiding the button.
     let signupBtn='';
+    const myEntry=myLobbyEntry(m);
     if((m.status==='upcoming'||m.status==='live')&&m.openSignups!==false&&myTeams.length){
       const myPending=myTeams.filter(t=>{
         const inMatch=(m.teams||[]).some(x=>x.teamId===t.id);
         const hasReq=myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status!=='denied');
         return inMatch||hasReq;
       });
-      if(myPending.length<myTeams.length&&slotsFilled<matchSlotCap(m)){
+      if(myPending.length<myTeams.length&&!isFullNow){
         signupBtn=`<button class="btn btn-accent btn-xs" onclick="openMatchSignupModal('${m.id}')"><i class="fa-solid fa-hand"></i> Request Slot</button>`;
-      }else if(myTeams.some(t=>(m.teams||[]).some(x=>x.teamId===t.id))){
-        signupBtn=`<span class="chip chip-green" style="font-size:.66rem">You're in</span>`;
+      }else if(myPending.length<myTeams.length&&isFullNow){
+        signupBtn=`<button class="btn btn-ghost btn-xs" onclick="openMatchSignupModal('${m.id}')"><i class="fa-solid fa-hourglass-half"></i> Join Waitlist</button>`;
+      }else if(myTeams.some(t=>myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status==='waitlisted'))){
+        signupBtn=`<span class="chip chip-accent" style="font-size:.66rem"><i class="fa-solid fa-hourglass-half"></i> Waitlisted</span>`;
       }else if(myTeams.some(t=>myRequests.some(r=>r.matchId===m.id&&r.teamId===t.id&&r.status==='pending'))){
         signupBtn=`<span class="chip chip-accent" style="font-size:.66rem">Requested</span>`;
       }
     }
+    // Check-in + self-leave controls, only shown to the captain/manager of whichever of my teams is actually seated in this match.
+    let checkinBtn='';
+    if(myEntry){
+      const cState=checkinWindowState(m);
+      if(cState==='open'&&!myEntry.checkedIn){
+        checkinBtn=`<button class="btn btn-success btn-xs" onclick="checkInMyTeam('${m.id}')"><i class="fa-solid fa-check"></i> We're Here</button>`;
+      }else if(myEntry.checkedIn){
+        checkinBtn=`<span class="chip chip-green" style="font-size:.66rem"><i class="fa-solid fa-check"></i> Checked in</span>`;
+      }else if(cState==='not-open'){
+        checkinBtn=`<span class="chip chip-neutral" style="font-size:.62rem" title="Check-in opens ${checkinOpenMinutes(m)} min before start">Check-in not open</span>`;
+      }else if(cState==='closed'){
+        checkinBtn=`<span class="chip chip-red" style="font-size:.62rem">Missed check-in</span>`;
+      }
+      const start=matchDateTs(m);
+      const canLeave=(m.status==='upcoming'||m.status==='live')&&isFinite(start)&&(start-Date.now())>=leaveCutoffMinutes(m)*60000;
+      if(canLeave)checkinBtn+=`<button class="btn btn-ghost btn-xs" title="Back out of this scrim yourself" onclick="leaveScrimAsCaptain('${m.id}')"><i class="fa-solid fa-door-open"></i> Leave</button>`;
+    }
     const seq=(Array.isArray(m.mapSequence)&&m.mapSequence.length>1)?m.mapSequence:null;
     const seqLine=seq?`<div class="match-meta" style="margin-top:.15rem;font-size:.72rem"><i class="fa-solid fa-list-ol" style="opacity:.6;margin-right:.3rem"></i>${seq.map((mp,i)=>`${i+1}. ${mp||'TBD'}`).join('  →  ')}</div>`:'';
-    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m)} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
+    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m)} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${checkinBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
 }
 // ═══ TEAM LOBBY — a visual chart of every team registered for a match, in either a slot Grid
@@ -7620,7 +7702,7 @@ function renderLobbyModalBody(){
         <button class="btn ${mode==='tree'?'btn-accent':'btn-ghost'} btn-xs" onclick="switchLobbyView('tree')"><i class="fa-solid fa-sitemap"></i> Tree</button>
       </div>
     </div>
-    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${formatScrimWhen(m)} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${formatScrimWhen(m)} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong>${checkinIsEnabled(m)?` · <strong style="color:var(--green)">${(m.teams||[]).filter(x=>x.checkedIn).length}/${filled} checked in</strong>`:''}</div>
     ${ADM&&mode==='grid'?`<div style="font-size:.72rem;color:var(--textD);margin-bottom:.6rem"><i class="fa-solid fa-hand"></i> Drag a team onto another slot to swap or move it.</div>`:''}
     <div id="lobby-view-content"></div>`;
   const content=document.getElementById('lobby-view-content');
@@ -7651,6 +7733,8 @@ function buildLobbyGridHTML(matchId){
       // everyone else just gets the click. Dragging a filled slot onto another slot (filled or
       // open) hands off to swapLobbySlots(), which swaps the two teams or moves into the gap.
       // The small red × (admin-only) pulls the team out of the lobby entirely, freeing the slot.
+      const ciOn=checkinIsEnabled(m);
+      const ciBadge=ciOn?`<div class="chip ${slot.checkedIn?'chip-green':'chip-neutral'}" style="font-size:.58rem;margin-top:.25rem${ADM?';cursor:pointer':''}"${ADM?` onclick="event.stopPropagation();adminToggleCheckin('${matchId}',${i})" title="Click to toggle check-in"`:''}><i class="fa-solid ${slot.checkedIn?'fa-check':'fa-clock'}"></i> ${slot.checkedIn?'Checked in':'Not checked in'}</div>`:'';
       cells.push(`<div class="lobby-slot filled" onclick="${t?`openTeamProfile('${t.id}')`:''}" style="border-color:${color}55"
         ${ADM?`draggable="true" ondragstart="lobbySlotDragStart(event,${i})" ondragover="event.preventDefault()" ondrop="lobbySlotDrop(event,'${matchId}',${i})"`:''}>
         ${ADM?`<div class="lobby-slot-remove" title="Remove ${esc(slot.teamName)} from this scrim" onclick="event.stopPropagation();removeTeamFromLobby('${matchId}',${i})"><i class="fa-solid fa-xmark"></i></div>`:''}
@@ -7658,6 +7742,7 @@ function buildLobbyGridHTML(matchId){
         <div class="lobby-slot-swatch" style="background:${color}"></div>
         <div class="lobby-slot-name">${esc(slot.teamName)}</div>
         <div class="lobby-slot-sub">${t?`${(t.members||[]).length} players${t.tag?' · ['+esc(t.tag)+']':''}`:'Registered'}</div>
+        ${ciBadge}
       </div>`);
     }else{
       cells.push(`<div class="lobby-slot open" ${ADM?`ondragover="event.preventDefault()" ondrop="lobbySlotDrop(event,'${matchId}',${i})"`:''}>
@@ -7713,6 +7798,7 @@ function removeTeamFromLobby(matchId,slot){
     {name:'Slot',value:`#${slot}`,inline:true}
   ]},teamMentionIgns(t),{team:entry.teamName,match:m.name,slot:String(slot)});
   notify('Team removed',`${entry.teamName} pulled from Slot ${slot} — it's open again`,'n-ok');
+  promoteWaitlist(matchId);
 }
 // Tree view: match at the root, branching into a Confirmed node and (if any) a Pending node,
 // each fanning out into one leaf per team. Pure-CSS org-chart pattern via nested <ul><li> — see
@@ -7879,7 +7965,7 @@ function createMatch(){
   if(MM_EDIT_ID){
     const m=ms.find(x=>x.id===MM_EDIT_ID);if(!m)return notify('Scrim not found','','n-bad');
     const oldWhen=`${m.date} ${m.time}`;
-    Object.assign(m,{name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:dateStr||'TBD',time:timeStr||'TBD',tz,startUTC:startUTC||null,maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),openSignups:!!document.getElementById('mm-open')?.checked});
+    Object.assign(m,{name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:dateStr||'TBD',time:timeStr||'TBD',tz,startUTC:startUTC||null,maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),openSignups:!!document.getElementById('mm-open')?.checked,checkinEnabled:!!document.getElementById('mm-checkin')?.checked,checkinOpenMin:parseInt(v('mm-checkin-open'))||0,checkinDeadlineMin:parseInt(v('mm-checkin-deadline'))||0,leaveCutoffMin:parseInt(v('mm-leave-cutoff'))||0});
     DB.set('matches',ms);
     closeModal('match-modal');MM_EDIT_ID=null;mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();
     logAdminAction('Scrim edited',`${name} — schedule/settings updated by ${CU?CU.name:'Admin'}${oldWhen.trim()!==`${m.date} ${m.time}`.trim()?` (was ${oldWhen.trim()||'TBD'})`:''}`);
@@ -7888,7 +7974,7 @@ function createMatch(){
   }
 
   const id='M'+String(ms.length+13).padStart(3,'0');
-  const newScrim={id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:dateStr||'TBD',time:timeStr||'TBD',tz,startUTC:startUTC||null,maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]};
+  const newScrim={id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:dateStr||'TBD',time:timeStr||'TBD',tz,startUTC:startUTC||null,maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,checkinEnabled:!!document.getElementById('mm-checkin')?.checked,checkinOpenMin:parseInt(v('mm-checkin-open'))||0,checkinDeadlineMin:parseInt(v('mm-checkin-deadline'))||0,leaveCutoffMin:parseInt(v('mm-leave-cutoff'))||0,slotsRevealed:false,teams:[]};
   ms.push(newScrim);
   DB.set('matches',ms);
   closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();
@@ -7933,6 +8019,11 @@ function openNewMatchModal(id){
     document.getElementById('mm-players').value=existing.maxPlayers||80;
     document.getElementById('mm-teamsize').value=existing.teamSize||MM_MODE_TEAMSIZE[existing.mode]||4;
     const openEl=document.getElementById('mm-open');if(openEl)openEl.checked=existing.openSignups!==false;
+    const ciEl=document.getElementById('mm-checkin');if(ciEl)ciEl.checked=existing.checkinEnabled!==false;
+    document.getElementById('mm-checkin-open').value=existing.checkinOpenMin!=null?existing.checkinOpenMin:30;
+    document.getElementById('mm-checkin-deadline').value=existing.checkinDeadlineMin!=null?existing.checkinDeadlineMin:10;
+    document.getElementById('mm-leave-cutoff').value=existing.leaveCutoffMin!=null?existing.leaveCutoffMin:60;
+    mmToggleCheckinFields();
     const cs=document.getElementById('mm-custom-scoring');
     if(cs){cs.checked=!!existing.scoring;toggleMMScoring();}
     if(existing.scoring){
@@ -7949,10 +8040,19 @@ function openNewMatchModal(id){
     document.getElementById('mm-tz').value='America/New_York';
     const cs=document.getElementById('mm-custom-scoring');if(cs)cs.checked=false;
     const wrap=document.getElementById('mm-scoring-wrap');if(wrap)wrap.style.display='none';
+    const ciEl=document.getElementById('mm-checkin');if(ciEl)ciEl.checked=true;
+    document.getElementById('mm-checkin-open').value=30;
+    document.getElementById('mm-checkin-deadline').value=10;
+    document.getElementById('mm-leave-cutoff').value=60;
+    mmToggleCheckinFields();
   }
   mmRenderMatchesList();
   mmAutoCalc();
   openModal('match-modal');
+}
+function mmToggleCheckinFields(){
+  const on=!!document.getElementById('mm-checkin')?.checked;
+  const wrap=document.getElementById('mm-checkin-fields');if(wrap)wrap.style.display=on?'grid':'none';
 }
 function mmAddMatchRow(){MM_MATCHES.push({map:''});mmRenderMatchesList();}
 function mmRemoveMatchRow(i){
@@ -8462,6 +8562,308 @@ function canEditRoster(teamId){
 // (maxTeams - 2). MATCH_SLOT_RESERVED is the count of slots held back from the start.
 const MATCH_SLOT_RESERVED=2;
 function matchSlotCap(m){return Math.max(0,(m.maxTeams||20)-MATCH_SLOT_RESERVED);}
+
+// ═══ CHECK-IN WINDOW, SELF-SERVE LEAVE, WAITLIST ═══
+// checkinEnabled defaults ON (undefined !== false) so this applies to scrims created before the
+// feature existed too, using the same 30/10/60-minute defaults shown in the Create Scrim modal.
+function checkinIsEnabled(m){return m.checkinEnabled!==false;}
+function checkinOpenMinutes(m){return m.checkinOpenMin!=null?m.checkinOpenMin:30;}
+function checkinDeadlineMinutes(m){return m.checkinDeadlineMin!=null?m.checkinDeadlineMin:10;}
+function leaveCutoffMinutes(m){return m.leaveCutoffMin!=null?m.leaveCutoffMin:60;}
+// 'na' = check-in isn't used for this scrim (or it has no start time yet) · 'not-open' = too early ·
+// 'open' = captains can check in right now · 'closed' = past the auto-free deadline.
+function checkinWindowState(m){
+  if(!checkinIsEnabled(m))return 'na';
+  const start=matchDateTs(m);if(!isFinite(start))return 'na';
+  const now=Date.now();
+  const opensAt=start-checkinOpenMinutes(m)*60000;
+  const deadlineAt=start-checkinDeadlineMinutes(m)*60000;
+  if(now<opensAt)return 'not-open';
+  if(now<deadlineAt)return 'open';
+  return 'closed';
+}
+// The team entry (in m.teams) that one of the current user's own teams holds in this match, if any.
+function myLobbyEntry(m){
+  if(!CU)return null;
+  const myTeams=myOwnedTeams();
+  return (m.teams||[]).find(x=>myTeams.some(t=>t.id===x.teamId))||null;
+}
+function checkInMyTeam(matchId){
+  if(!CU)return notify('Login required','Sign in with Discord to check in','n-bad');
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  const entry=myLobbyEntry(m);
+  if(!entry)return notify('Not in this scrim','','n-bad');
+  if(entry.checkedIn)return;
+  const state=checkinWindowState(m);
+  if(state==='not-open')return notify('Check-in isn\'t open yet',`Opens ${checkinOpenMinutes(m)} min before start`,'n-bad');
+  if(state==='closed')return notify('Check-in window closed','Contact the host directly if you\'re still here','n-bad');
+  entry.checkedIn=true;entry.checkedInAt=Date.now();
+  DB.set('matches',ms);
+  renderMatches();renderAMatches();if(document.getElementById('lobby-modal-body'))renderLobbyModalBody();
+  logAdminAction('Team checked in',`${entry.teamName} confirmed they're here for ${m.name}`);
+  notify("You're checked in!",`Confirmed for ${m.name}`,'n-ok');
+}
+// Admin manual override — toggles a team's checked-in flag directly (e.g. they confirmed over
+// voice/DM instead of clicking the button themselves).
+function adminToggleCheckin(matchId,slot){
+  if(!ADM)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  const entry=(m.teams||[]).find(x=>(x.slot||0)===slot);if(!entry)return;
+  entry.checkedIn=!entry.checkedIn;entry.checkedInAt=entry.checkedIn?Date.now():null;
+  DB.set('matches',ms);
+  renderLobbyModalBody();renderMatches();renderAMatches();
+  logAdminAction('Check-in updated',`${entry.teamName} marked ${entry.checkedIn?'checked in':'not checked in'} for ${m.name} by ${CU?CU.name:'Admin'}`);
+}
+// Captain-initiated leave — allowed until leaveCutoffMinutes before start; after that, they have to
+// go through the host (removeTeamFromLobby). Frees the slot and immediately offers it to whoever's
+// first on the waitlist for this scrim.
+function leaveScrimAsCaptain(matchId){
+  if(!CU)return notify('Login required','','n-bad');
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  const entry=myLobbyEntry(m);
+  if(!entry)return notify('Not in this scrim','','n-bad');
+  const start=matchDateTs(m);
+  if(isFinite(start)&&(start-Date.now())<leaveCutoffMinutes(m)*60000){
+    return notify('Too late to leave yourself',`Self-leave closes ${leaveCutoffMinutes(m)} min before start — message the host to drop out now`,'n-bad');
+  }
+  const hasWaitlist=DB.get('matchRequests',[]).some(r=>r.matchId===matchId&&r.status==='waitlisted');
+  if(!confirm(`Leave "${m.name}"? Your slot will open up${hasWaitlist?' and go to the next waitlisted team':''}. You can request a slot again later if one's open.`))return;
+  m.teams=(m.teams||[]).filter(x=>x!==entry);
+  DB.set('matches',ms);
+  logAdminAction('Team left scrim',`${entry.teamName} left ${m.name} (Slot ${entry.slot}) on their own, before the cutoff`);
+  fireWebhookEvent('matchTeamLeft',{title:'🚪 Team Left Scrim',color:15105570,fields:[
+    {name:'Team',value:entry.teamName,inline:true},{name:'Scrim',value:m.name,inline:true},{name:'Slot',value:`#${entry.slot||'—'}`,inline:true}
+  ]},null,{team:entry.teamName,match:m.name,slot:String(entry.slot||'')});
+  notify('You left the scrim','Slot freed up','n-ok');
+  renderMatches();renderAMatches();
+  promoteWaitlist(matchId);
+}
+// Pulls the earliest still-waitlisted request for this match into the freed slot, if any. Called
+// after anything frees a slot: admin removal, self-leave, or an auto-freed no-show.
+function promoteWaitlist(matchId){
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  if((m.teams||[]).length>=matchSlotCap(m))return;
+  const requests=DB.get('matchRequests',[]);
+  const waiting=requests.filter(r=>r.matchId===matchId&&r.status==='waitlisted').sort((a,b)=>(a.waitlistTs||0)-(b.waitlistTs||0));
+  if(!waiting.length)return;
+  const next=waiting[0];
+  const teamsDb=DB.get('teams');const t=teamsDb.find(x=>x.id===next.teamId);
+  m.teams=m.teams||[];
+  const taken=new Set(m.teams.map(x=>x.slot).filter(Boolean));
+  let slot=MATCH_SLOT_RESERVED+1;while(taken.has(slot)&&slot<=(m.maxTeams||20))slot++;
+  m.teams.push({teamId:next.teamId,teamName:next.teamName,slot,checkedIn:false});
+  next.status='approved';
+  DB.set('matches',ms);DB.set('matchRequests',requests);
+  logAdminAction('Waitlisted team promoted',`${next.teamName} was auto-promoted off the waitlist into ${m.name} (Slot ${slot})`);
+  fireWebhookEvent('matchWaitlistPromoted',{title:'⬆️ Promoted From Waitlist!',color:3066993,fields:[
+    {name:'Team',value:next.teamName,inline:true},{name:'Slot',value:`#${slot}`,inline:true},{name:'Match',value:m.name,inline:true},
+    {name:'Map',value:m.map||'—',inline:true},{name:'Date',value:m.date||'TBD',inline:true},{name:'Time',value:m.time||'TBD',inline:true}
+  ]},teamMentionIgns(t),{team:next.teamName,slot:String(slot),match:m.name,map:m.map||'',date:m.date||'',time:m.time||'',mode:m.mode||''});
+  renderMatches();renderAMatches();updateMatchSignupBadge();
+}
+// Same "no server cron" caveat as maybeCheckMatchReminders — this only fires while an admin's
+// browser has the dashboard open, once per match (m.noShowSwept), the moment the check-in deadline
+// passes. Any team that never checked in gets pulled out, their slot freed, and the next waitlisted
+// team (if any) auto-promoted into it.
+function maybeAutoFreeNoShows(){
+  if(!ADM)return;
+  const ms=DB.get('matches');let changed=false;
+  const toPromote=[];
+  ms.forEach(m=>{
+    if(m.status!=='upcoming'&&m.status!=='live')return;
+    if(!checkinIsEnabled(m)||m.noShowSwept)return;
+    if(checkinWindowState(m)!=='closed')return;
+    const noShows=(m.teams||[]).filter(x=>!x.checkedIn);
+    m.noShowSwept=true;changed=true;
+    if(!noShows.length)return;
+    const teamsDb=DB.get('teams');
+    noShows.forEach(entry=>{
+      const t=teamsDb.find(x=>x.id===entry.teamId);
+      logAdminAction('No-show auto-removed',`${entry.teamName} never checked in for ${m.name} (Slot ${entry.slot}) — slot auto-freed`);
+      fireWebhookEvent('matchNoShowRemoved',{title:'⏰ No-Show — Slot Auto-Freed',color:15158332,fields:[
+        {name:'Team',value:entry.teamName,inline:true},{name:'Scrim',value:m.name,inline:true},{name:'Slot',value:`#${entry.slot||'—'}`,inline:true}
+      ]},teamMentionIgns(t),{team:entry.teamName,match:m.name,slot:String(entry.slot||'')});
+    });
+    m.teams=(m.teams||[]).filter(x=>x.checkedIn);
+    toPromote.push(m.id);
+  });
+  if(changed){DB.set('matches',ms);renderMatches();renderAMatches();toPromote.forEach(promoteWaitlist);}
+}
+
+// ═══ RECURRING SCRIMS ═══
+// A "template" (recurringScrims collection) describes a weekly slot (day/time/tz/mode/slots).
+// Same "no server cron" limitation as the reminder/no-show checks above: the actual scrim
+// instance for the next occurrence only gets generated once an admin's browser loads the
+// dashboard after the previous occurrence's date has passed. Each generated scrim is a completely
+// normal entry in `matches` (editable, deletable, etc. like any other) tagged with
+// recurringId so this function knows not to generate a duplicate for the same date.
+function nextRecurDate(tpl){
+  const now=new Date();
+  for(let i=0;i<8;i++){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i);
+    if(d.getDay()!==tpl.dow)continue;
+    const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const startUTC=zonedTimeToUtc(dateStr,tpl.time,tpl.tz)?.getTime();
+    if(startUTC&&startUTC>Date.now()-10*60000)return{dateStr,startUTC};
+  }
+  return null;
+}
+function maybeGenerateRecurringScrims(){
+  if(!ADM)return;
+  const templates=DB.get('recurringScrims',[]).filter(t=>t.active!==false);
+  if(!templates.length)return;
+  const ms=DB.get('matches');let changed=false;
+  templates.forEach(tpl=>{
+    const next=nextRecurDate(tpl);if(!next)return;
+    if(ms.some(m=>m.recurringId===tpl.id&&m.date===next.dateStr))return;
+    const id='M'+String(ms.length+13).padStart(3,'0')+'r'+Math.random().toString(36).slice(2,5);
+    ms.push({id,name:tpl.name,map:'',mapSequence:[''],scoring:null,status:'upcoming',date:next.dateStr,time:tpl.time,tz:tpl.tz,startUTC:next.startUTC,maxTeams:tpl.maxTeams||20,mode:tpl.mode,notes:'',openSignups:tpl.openSignups!==false,checkinEnabled:true,checkinOpenMin:30,checkinDeadlineMin:10,leaveCutoffMin:60,slotsRevealed:false,teams:[],recurringId:tpl.id});
+    changed=true;
+    logAdminAction('Recurring scrim generated',`"${tpl.name}" — next occurrence auto-created for ${next.dateStr}`);
+  });
+  if(changed){DB.set('matches',ms);renderMatches();renderAMatches();renderDashboardData();}
+}
+function mmPopulateTzSelectGeneric(id){
+  const sel=document.getElementById(id);if(!sel||sel.options.length)return;
+  sel.innerHTML=TZ_LIST.map(z=>`<option value="${z.v}">${z.l}</option>`).join('');
+}
+function renderRecurringModal(){
+  mmPopulateTzSelectGeneric('rs-tz');
+  const list=DB.get('recurringScrims',[]);
+  const el=document.getElementById('rs-list');if(!el)return;
+  const dowNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  el.innerHTML=list.length?list.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .9rem">
+    <div><div style="font-weight:600">${esc(t.name)}${t.active===false?' <span class="chip chip-neutral" style="font-size:.6rem">Paused</span>':''}</div><div style="font-size:.75rem;color:var(--textM)">Every ${dowNames[t.dow]} · ${t.time} · ${t.mode} · ${t.maxTeams} team slots</div></div>
+    <div style="display:flex;gap:.3rem;flex-shrink:0">
+      <button class="btn btn-ghost btn-xs" title="${t.active===false?'Resume':'Pause'}" onclick="toggleRecurringActive('${t.id}')"><i class="fa-solid ${t.active===false?'fa-play':'fa-pause'}"></i></button>
+      <button class="btn btn-danger btn-xs" onclick="deleteRecurringScrim('${t.id}')"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  </div>`).join(''):'<div class="text-dim" style="padding:.4rem 0">No recurring scrims set up yet.</div>';
+}
+function createRecurringScrim(){
+  const name=v('rs-n');if(!name)return notify('Name required','','n-bad');
+  const list=DB.get('recurringScrims',[]);
+  list.push({id:'rs'+Date.now(),name,dow:parseInt(v('rs-dow'))||0,time:v('rs-tm')||'20:00',tz:v('rs-tz')||'America/New_York',mode:v('rs-md'),maxTeams:parseInt(v('rs-mt'))||20,openSignups:!!document.getElementById('rs-open')?.checked,active:true});
+  DB.set('recurringScrims',list);
+  document.getElementById('rs-n').value='';
+  renderRecurringModal();
+  if(ADM)maybeGenerateRecurringScrims();
+  logAdminAction('Recurring scrim created',`"${name}" set up by ${CU?CU.name:'Admin'}`);
+  notify('Recurring scrim saved!','The next occurrence will generate automatically','n-ok');
+}
+function toggleRecurringActive(id){
+  const list=DB.get('recurringScrims',[]);const t=list.find(x=>x.id===id);if(!t)return;
+  t.active=t.active===false?true:false;
+  DB.set('recurringScrims',list);renderRecurringModal();
+  logAdminAction(t.active?'Recurring scrim resumed':'Recurring scrim paused',`"${t.name}" ${t.active?'resumed':'paused'} by ${CU?CU.name:'Admin'}`);
+  if(t.active)maybeGenerateRecurringScrims();
+}
+function deleteRecurringScrim(id){
+  const list=DB.get('recurringScrims',[]);const t=list.find(x=>x.id===id);if(!t)return;
+  if(!confirm(`Delete the recurring template "${t.name}"? Scrims already generated from it are untouched — this just stops future ones.`))return;
+  DB.set('recurringScrims',list.filter(x=>x.id!==id));renderRecurringModal();
+  logAdminAction('Recurring scrim deleted',`"${t.name}" template deleted by ${CU?CU.name:'Admin'}`);
+}
+
+// ═══ ICS CALENDAR EXPORT ═══
+// Two ways to get scrims into an external calendar app:
+//  1) A one-time .ics file download — works immediately, no deployment needed, but is a snapshot.
+//  2) A live subscribe URL backed by a small Supabase Edge Function (source provided for download)
+//     that reads straight from the same kv_store this app already uses, so calendars that
+//     subscribe to it pick up new/changed scrims automatically. Needs a one-time `supabase
+//     functions deploy` from the project owner — until then the URL just 404s.
+function icsEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+function icsDt(ts){const d=new Date(ts);return d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,'0')+String(d.getUTCDate()).padStart(2,'0')+'T'+String(d.getUTCHours()).padStart(2,'0')+String(d.getUTCMinutes()).padStart(2,'0')+String(d.getUTCSeconds()).padStart(2,'0')+'Z';}
+function buildIcsCalendar(matches){
+  const cfg=DB.get('cfg',{});
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+icsEscape(cfg.name||'Scrims')+'//Scrim Schedule//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:'+icsEscape(cfg.name||'Scrim Schedule')];
+  matches.forEach(m=>{
+    const start=matchDateTs(m);if(!isFinite(start))return;
+    const end=start+90*60000; // 90-minute default duration — scrims don't record an explicit end time
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:'+m.id+'@scrims');
+    lines.push('DTSTAMP:'+icsDt(Date.now()));
+    lines.push('DTSTART:'+icsDt(start));
+    lines.push('DTEND:'+icsDt(end));
+    lines.push('SUMMARY:'+icsEscape(m.name+(m.map?' — '+m.map:'')));
+    lines.push('DESCRIPTION:'+icsEscape(`${m.mode||''}${m.mode?' · ':''}${(m.teams||[]).length}/${matchSlotCap(m)} teams`));
+    lines.push('STATUS:CONFIRMED');
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+function downloadIcsSnapshot(){
+  const ms=DB.get('matches',[]).filter(m=>m.status==='upcoming'||m.status==='live');
+  if(!ms.length)return notify('Nothing to export','No upcoming or live scrims right now','n-bad');
+  const ics=buildIcsCalendar(ms);
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='scrims.ics';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function openIcsExportModal(){
+  const urlEl=document.getElementById('ics-feed-url');
+  if(urlEl)urlEl.value=SUPABASE_URL+'/functions/v1/ics-feed';
+  openModal('ics-export-modal');
+}
+function copyIcsFeedUrl(){
+  const urlEl=document.getElementById('ics-feed-url');if(!urlEl)return;
+  navigator.clipboard?.writeText(urlEl.value).then(()=>notify('Copied!','','n-ok')).catch(()=>notify('Copy failed','Select and copy the URL manually','n-bad'));
+}
+// Source for the optional Supabase Edge Function that serves the live subscribe feed. Downloaded
+// as a plain .ts file — the project owner deploys it once with the Supabase CLI. It only ever
+// reads the existing kv_store row for 'matches' with the anon key (same data already public on
+// the Schedule page) and returns it as ICS text; it writes nothing.
+const ICS_EDGE_FUNCTION_SRC=`// supabase/functions/ics-feed/index.ts
+// Deploy once with: supabase functions deploy ics-feed
+// Then subscribe to: https://<your-project>.supabase.co/functions/v1/ics-feed
+// Reads the same public 'matches' row this app already writes to kv_store — read-only, no secrets.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+function icsEscape(s: string) {
+  return (s || "").replace(/\\\\/g, "\\\\\\\\").replace(/;/g, "\\\\;").replace(/,/g, "\\\\,").replace(/\\n/g, "\\\\n");
+}
+function icsDt(ts: number) {
+  const d = new Date(ts);
+  const p = (n: number, len = 2) => String(n).padStart(len, "0");
+  return \`\${d.getUTCFullYear()}\${p(d.getUTCMonth() + 1)}\${p(d.getUTCDate())}T\${p(d.getUTCHours())}\${p(d.getUTCMinutes())}\${p(d.getUTCSeconds())}Z\`;
+}
+function matchStartTs(m: any) {
+  if (m.startUTC) return m.startUTC;
+  const d = new Date(\`\${m.date} \${m.time}\`);
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+serve(async () => {
+  const res = await fetch(\`\${SUPABASE_URL}/rest/v1/kv_store?select=value&key=eq.matches\`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: \`Bearer \${SUPABASE_ANON_KEY}\` },
+  });
+  const rows = await res.json();
+  const matches = (rows?.[0]?.value || []).filter((m: any) => m.status === "upcoming" || m.status === "live");
+
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Scrims//Scrim Schedule//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Scrim Schedule"];
+  for (const m of matches) {
+    const start = matchStartTs(m);
+    if (!start) continue;
+    const end = start + 90 * 60000;
+    lines.push("BEGIN:VEVENT", \`UID:\${m.id}@scrims\`, \`DTSTAMP:\${icsDt(Date.now())}\`, \`DTSTART:\${icsDt(start)}\`, \`DTEND:\${icsDt(end)}\`, \`SUMMARY:\${icsEscape(m.name + (m.map ? " — " + m.map : ""))}\`, \`DESCRIPTION:\${icsEscape(m.mode || "")}\`, "STATUS:CONFIRMED", "END:VEVENT");
+  }
+  lines.push("END:VCALENDAR");
+
+  return new Response(lines.join("\\r\\n"), {
+    headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "public, max-age=300" },
+  });
+});
+`;
+function downloadIcsEdgeFunction(){
+  const blob=new Blob([ICS_EDGE_FUNCTION_SRC],{type:'text/typescript;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ics-feed-index.ts';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
 function myOwnedTeams(){
   if(!CU)return[];
   return DB.get('teams').filter(t=>t.approved&&(t.captain===CU.ign||t.manager===CU.ign));
@@ -8490,27 +8892,34 @@ function submitMatchSignup(){
   const requests=DB.get('matchRequests',[]);
   if(requests.find(r=>r.matchId===matchId&&r.teamId===teamId&&r.status!=='denied'))return notify('Already requested','','n-bad');
   if((m.teams||[]).some(x=>x.teamId===teamId))return notify('Already in this match','','n-bad');
-  if((m.teams||[]).length>=matchSlotCap(m))return notify('Match is full','No open slots left for this match','n-bad');
-  requests.push({id:'mr'+Date.now(),matchId,matchName:m.name,teamId,teamName:t.name,requestedBy:CU.ign,status:'pending',ts:new Date().toLocaleString()});
+  const isFull=(m.teams||[]).length>=matchSlotCap(m);
+  requests.push({id:'mr'+Date.now(),matchId,matchName:m.name,teamId,teamName:t.name,requestedBy:CU.ign,status:isFull?'waitlisted':'pending',waitlistTs:isFull?Date.now():undefined,ts:new Date().toLocaleString()});
   DB.set('matchRequests',requests);closeModal('match-signup-modal');updateMatchSignupBadge();
-  fireWebhookEvent('matchSignupRequest',{title:'📋 New Scrim/Match Signup Request',color:3900151,fields:[
-    {name:'Team',value:t.name,inline:true},
-    {name:'Match',value:m.name,inline:true},
-    {name:'Map',value:m.map||'—',inline:true},
-    {name:'When',value:`${m.date} ${m.time}`,inline:true},
-    {name:'Requested by',value:CU.ign,inline:true}
-  ]},null,{team:t.name,match:m.name,map:m.map||'',date:m.date||'',time:m.time||'',mode:m.mode||''});
-  notify(`Request sent for ${t.name}!`,'Awaiting host approval','n-ok');
+  if(isFull){
+    fireWebhookEvent('matchWaitlisted',{title:'⏳ Team Joined Waitlist',color:10181046,fields:[
+      {name:'Team',value:t.name,inline:true},{name:'Match',value:m.name,inline:true},{name:'Requested by',value:CU.ign,inline:true}
+    ]},teamMentionIgns(t),{team:t.name,match:m.name});
+    notify(`${t.name} added to the waitlist`,"Match is full — you'll be auto-assigned a slot if one opens up",'n-info');
+  }else{
+    fireWebhookEvent('matchSignupRequest',{title:'📋 New Scrim/Match Signup Request',color:3900151,fields:[
+      {name:'Team',value:t.name,inline:true},
+      {name:'Match',value:m.name,inline:true},
+      {name:'Map',value:m.map||'—',inline:true},
+      {name:'When',value:`${m.date} ${m.time}`,inline:true},
+      {name:'Requested by',value:CU.ign,inline:true}
+    ]},null,{team:t.name,match:m.name,map:m.map||'',date:m.date||'',time:m.time||'',mode:m.mode||''});
+    notify(`Request sent for ${t.name}!`,'Awaiting host approval','n-ok');
+  }
 }
 function renderMatchSignupRequests(){
-  const requests=DB.get('matchRequests',[]).filter(r=>r.status==='pending');
+  const requests=DB.get('matchRequests',[]).filter(r=>r.status==='pending'||r.status==='waitlisted');
   const el=document.getElementById('match-signup-request-list');if(!el)return;
   if(!requests.length){el.innerHTML='<div class="text-dim" style="padding:1rem">No pending signup requests.</div>';return;}
   el.innerHTML=requests.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.6rem .9rem;margin-bottom:.4rem;gap:.6rem">
-    <div style="min-width:0"><div style="font-weight:600">${r.teamName}</div><div style="font-size:.77rem;color:var(--textM)">→ ${r.matchName} · requested by ${r.requestedBy} · ${r.ts}</div></div>
+    <div style="min-width:0"><div style="font-weight:600">${r.teamName}${r.status==='waitlisted'?' <span class="chip chip-accent" style="font-size:.6rem;vertical-align:middle"><i class="fa-solid fa-hourglass-half"></i> Waitlisted</span>':''}</div><div style="font-size:.77rem;color:var(--textM)">→ ${r.matchName} · requested by ${r.requestedBy} · ${r.ts}</div></div>
     <div style="display:flex;gap:.3rem;flex-shrink:0">
-      <button class="btn btn-success btn-xs" onclick="resolveMatchSignupRequest('${r.id}',true)"><i class="fa-solid fa-check"></i> Approve</button>
-      <button class="btn btn-danger btn-xs" onclick="resolveMatchSignupRequest('${r.id}',false)"><i class="fa-solid fa-xmark"></i> Deny</button>
+      <button class="btn btn-success btn-xs" onclick="resolveMatchSignupRequest('${r.id}',true)"><i class="fa-solid fa-check"></i> ${r.status==='waitlisted'?'Promote':'Approve'}</button>
+      <button class="btn btn-danger btn-xs" onclick="resolveMatchSignupRequest('${r.id}',false)"><i class="fa-solid fa-xmark"></i> ${r.status==='waitlisted'?'Remove':'Deny'}</button>
     </div>
   </div>`).join('');
 }
@@ -8859,6 +9268,10 @@ const WEBHOOK_EVENTS={
   matchSignupDenied:{label:'Scrim/Match Signup Denied',icon:'fa-calendar-xmark',defaultScope:'captain',tokens:'{team} {match} {mentions}'},
   matchLobbyRevealed:{label:'Event Started (Lobby Revealed)',icon:'fa-table-cells',defaultScope:'none',tokens:'{match} {map} {date} {time}'},
   matchTeamRemoved:{label:'Team Removed From Scrim',icon:'fa-user-slash',defaultScope:'captain',tokens:'{team} {match} {slot} {mentions}'},
+  matchWaitlisted:{label:'Team Joined Waitlist',icon:'fa-hourglass-half',defaultScope:'captain',tokens:'{team} {match} {mentions}'},
+  matchWaitlistPromoted:{label:'Team Promoted From Waitlist',icon:'fa-arrow-up-right-dots',defaultScope:'all',tokens:'{team} {slot} {match} {map} {date} {time} {mode} {mentions}'},
+  matchTeamLeft:{label:'Team Left Scrim (self-serve)',icon:'fa-door-open',defaultScope:'none',tokens:'{team} {match} {slot} {mentions}'},
+  matchNoShowRemoved:{label:'Team Auto-Removed (Missed Check-In)',icon:'fa-user-clock',defaultScope:'captain',tokens:'{team} {match} {slot} {mentions}'},
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
   playerOfWeek:{label:'Player of the Week',icon:'fa-crown'},
   weeklyRecap:{label:'Weekly Recap',icon:'fa-calendar-week'},
@@ -9228,7 +9641,7 @@ function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))ret
   // the pre-reset numbers until they manually navigated away and back. Re-render it here too.
   if(document.getElementById('an-content'))renderAnalytics(AN_TAB);
   renderAPlayers();renderATeams();updateStats();renderDashboardData();buildTicker();renderReg();refreshDLs();logAdminAction('Data cleared',`All ${what} were cleared from the tournament`);notify(`${what} cleared!`,'','n-ok');}
-function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','rlogs5','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
+function resetAll(){if(!confirm('FULL RESET? All data lost.'))return;if(!confirm('Last chance!'))return;logAdminAction('Full tournament reset','Every collection was wiped (players, teams, matches, TDM matches, logs, etc.)');['players','teams','matches','tdmMatches','h2hRecords','rlogs5','s5','teamRequests','joinRequests','adminRoles','transferRequests','matchRequests','recurringScrims'].forEach(k=>localStorage.removeItem('rge5_'+k));notify('Resetting...','','n-ok');setTimeout(()=>location.reload(),1200);}
 
 // ═══ MODALS ═══
 function openModal(id){document.getElementById(id)?.classList.add('open');}
