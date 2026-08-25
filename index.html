@@ -2,10 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>RAGEISM · PUBG Esports</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- preconnect: opens the connection to each external host early instead of waiting for the
+     <link>/<script> tag to be parsed, so the fonts/icons/SDK start downloading sooner -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<!-- weight 300 isn't used anywhere in this app for any of these families — dropped to cut
+     5 unused font files off every page load -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- only fa-solid and fa-brands classes are used anywhere in this app (verified — no fa-regular/
+     fa-light/fa-thin/fa-duotone) so we load just those two style sheets instead of the full
+     all.min.css bundle, which also ships regular/light/thin/duotone definitions we never use -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/brands.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ── THEME SYSTEM ───────────────────────────────────────────────
@@ -91,7 +108,9 @@ html[data-theme="sunset"] {
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--font-main);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5;transition:background .25s ease,color .25s ease}
+html{overscroll-behavior-y:none} /* stops the rubber-band pull-to-refresh flash on mobile browsers */
+body{font-family:var(--font-main);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5;transition:background .25s ease,color .25s ease;-webkit-tap-highlight-color:transparent}
+button,.btn,a{touch-action:manipulation} /* removes the ~300ms tap delay on touch devices */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(99,102,241,.08) 0%,transparent 60%),
              radial-gradient(ellipse 60% 40% at 90% 100%,rgba(16,185,129,.05) 0%,transparent 60%)}
@@ -851,6 +870,9 @@ tr:last-child td{border-bottom:none}
   .mobile-menu-btn{display:flex}
   #mobile-backdrop{display:block}
   #bottom-nav{display:flex}
+  /* iOS Safari auto-zooms the page on focus for any input under 16px — bump every text
+     input/select/textarea to 16px only on phones so the layout doesn't jump when typing */
+  .fi,.fsel,.fta{font-size:16px}
   .main-content{padding-bottom:64px}
 
   .sidebar{
@@ -1555,7 +1577,6 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-ghost btn-sm" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')"><i class="fa-solid fa-clipboard-list"></i> Signup Requests <span id="match-signup-badge" class="sb-badge sb-badge-accent" style="display:inline;position:static;margin-left:.3rem">0</span></button>
             <button class="btn btn-ghost btn-sm" onclick="renderSmartSortModal();openModal('smart-sort-modal')"><i class="fa-solid fa-shuffle"></i> Smart-Sort Lobbies</button>
             <button class="btn btn-ghost btn-sm" onclick="renderRecurringModal();openModal('recurring-modal')"><i class="fa-solid fa-repeat"></i> Recurring Scrims</button>
-            <button class="btn btn-ghost btn-sm" onclick="openIcsExportModal()"><i class="fa-solid fa-calendar-days"></i> Calendar Feed</button>
             <button class="btn btn-accent btn-sm" onclick="openNewMatchModal()"><i class="fa-solid fa-plus"></i> New Scrim</button>
           </div>
         </div>
@@ -1955,7 +1976,6 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('done',this)">Ended</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('tdm',this)"><i class="fa-solid fa-skull-crossbones"></i> TDM</button>
             <button class="btn btn-ghost btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
-            <button class="btn btn-ghost btn-sm" onclick="openIcsExportModal()"><i class="fa-solid fa-calendar-plus"></i> Add to Calendar</button>
             <button class="btn btn-ghost btn-sm admin-only" onclick="openNewMatchModal()" style="display:none"><i class="fa-solid fa-plus"></i> New</button>
           </div>
         </div>
@@ -2264,28 +2284,6 @@ tr:last-child td{border-bottom:none}
     <div class="frow"><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="rs-md"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div><div class="fg"><label class="fl">Max Team Slots</label><input class="fi" id="rs-mt" type="number" value="20" min="1"/></div></div>
     <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="rs-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for each generated scrim</label>
     <button class="btn btn-accent btn-fw" onclick="createRecurringScrim()"><i class="fa-solid fa-plus"></i> Save Recurring Scrim</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="ics-export-modal">
-  <div class="modal-box" style="max-width:560px">
-    <button class="modal-close" onclick="closeModal('ics-export-modal')"><i class="fa-solid fa-xmark"></i></button>
-    <div class="modal-title"><i class="fa-solid fa-calendar-days"></i> Calendar Feed</div>
-    <div class="fg" style="margin-bottom:1rem">
-      <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Get every upcoming (and live) scrim into Google/Apple/Outlook Calendar, in each viewer's own time zone automatically.</div>
-      <button class="btn btn-accent btn-fw" onclick="downloadIcsSnapshot()"><i class="fa-solid fa-download"></i> Download .ics (snapshot)</button>
-      <div style="font-size:.7rem;color:var(--textD);margin-top:.4rem">Works instantly — import it into any calendar app. It's a one-time snapshot though: re-download it whenever scrims change.</div>
-    </div>
-    <div class="fg">
-      <label class="fl">Live subscribe URL <span style="font-weight:400;color:var(--textD)">(auto-updates — requires the included Edge Function, see below)</span></label>
-      <div style="display:flex;gap:.4rem">
-        <input class="fi" id="ics-feed-url" readonly style="font-size:.72rem" value=""/>
-        <button class="btn btn-ghost btn-sm" onclick="copyIcsFeedUrl()"><i class="fa-solid fa-copy"></i></button>
-      </div>
-    </div>
-    <div style="font-size:.72rem;color:var(--textD);margin-top:.8rem;line-height:1.5">
-      <i class="fa-solid fa-circle-info"></i> The live URL needs a small Supabase Edge Function deployed once (reads the same <span class="font-mono">kv_store</span> this app already uses and serves it as a calendar feed). <button class="btn btn-ghost btn-xs" onclick="downloadIcsEdgeFunction()"><i class="fa-solid fa-download"></i> Download the function source</button> — deploy it with <span class="font-mono">supabase functions deploy ics-feed</span>, then subscribe to the URL above in Google Calendar (Other calendars → From URL) or Apple Calendar (File → New Calendar Subscription). Until it's deployed, that URL will 404 — the snapshot download above works either way.
-    </div>
   </div>
 </div>
 
@@ -2672,7 +2670,7 @@ function sbStatus(type, msg){
   const txt = document.getElementById('sb-status-txt');
   if(!bar || !txt) return;
   const cls = type==='err' ? 'sb-err' : type==='loading' ? 'sb-loading' : '';
-  bar.className = (ADM ? 'show ' : '') + cls;
+  bar.className = cls;
   txt.textContent = msg;
   if(type === 'ok') setTimeout(() => { bar.style.opacity = '.45'; }, 5000);
   renderDebugStatus();
@@ -2682,7 +2680,7 @@ function refreshSbBarVisibility(){
   const bar = document.getElementById('sb-status-bar');
   if(!bar) return;
   const cls = SB_LAST_TYPE==='err' ? 'sb-err' : SB_LAST_TYPE==='loading' ? 'sb-loading' : '';
-  bar.className = (ADM ? 'show ' : '') + cls;
+  bar.className = cls;
 }
 function renderDebugStatus(){
   const el = document.getElementById('debug-sb-status');
@@ -8763,105 +8761,6 @@ function deleteRecurringScrim(id){
   if(!confirm(`Delete the recurring template "${t.name}"? Scrims already generated from it are untouched — this just stops future ones.`))return;
   DB.set('recurringScrims',list.filter(x=>x.id!==id));renderRecurringModal();
   logAdminAction('Recurring scrim deleted',`"${t.name}" template deleted by ${CU?CU.name:'Admin'}`);
-}
-
-// ═══ ICS CALENDAR EXPORT ═══
-// Two ways to get scrims into an external calendar app:
-//  1) A one-time .ics file download — works immediately, no deployment needed, but is a snapshot.
-//  2) A live subscribe URL backed by a small Supabase Edge Function (source provided for download)
-//     that reads straight from the same kv_store this app already uses, so calendars that
-//     subscribe to it pick up new/changed scrims automatically. Needs a one-time `supabase
-//     functions deploy` from the project owner — until then the URL just 404s.
-function icsEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
-function icsDt(ts){const d=new Date(ts);return d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,'0')+String(d.getUTCDate()).padStart(2,'0')+'T'+String(d.getUTCHours()).padStart(2,'0')+String(d.getUTCMinutes()).padStart(2,'0')+String(d.getUTCSeconds()).padStart(2,'0')+'Z';}
-function buildIcsCalendar(matches){
-  const cfg=DB.get('cfg',{});
-  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+icsEscape(cfg.name||'Scrims')+'//Scrim Schedule//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:'+icsEscape(cfg.name||'Scrim Schedule')];
-  matches.forEach(m=>{
-    const start=matchDateTs(m);if(!isFinite(start))return;
-    const end=start+90*60000; // 90-minute default duration — scrims don't record an explicit end time
-    lines.push('BEGIN:VEVENT');
-    lines.push('UID:'+m.id+'@scrims');
-    lines.push('DTSTAMP:'+icsDt(Date.now()));
-    lines.push('DTSTART:'+icsDt(start));
-    lines.push('DTEND:'+icsDt(end));
-    lines.push('SUMMARY:'+icsEscape(m.name+(m.map?' — '+m.map:'')));
-    lines.push('DESCRIPTION:'+icsEscape(`${m.mode||''}${m.mode?' · ':''}${(m.teams||[]).length}/${matchSlotCap(m)} teams`));
-    lines.push('STATUS:CONFIRMED');
-    lines.push('END:VEVENT');
-  });
-  lines.push('END:VCALENDAR');
-  return lines.join('\r\n');
-}
-function downloadIcsSnapshot(){
-  const ms=DB.get('matches',[]).filter(m=>m.status==='upcoming'||m.status==='live');
-  if(!ms.length)return notify('Nothing to export','No upcoming or live scrims right now','n-bad');
-  const ics=buildIcsCalendar(ms);
-  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='scrims.ics';a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-}
-function openIcsExportModal(){
-  const urlEl=document.getElementById('ics-feed-url');
-  if(urlEl)urlEl.value=SUPABASE_URL+'/functions/v1/ics-feed';
-  openModal('ics-export-modal');
-}
-function copyIcsFeedUrl(){
-  const urlEl=document.getElementById('ics-feed-url');if(!urlEl)return;
-  navigator.clipboard?.writeText(urlEl.value).then(()=>notify('Copied!','','n-ok')).catch(()=>notify('Copy failed','Select and copy the URL manually','n-bad'));
-}
-// Source for the optional Supabase Edge Function that serves the live subscribe feed. Downloaded
-// as a plain .ts file — the project owner deploys it once with the Supabase CLI. It only ever
-// reads the existing kv_store row for 'matches' with the anon key (same data already public on
-// the Schedule page) and returns it as ICS text; it writes nothing.
-const ICS_EDGE_FUNCTION_SRC=`// supabase/functions/ics-feed/index.ts
-// Deploy once with: supabase functions deploy ics-feed
-// Then subscribe to: https://<your-project>.supabase.co/functions/v1/ics-feed
-// Reads the same public 'matches' row this app already writes to kv_store — read-only, no secrets.
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-
-function icsEscape(s: string) {
-  return (s || "").replace(/\\\\/g, "\\\\\\\\").replace(/;/g, "\\\\;").replace(/,/g, "\\\\,").replace(/\\n/g, "\\\\n");
-}
-function icsDt(ts: number) {
-  const d = new Date(ts);
-  const p = (n: number, len = 2) => String(n).padStart(len, "0");
-  return \`\${d.getUTCFullYear()}\${p(d.getUTCMonth() + 1)}\${p(d.getUTCDate())}T\${p(d.getUTCHours())}\${p(d.getUTCMinutes())}\${p(d.getUTCSeconds())}Z\`;
-}
-function matchStartTs(m: any) {
-  if (m.startUTC) return m.startUTC;
-  const d = new Date(\`\${m.date} \${m.time}\`);
-  return isNaN(d.getTime()) ? null : d.getTime();
-}
-
-serve(async () => {
-  const res = await fetch(\`\${SUPABASE_URL}/rest/v1/kv_store?select=value&key=eq.matches\`, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: \`Bearer \${SUPABASE_ANON_KEY}\` },
-  });
-  const rows = await res.json();
-  const matches = (rows?.[0]?.value || []).filter((m: any) => m.status === "upcoming" || m.status === "live");
-
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Scrims//Scrim Schedule//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Scrim Schedule"];
-  for (const m of matches) {
-    const start = matchStartTs(m);
-    if (!start) continue;
-    const end = start + 90 * 60000;
-    lines.push("BEGIN:VEVENT", \`UID:\${m.id}@scrims\`, \`DTSTAMP:\${icsDt(Date.now())}\`, \`DTSTART:\${icsDt(start)}\`, \`DTEND:\${icsDt(end)}\`, \`SUMMARY:\${icsEscape(m.name + (m.map ? " — " + m.map : ""))}\`, \`DESCRIPTION:\${icsEscape(m.mode || "")}\`, "STATUS:CONFIRMED", "END:VEVENT");
-  }
-  lines.push("END:VCALENDAR");
-
-  return new Response(lines.join("\\r\\n"), {
-    headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "public, max-age=300" },
-  });
-});
-`;
-function downloadIcsEdgeFunction(){
-  const blob=new Blob([ICS_EDGE_FUNCTION_SRC],{type:'text/typescript;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ics-feed-index.ts';a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
 function myOwnedTeams(){
