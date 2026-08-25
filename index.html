@@ -1681,9 +1681,9 @@ tr:last-child td{border-bottom:none}
                 <div class="ov-preset-sw" data-preset="mono" onclick="applyOverlayPreset('mono')"><div class="ov-preset-dot" style="background:linear-gradient(90deg,#94a3b8,#e2e8f0,#64748b)"></div>Mono</div>
               </div>
               <div class="frow3" style="margin-bottom:.9rem">
-                <div class="fg" style="margin-bottom:0"><label class="fl">Color 1</label><input class="fi" id="cfg-ov-c1" type="color" value="#6366f1" style="height:40px;padding:.2rem" oninput="previewOverlayDesign()"/></div>
-                <div class="fg" style="margin-bottom:0"><label class="fl">Color 2</label><input class="fi" id="cfg-ov-c2" type="color" value="#ec4899" style="height:40px;padding:.2rem" oninput="previewOverlayDesign()"/></div>
-                <div class="fg" style="margin-bottom:0"><label class="fl">Color 3</label><input class="fi" id="cfg-ov-c3" type="color" value="#22d3ee" style="height:40px;padding:.2rem" oninput="previewOverlayDesign()"/></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Color 1</label><input class="fi" id="cfg-ov-c1" type="color" value="#6366f1" style="height:40px;padding:.2rem" oninput="previewOverlayDesignThrottled()"/></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Color 2</label><input class="fi" id="cfg-ov-c2" type="color" value="#ec4899" style="height:40px;padding:.2rem" oninput="previewOverlayDesignThrottled()"/></div>
+                <div class="fg" style="margin-bottom:0"><label class="fl">Color 3</label><input class="fi" id="cfg-ov-c3" type="color" value="#22d3ee" style="height:40px;padding:.2rem" oninput="previewOverlayDesignThrottled()"/></div>
               </div>
               <div class="frow" style="margin-bottom:.9rem">
                 <div class="fg" style="margin-bottom:0"><label class="fl">Background</label>
@@ -9402,6 +9402,18 @@ function applyOverlayDesign(cfg){
   const cr=OVERLAY_CORNERS[corner];
   root.style.setProperty('--ov-radius',cr.r);root.style.setProperty('--ov-radius-sm',cr.rs);root.style.setProperty('--ov-radius-av',cr.rav);
   root.setAttribute('data-ovbg',bg);
+}
+// previewOverlayDesign() is wired to oninput on the 3 color pickers, which fires continuously
+// (many times a second) while the native color picker is being dragged — and applyOverlayDesign()
+// writes several CSS vars onto <html> AND that preview card uses backdrop-filter blur + an
+// animated conic-gradient mask, both expensive to repaint. Doing that on every raw input event
+// was the main source of visible stutter/flicker on this page. rAF-throttling collapses however
+// many events land within a single frame down to just the latest one, so the preview still feels
+// live but the browser only actually repaints once per frame instead of dozens of times.
+let _ovPreviewRaf=null;
+function previewOverlayDesignThrottled(){
+  if(_ovPreviewRaf)return;
+  _ovPreviewRaf=requestAnimationFrame(()=>{_ovPreviewRaf=null;previewOverlayDesign();});
 }
 function applyOverlayPreset(name){
   const p=OVERLAY_PRESETS[name];if(!p)return;
