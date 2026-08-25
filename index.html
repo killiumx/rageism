@@ -7553,6 +7553,7 @@ function renderLobbyModalBody(){
       </div>
     </div>
     <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${esc(m.date||'TBD')} ${esc(m.time||'')} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
+    ${ADM&&mode==='grid'?`<div style="font-size:.72rem;color:var(--textD);margin-bottom:.6rem"><i class="fa-solid fa-hand"></i> Drag a team onto another slot to swap or move it.</div>`:''}
     <div id="lobby-view-content"></div>`;
   const content=document.getElementById('lobby-view-content');
   content.innerHTML=mode==='tree'?buildLobbyTreeHTML(matchId):buildLobbyGridHTML(matchId);
@@ -7578,14 +7579,18 @@ function buildLobbyGridHTML(matchId){
     }else if(slot){
       const t=teams.find(x=>x.id===slot.teamId);
       const color=t?.color||'var(--accent)';
-      cells.push(`<div class="lobby-slot filled" onclick="${t?`openTeamProfile('${t.id}')`:''}" style="border-color:${color}55">
+      // ADM gets drag-and-drop reordering on top of the normal click-to-view-profile behavior;
+      // everyone else just gets the click. Dragging a filled slot onto another slot (filled or
+      // open) hands off to swapLobbySlots(), which swaps the two teams or moves into the gap.
+      cells.push(`<div class="lobby-slot filled" onclick="${t?`openTeamProfile('${t.id}')`:''}" style="border-color:${color}55"
+        ${ADM?`draggable="true" ondragstart="lobbySlotDragStart(event,${i})" ondragover="event.preventDefault()" ondrop="lobbySlotDrop(event,'${matchId}',${i})"`:''}>
         <div class="lobby-slot-num">Slot ${i}</div>
         <div class="lobby-slot-swatch" style="background:${color}"></div>
         <div class="lobby-slot-name">${esc(slot.teamName)}</div>
         <div class="lobby-slot-sub">${t?`${(t.members||[]).length} players${t.tag?' · ['+esc(t.tag)+']':''}`:'Registered'}</div>
       </div>`);
     }else{
-      cells.push(`<div class="lobby-slot open">
+      cells.push(`<div class="lobby-slot open" ${ADM?`ondragover="event.preventDefault()" ondrop="lobbySlotDrop(event,'${matchId}',${i})"`:''}>
         <div class="lobby-slot-num">Slot ${i}</div>
         <i class="fa-solid fa-plus" style="color:var(--textD);font-size:1rem;margin:.2rem 0"></i>
         <div class="lobby-slot-sub">Open slot</div>
@@ -7593,6 +7598,30 @@ function buildLobbyGridHTML(matchId){
     }
   }
   return `<div class="lobby-grid">${cells.join('')}</div>`;
+}
+// ── Host drag-and-drop slot reorganizing — pick up a filled slot, drop it on another slot
+// (filled or open) to swap the two teams (or move into the gap if the target was open). ──
+let LOBBY_DRAG_SLOT=null;
+function lobbySlotDragStart(ev,fromSlot){
+  LOBBY_DRAG_SLOT=fromSlot;
+  ev.dataTransfer.effectAllowed='move';
+}
+function lobbySlotDrop(ev,matchId,toSlot){
+  ev.preventDefault();
+  if(!ADM||LOBBY_DRAG_SLOT===null)return;
+  const fromSlot=LOBBY_DRAG_SLOT;LOBBY_DRAG_SLOT=null;
+  if(fromSlot===toSlot)return;
+  if(toSlot<=MATCH_SLOT_RESERVED)return notify('Slot reserved','Slots 1 & 2 are held back and can\'t be assigned to a team','n-bad');
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  m.teams=m.teams||[];
+  const a=m.teams.find(x=>(x.slot||0)===fromSlot);if(!a)return;
+  const b=m.teams.find(x=>(x.slot||0)===toSlot);
+  a.slot=toSlot;
+  if(b)b.slot=fromSlot;
+  DB.set('matches',ms);
+  renderLobbyModalBody();renderAMatches();renderMatches();
+  logAdminAction('Lobby slots reorganized',b?`${a.teamName} and ${b.teamName} swapped slots (${toSlot} ↔ ${fromSlot}) in ${m.name} by ${CU?CU.name:'Admin'}`:`${a.teamName} moved to Slot ${toSlot} in ${m.name} by ${CU?CU.name:'Admin'}`);
+  notify(b?'Slots swapped!':'Team moved!',b?`${a.teamName} ↔ ${b.teamName}`:`${a.teamName} → Slot ${toSlot}`,'n-ok');
 }
 // Tree view: match at the root, branching into a Confirmed node and (if any) a Pending node,
 // each fanning out into one leaf per team. Pure-CSS org-chart pattern via nested <ul><li> — see
@@ -8529,7 +8558,7 @@ function renderAMatches(){
     const teamsIn=(m.teams||[]).length;
     return `<tr>
       <td class="text-dim font-mono" style="font-size:.72rem">#${m.id}</td>
-      <td style="font-weight:600">${m.name}${m.scoring?' <i class="fa-solid fa-star" style="color:var(--amber);font-size:.7rem" title="Custom scoring"></i>':''}<div style="font-size:.68rem;color:var(--textD);font-weight:400">${teamsIn}/${m.maxTeams||20} teams${pending?` · <span style="color:var(--amber)">${pending} pending request${pending===1?'':'s'}</span>`:''}</div></td>
+      <td style="font-weight:600">${m.name}${m.scoring?' <i class="fa-solid fa-star" style="color:var(--amber);font-size:.7rem" title="Custom scoring"></i>':''} <i class="fa-solid fa-pen" style="font-size:.65rem;color:var(--textD);cursor:pointer" onclick="renameScrim('${m.id}')" title="Edit scrim title"></i><div style="font-size:.68rem;color:var(--textD);font-weight:400">${teamsIn}/${m.maxTeams||20} teams${pending?` · <span style="color:var(--amber)">${pending} pending request${pending===1?'':'s'}</span>`:''}</div></td>
       <td style="font-size:.78rem;white-space:nowrap">${seqHtml}</td>
       <td><span class="chip ${sc}">${m.status}</span></td>
       <td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td>
@@ -8626,6 +8655,25 @@ function delMatch(id){
   renderAMatches();renderMatches();renderResultLogs();renderAPlayers();renderLB();updateStats();renderDashboardData();renderTeams();refreshDLs();if(ADM)renderAdminOverview();
   if(target)logAdminAction('Match removed',`${target.name||target.id} was removed${mine.length?` along with ${mine.length} result log(s)`:''}`);
   notify('Match removed',mine.length?`${mine.length} result log(s) deleted, stats rolled back`:'','n-ok');
+}
+// Lets the host rename a scrim after it's already been created (e.g. fixing a typo, or the
+// event name changed) without having to delete it and recreate it from scratch — teams, planned
+// matches, signups and any logged results all stay exactly as they were, only the title changes.
+function renameScrim(id){
+  if(!ADM)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===id);if(!m)return;
+  const name=prompt('New title for this scrim:',m.name);
+  if(name===null)return; // cancelled
+  const trimmed=name.trim();
+  if(!trimmed)return notify('Name required','Scrim title can\'t be empty','n-bad');
+  if(trimmed===m.name)return;
+  const oldName=m.name;m.name=trimmed;
+  DB.set('matches',ms);
+  renderAMatches();renderMatches();renderDashboardData();refreshDLs();
+  // Keep the Log Results header in sync if this exact scrim is the one currently loaded there.
+  if(document.getElementById('res-mid')?.value===id)onMatchSelect();
+  logAdminAction('Scrim renamed',`"${oldName}" renamed to "${trimmed}" by ${CU?CU.name:'Admin'}`);
+  notify('Scrim renamed!',`"${oldName}" → "${trimmed}"`,'n-ok');
 }
 function copyOverlayLink(){
   const el=document.getElementById('ov-link');if(!el)return;
