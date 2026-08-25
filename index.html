@@ -494,7 +494,7 @@ html[data-ovbg="transparent"]{
 
 /* ── Team Lobby grid (visual slot chart for a match's registered teams) ─── */
 .lobby-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.55rem;max-height:60vh;overflow-y:auto;padding-right:.2rem}
-.lobby-slot{border:1px solid var(--border);border-radius:var(--rS);background:var(--bg2);padding:.6rem .5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.15rem;min-height:88px;justify-content:center;transition:transform .12s,border-color .12s}
+.lobby-slot{border:1px solid var(--border);border-radius:var(--rS);background:var(--bg2);padding:.6rem .5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.15rem;min-height:88px;justify-content:center;transition:transform .12s,border-color .12s;position:relative}
 .lobby-slot.filled{cursor:pointer;background:var(--bg3)}
 .lobby-slot.filled:hover{transform:translateY(-2px);border-color:var(--borderH)}
 .lobby-slot.open{border-style:dashed;opacity:.55}
@@ -502,6 +502,8 @@ html[data-ovbg="transparent"]{
 .lobby-slot-swatch{width:16px;height:16px;border-radius:5px;margin:.15rem 0}
 .lobby-slot-name{font-size:.78rem;font-weight:700;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .lobby-slot-sub{font-size:.65rem;color:var(--textD)}
+.lobby-slot-remove{position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--red);color:#fff;border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.55rem;cursor:pointer;line-height:1;z-index:2}
+.lobby-slot-remove:hover{background:#b91c1c}
 
 /* ── Team Lobby tree (pure-CSS org-chart: match → Confirmed/Pending → each team) ───
    Classic nested <ul><li> family-tree pattern; connector lines drawn with ::before/::after
@@ -2108,7 +2110,7 @@ tr:last-child td{border-bottom:none}
       <button type="button" class="btn btn-ghost btn-sm" onclick="mmAddMatchRow()"><i class="fa-solid fa-plus"></i> Add Match</button>
     </div>
     <div class="frow"><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="mm-st"><option value="upcoming">Upcoming</option><option value="live">Live</option><option value="done">Ended</option></select></div><div class="fg"><label class="fl">Mode</label><select class="fi fsel" id="mm-md" onchange="mmSyncTeamSize()"><option value="Squad (4v4)">Squad (4v4)</option><option value="Trio (3v3)">Trio (3v3)</option><option value="Duo">Duo</option><option value="Solo">Solo</option></select></div></div>
-    <div class="frow"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div></div>
+    <div class="frow" style="grid-template-columns:1fr 1fr 1.3fr"><div class="fg"><label class="fl">Date</label><input class="fi" id="mm-dt" type="date"/></div><div class="fg"><label class="fl">Time</label><input class="fi" id="mm-tm" type="time"/></div><div class="fg"><label class="fl">Time Zone</label><select class="fi fsel" id="mm-tz"></select></div></div>
     <div class="frow"><div class="fg"><label class="fl">Total Player Slots</label><input class="fi" id="mm-players" type="number" value="80" min="1" oninput="mmAutoCalc()"/></div><div class="fg" style="display:flex;align-items:flex-end"><div style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.55rem .9rem;display:flex;align-items:center;gap:.8rem">
       <div style="flex-shrink:0"><div class="fl" style="margin-bottom:.3rem">Players / team</div><input class="fi" id="mm-teamsize" type="number" value="4" min="1" style="width:64px;text-align:center" oninput="mmAutoCalc()"/></div>
       <div style="flex:1;text-align:right"><div style="font-size:.6rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px">Team slots (auto)</div><div id="mm-mt-display" style="font-size:1.15rem;font-weight:800;color:var(--accentL);line-height:1.2">20 teams</div></div>
@@ -2122,7 +2124,7 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:1rem;cursor:pointer"><input type="checkbox" id="mm-open" checked style="width:16px;height:16px"/> Let team captains/managers request a slot for this scrim</label>
-    <button class="btn btn-accent btn-fw" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
+    <button class="btn btn-accent btn-fw" id="mm-save-btn" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
   </div>
 </div>
 
@@ -3929,7 +3931,73 @@ function myTeamIdsForCountdown(){
   const teams=DB.get('teams',[]).filter(t=>t.approved);
   return teams.filter(t=>t.captain===myIgn||t.manager===myIgn||(t.members||[]).includes(myIgn)).map(t=>t.id);
 }
+// ═══ TIME ZONES ═══ — scrims are scheduled in whatever zone the host picks (defaults to US
+// Eastern, since that's this scene's home base) and every viewer sees it converted into their
+// OWN browser time zone automatically, alongside the host's original time for clarity. This
+// removes all the "wait, is that EST or my time?" confusion around scrim start times.
+const TZ_LIST=[
+  {v:'America/New_York',l:'Eastern — New York (ET)'},
+  {v:'America/Chicago',l:'Central — Chicago (CT)'},
+  {v:'America/Denver',l:'Mountain — Denver (MT)'},
+  {v:'America/Los_Angeles',l:'Pacific — Los Angeles (PT)'},
+  {v:'America/Anchorage',l:'Alaska (AKT)'},
+  {v:'Pacific/Honolulu',l:'Hawaii (HST)'},
+  {v:'America/Sao_Paulo',l:'Brasília (BRT)'},
+  {v:'UTC',l:'UTC'},
+  {v:'Europe/London',l:'London (GMT/BST)'},
+  {v:'Europe/Paris',l:'Central Europe — Paris (CET)'},
+  {v:'Europe/Moscow',l:'Moscow (MSK)'},
+  {v:'Asia/Kolkata',l:'India (IST)'},
+  {v:'Asia/Singapore',l:'Singapore (SGT)'},
+  {v:'Asia/Tokyo',l:'Japan (JST)'},
+  {v:'Asia/Shanghai',l:'China (CST)'},
+  {v:'Australia/Sydney',l:'Sydney (AEST/AEDT)'},
+];
+function mmPopulateTzSelect(){
+  const sel=document.getElementById('mm-tz');if(!sel||sel.options.length)return;
+  sel.innerHTML=TZ_LIST.map(z=>`<option value="${z.v}">${z.l}</option>`).join('');
+}
+// Converts a host-entered wall-clock date+time in a NAMED time zone into the correct real-world
+// UTC instant — without needing a date library. Trick: format that UTC "guess" back through the
+// target zone; the difference between what we asked for and what came out IS that zone's offset
+// at that exact moment (so DST is handled automatically for the right time of year).
+function zonedTimeToUtc(dateStr,timeStr,timeZone){
+  try{
+    const asUTC=new Date(`${dateStr}T${timeStr}:00Z`);
+    if(isNaN(asUTC.getTime()))return null;
+    const fmt=new Intl.DateTimeFormat('en-US',{timeZone,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const p=fmt.formatToParts(asUTC).reduce((acc,x)=>{acc[x.type]=x.value;return acc;},{});
+    const hh=p.hour==='24'?'00':p.hour;
+    const asZoned=new Date(`${p.year}-${p.month}-${p.day}T${hh}:${p.minute}:${p.second}Z`);
+    return new Date(asUTC.getTime()+(asUTC-asZoned));
+  }catch{return null;}
+}
+// Short zone label (e.g. "EDT", "GMT+5:30") for a given instant + zone — instants matter because
+// the same zone can abbreviate differently across DST (EST vs EDT).
+function tzAbbrev(date,timeZone){
+  try{
+    const parts=new Intl.DateTimeFormat('en-US',{timeZone,timeZoneName:'short'}).formatToParts(date);
+    return parts.find(p=>p.type==='timeZoneName')?.value||timeZone;
+  }catch{return timeZone;}
+}
+// Main display helper used everywhere a scrim's schedule is shown to a viewer. Falls back to the
+// raw stored strings for older scrims saved before time zones were tracked.
+function formatScrimWhen(m,opts={}){
+  if(!m.startUTC||!m.tz)return `${m.date||'TBD'} ${m.time||''}`.trim();
+  const d=new Date(m.startUTC);
+  const hostStr=d.toLocaleString(undefined,{timeZone:m.tz,weekday:opts.short?undefined:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const hostTz=tzAbbrev(d,m.tz);
+  const viewerTz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if(viewerTz&&viewerTz!==m.tz){
+    const viewerStr=d.toLocaleString(undefined,{hour:'numeric',minute:'2-digit'});
+    const viewerAbbrev=tzAbbrev(d,viewerTz);
+    if(opts.plain)return `${hostStr} ${hostTz} (${viewerStr} ${viewerAbbrev} your time)`;
+    return `${hostStr} ${hostTz} <span style="color:var(--textD)">(${viewerStr} ${viewerAbbrev} your time)</span>`;
+  }
+  return `${hostStr} ${hostTz}`;
+}
 function matchDateTs(m){
+  if(m.startUTC)return m.startUTC;
   try{const d=new Date(`${m.date} ${m.time}`);if(!isNaN(d.getTime()))return d.getTime();}catch{}
   return Infinity;
 }
@@ -3970,8 +4038,8 @@ function maybeCheckMatchReminders(){
   const now=Date.now();
   ms.forEach(m=>{
     if(m.status!=='upcoming'||m.reminded||!m.date||!m.time)return;
-    const startTs=new Date(`${m.date}T${m.time}`).getTime();
-    if(isNaN(startTs))return;
+    const startTs=matchDateTs(m);
+    if(!isFinite(startTs))return;
     const diffMin=(startTs-now)/60000;
     if(diffMin<=30&&diffMin>-5){
       m.reminded=true;changed=true;
@@ -4196,13 +4264,13 @@ function renderDashboardData(){
     else el.innerHTML=ms.slice(0,3).map(m=>{
       const sc=m.status==='live'?'status-live':m.status==='upcoming'?'status-up':'status-done';
       const sl=m.status==='live'?`<div class="live-dot"></div>Live`:m.status==='upcoming'?'Upcoming':'Ended';
-      return `<div class="match-item"><div class="match-map-icon">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${m.mode}</div></div><div class="${sc}">${sl}</div></div>`;
+      return `<div class="match-item"><div class="match-map-icon">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m)} · ${m.mode}</div></div><div class="${sc}">${sl}</div></div>`;
     }).join('');
   }
   // Next match
   const nextM=ms.find(m=>m.status==='upcoming')||ms.find(m=>m.status==='live');
   const nmi=document.getElementById('next-match-info');
-  if(nmi){if(nextM)nmi.innerHTML=`<div style="font-weight:600;font-size:.88rem">${nextM.name}</div><div style="font-size:.75rem;color:var(--textM);margin-top:.2rem">${nextM.maxTeams||'—'} Teams · ${nextM.mode||'Squad'} · ${nextM.date} ${nextM.time}</div>`;else nmi.innerHTML='<div style="font-size:.85rem;color:var(--textD)">No upcoming matches</div>';}
+  if(nmi){if(nextM)nmi.innerHTML=`<div style="font-weight:600;font-size:.88rem">${nextM.name}</div><div style="font-size:.75rem;color:var(--textM);margin-top:.2rem">${nextM.maxTeams||'—'} Teams · ${nextM.mode||'Squad'} · ${formatScrimWhen(nextM)}</div>`;else nmi.innerHTML='<div style="font-size:.85rem;color:var(--textD)">No upcoming matches</div>';}
   // Top
   const pl=DB.get('players');const body=document.getElementById('d-top');if(body){
     if(!pl.length){body.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--textD)">No players yet.</td></tr>';}
@@ -4219,7 +4287,7 @@ function renderAdminOverview(){
   const ms=DB.get('matches');const el=document.getElementById('ao-matches');if(el){
     if(!ms.length){el.innerHTML='<div class="text-dim" style="font-size:.84rem;padding:.5rem">No matches yet.</div>';}
     else el.innerHTML=ms.map(m=>{const sc=m.status==='live'?'status-live':m.status==='upcoming'?'status-up':'status-done';const sl=m.status==='live'?`<div class="live-dot"></div>Live`:m.status==='upcoming'?'Upcoming':'Ended';
-      return `<div class="match-item"><div class="match-map-icon">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem"><div class="${sc}">${sl}</div><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')">Cycle</button></div></div>`;
+      return `<div class="match-item"><div class="match-map-icon">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m,{short:true})}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem"><div class="${sc}">${sl}</div><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')">Cycle</button></div></div>`;
     }).join('');
   }
   const pl=DB.get('players');const body=document.getElementById('ao-top');if(body){
@@ -7503,7 +7571,7 @@ function renderMatches(filter='all'){
     }
     const seq=(Array.isArray(m.mapSequence)&&m.mapSequence.length>1)?m.mapSequence:null;
     const seqLine=seq?`<div class="match-meta" style="margin-top:.15rem;font-size:.72rem"><i class="fa-solid fa-list-ol" style="opacity:.6;margin-right:.3rem"></i>${seq.map((mp,i)=>`${i+1}. ${mp||'TBD'}`).join('  →  ')}</div>`:'';
-    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${m.date} · ${m.time} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
+    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m)} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
 }
 // ═══ TEAM LOBBY — a visual chart of every team registered for a match, in either a slot Grid
@@ -7552,7 +7620,7 @@ function renderLobbyModalBody(){
         <button class="btn ${mode==='tree'?'btn-accent':'btn-ghost'} btn-xs" onclick="switchLobbyView('tree')"><i class="fa-solid fa-sitemap"></i> Tree</button>
       </div>
     </div>
-    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${esc(m.date||'TBD')} ${esc(m.time||'')} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
+    <div style="font-size:.8rem;color:var(--textM);margin-bottom:1rem">${esc(m.map||'')} · ${formatScrimWhen(m)} · ${perTeam} players/team · <strong style="color:var(--accentL)">${filled}/${cap} teams filled</strong></div>
     ${ADM&&mode==='grid'?`<div style="font-size:.72rem;color:var(--textD);margin-bottom:.6rem"><i class="fa-solid fa-hand"></i> Drag a team onto another slot to swap or move it.</div>`:''}
     <div id="lobby-view-content"></div>`;
   const content=document.getElementById('lobby-view-content');
@@ -7582,8 +7650,10 @@ function buildLobbyGridHTML(matchId){
       // ADM gets drag-and-drop reordering on top of the normal click-to-view-profile behavior;
       // everyone else just gets the click. Dragging a filled slot onto another slot (filled or
       // open) hands off to swapLobbySlots(), which swaps the two teams or moves into the gap.
+      // The small red × (admin-only) pulls the team out of the lobby entirely, freeing the slot.
       cells.push(`<div class="lobby-slot filled" onclick="${t?`openTeamProfile('${t.id}')`:''}" style="border-color:${color}55"
         ${ADM?`draggable="true" ondragstart="lobbySlotDragStart(event,${i})" ondragover="event.preventDefault()" ondrop="lobbySlotDrop(event,'${matchId}',${i})"`:''}>
+        ${ADM?`<div class="lobby-slot-remove" title="Remove ${esc(slot.teamName)} from this scrim" onclick="event.stopPropagation();removeTeamFromLobby('${matchId}',${i})"><i class="fa-solid fa-xmark"></i></div>`:''}
         <div class="lobby-slot-num">Slot ${i}</div>
         <div class="lobby-slot-swatch" style="background:${color}"></div>
         <div class="lobby-slot-name">${esc(slot.teamName)}</div>
@@ -7622,6 +7692,27 @@ function lobbySlotDrop(ev,matchId,toSlot){
   renderLobbyModalBody();renderAMatches();renderMatches();
   logAdminAction('Lobby slots reorganized',b?`${a.teamName} and ${b.teamName} swapped slots (${toSlot} ↔ ${fromSlot}) in ${m.name} by ${CU?CU.name:'Admin'}`:`${a.teamName} moved to Slot ${toSlot} in ${m.name} by ${CU?CU.name:'Admin'}`);
   notify(b?'Slots swapped!':'Team moved!',b?`${a.teamName} ↔ ${b.teamName}`:`${a.teamName} → Slot ${toSlot}`,'n-ok');
+}
+// Pulls a team out of a scrim's lobby entirely — the host might need this if a team no-shows,
+// drops out last-minute, or was let in by mistake. Frees the slot (it goes back to "Open") and
+// leaves the team free to request a slot again later, in this or another scrim, if they want back in.
+function removeTeamFromLobby(matchId,slot){
+  if(!ADM)return;
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  m.teams=m.teams||[];
+  const entry=m.teams.find(x=>(x.slot||0)===slot);if(!entry)return;
+  if(!confirm(`Remove ${entry.teamName} from "${m.name}"? Their slot will open back up. This doesn't delete the team itself — they can request a slot again later.`))return;
+  const teamsDb=DB.get('teams');const t=teamsDb.find(x=>x.id===entry.teamId);
+  m.teams=m.teams.filter(x=>x!==entry);
+  DB.set('matches',ms);
+  renderLobbyModalBody();renderAMatches();renderMatches();renderDashboardData();
+  logAdminAction('Team removed from lobby',`${entry.teamName} was removed from ${m.name} (Slot ${slot}) by ${CU?CU.name:'Admin'}`);
+  fireWebhookEvent('matchTeamRemoved',{title:'⚠️ Team Removed From Scrim',color:15158332,fields:[
+    {name:'Team',value:entry.teamName,inline:true},
+    {name:'Scrim',value:m.name,inline:true},
+    {name:'Slot',value:`#${slot}`,inline:true}
+  ]},teamMentionIgns(t),{team:entry.teamName,match:m.name,slot:String(slot)});
+  notify('Team removed',`${entry.teamName} pulled from Slot ${slot} — it's open again`,'n-ok');
 }
 // Tree view: match at the root, branching into a Confirmed node and (if any) a Pending node,
 // each fanning out into one leaf per team. Pure-CSS org-chart pattern via nested <ul><li> — see
@@ -7708,7 +7799,7 @@ function renderMatchesCalendar(){
         const isToday=iso(new Date())===dateStr;
         return `<div class="cal-day-cell" data-date="${dateStr}" ondragover="event.preventDefault()" ondrop="calDropMatch(event,'${dateStr}')" style="min-height:80px;background:var(--bg2);border:1px solid ${isToday?'var(--accent)':'var(--border)'};border-radius:8px;padding:.35rem;overflow:hidden">
           <div style="font-size:.68rem;color:${isToday?'var(--accentL)':'var(--textD)'};font-weight:${isToday?700:400};margin-bottom:.25rem">${d.getDate()}</div>
-          ${dayMs.map(m=>`<div ${ADM?`draggable="true" ondragstart="calDragStart(event,'${m.id}')"`:''} onclick="openMatchSignupModal('${m.id}')" style="background:${m.status==='live'?'rgba(239,68,68,.15)':'rgba(99,102,241,.12)'};border-radius:4px;padding:.2rem .35rem;font-size:.62rem;margin-bottom:.2rem;cursor:${ADM?'grab':'default'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(m.name)} · ${m.time||''}">${m.status==='live'?'🔴 ':''}${esc(m.name)}</div>`).join('')}
+          ${dayMs.map(m=>`<div ${ADM?`draggable="true" ondragstart="calDragStart(event,'${m.id}')"`:''} onclick="openMatchSignupModal('${m.id}')" style="background:${m.status==='live'?'rgba(239,68,68,.15)':'rgba(99,102,241,.12)'};border-radius:4px;padding:.2rem .35rem;font-size:.62rem;margin-bottom:.2rem;cursor:${ADM?'grab':'default'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(m.name)} · ${esc(formatScrimWhen(m,{plain:true}))}">${m.status==='live'?'🔴 ':''}${esc(m.name)}</div>`).join('')}
         </div>`;
       }).join('')}
     </div>`;
@@ -7721,6 +7812,12 @@ function calDropMatch(ev,newDate){
   const ms=DB.get('matches',[]);const m=ms.find(x=>x.id===CAL_DRAG_ID);if(!m)return;
   if(m.date===newDate){CAL_DRAG_ID=null;return;}
   const oldDate=m.date;m.date=newDate;
+  // Keep the stored UTC instant in sync with the new date, same time-of-day + time zone as before
+  // (drag-to-reschedule only changes the day, not the hour or host's chosen zone).
+  if(m.tz&&m.time&&m.time!=='TBD'){
+    const recomputed=zonedTimeToUtc(newDate,m.time,m.tz);
+    if(recomputed)m.startUTC=recomputed.getTime();
+  }
   DB.set('matches',ms);
   logAdminAction('Match rescheduled',`"${m.name}" moved from ${oldDate||'unscheduled'} to ${newDate} by ${CU?CU.name:'Admin'}`);
   CAL_DRAG_ID=null;
@@ -7772,8 +7869,26 @@ function createMatch(){
     const kpEl=document.getElementById('mm-kill-pt');
     scoring={placementPts,killPts:kpEl?(Number(kpEl.value)||0):DEFAULT_KILL_PT};
   }
-  const ms=DB.get('matches');const id='M'+String(ms.length+13).padStart(3,'0');
-  const newScrim={id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:v('mm-dt')||'TBD',time:v('mm-tm')||'TBD',maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]};
+  const dateStr=v('mm-dt')||'',timeStr=v('mm-tm')||'',tz=v('mm-tz')||'America/New_York';
+  const startUTC=(dateStr&&timeStr)?zonedTimeToUtc(dateStr,timeStr,tz)?.getTime():null;
+  const ms=DB.get('matches');
+
+  // ── EDIT MODE: MM_EDIT_ID was set by openNewMatchModal(id) — update the existing scrim in
+  // place instead of creating a new one, so teams, signups, revealed/hidden state, and any
+  // already-logged results all stay exactly as they were. Only the fields in this form change. ──
+  if(MM_EDIT_ID){
+    const m=ms.find(x=>x.id===MM_EDIT_ID);if(!m)return notify('Scrim not found','','n-bad');
+    const oldWhen=`${m.date} ${m.time}`;
+    Object.assign(m,{name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:dateStr||'TBD',time:timeStr||'TBD',tz,startUTC:startUTC||null,maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),openSignups:!!document.getElementById('mm-open')?.checked});
+    DB.set('matches',ms);
+    closeModal('match-modal');MM_EDIT_ID=null;mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();
+    logAdminAction('Scrim edited',`${name} — schedule/settings updated by ${CU?CU.name:'Admin'}${oldWhen.trim()!==`${m.date} ${m.time}`.trim()?` (was ${oldWhen.trim()||'TBD'})`:''}`);
+    notify('Scrim updated!',formatScrimWhen(m).replace(/<[^>]+>/g,''),'n-ok');
+    return m.id;
+  }
+
+  const id='M'+String(ms.length+13).padStart(3,'0');
+  const newScrim={id,name,map:mapSequence[0]||'',mapSequence,scoring,status:v('mm-st'),date:dateStr||'TBD',time:timeStr||'TBD',tz,startUTC:startUTC||null,maxTeams:parseInt(v('mm-mt'))||20,maxPlayers:parseInt(v('mm-players'))||undefined,teamSize:parseInt(v('mm-teamsize'))||undefined,mode:v('mm-md'),notes:'',openSignups:!!document.getElementById('mm-open')?.checked,slotsRevealed:false,teams:[]};
   ms.push(newScrim);
   DB.set('matches',ms);
   closeModal('match-modal');mmAutoCalc();renderMatches();renderAMatches();renderDashboardData();refreshDLs();if(ADM)renderAdminOverview();
@@ -7795,12 +7910,48 @@ function createMatch(){
 // MM_MATCHES only exists while the Create Scrim modal is open; createMatch() reads it into the
 // new scrim's mapSequence when saving.
 let MM_MATCHES=[];
-function openNewMatchModal(){
-  MM_MATCHES=[{map:''}];
-  const nameEl=document.getElementById('mm-n');if(nameEl)nameEl.value='';
-  const cs=document.getElementById('mm-custom-scoring');if(cs)cs.checked=false;
-  const wrap=document.getElementById('mm-scoring-wrap');if(wrap)wrap.style.display='none';
+// null while creating a brand-new scrim; set to a scrim's id while editing an existing one (see
+// openNewMatchModal(id) below) so createMatch() knows to update in place instead of inserting.
+let MM_EDIT_ID=null;
+function openNewMatchModal(id){
+  mmPopulateTzSelect();
+  const ms=DB.get('matches',[]);
+  const existing=id?ms.find(x=>x.id===id):null;
+  MM_EDIT_ID=existing?existing.id:null;
+  const titleEl=document.getElementById('mm-modal-title');
+  const saveBtn=document.getElementById('mm-save-btn');
+  if(existing){
+    if(titleEl)titleEl.textContent='Edit Scrim';
+    if(saveBtn)saveBtn.innerHTML='<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+    MM_MATCHES=(Array.isArray(existing.mapSequence)&&existing.mapSequence.length)?existing.mapSequence.map(mp=>({map:mp||''})):[{map:existing.map||''}];
+    document.getElementById('mm-n').value=existing.name||'';
+    document.getElementById('mm-st').value=existing.status||'upcoming';
+    document.getElementById('mm-md').value=existing.mode||'Squad (4v4)';
+    document.getElementById('mm-dt').value=existing.date&&existing.date!=='TBD'?existing.date:'';
+    document.getElementById('mm-tm').value=existing.time&&existing.time!=='TBD'?existing.time:'';
+    document.getElementById('mm-tz').value=existing.tz||'America/New_York';
+    document.getElementById('mm-players').value=existing.maxPlayers||80;
+    document.getElementById('mm-teamsize').value=existing.teamSize||MM_MODE_TEAMSIZE[existing.mode]||4;
+    const openEl=document.getElementById('mm-open');if(openEl)openEl.checked=existing.openSignups!==false;
+    const cs=document.getElementById('mm-custom-scoring');
+    if(cs){cs.checked=!!existing.scoring;toggleMMScoring();}
+    if(existing.scoring){
+      mmRenderPlacementGrid();
+      existing.scoring.placementPts.forEach((pts,i)=>{const el=document.getElementById(`mm-place-${i}`);if(el)el.value=pts;});
+      const kp=document.getElementById('mm-kill-pt');if(kp)kp.value=existing.scoring.killPts;
+    }
+  }else{
+    if(titleEl)titleEl.textContent='Create Scrim';
+    if(saveBtn)saveBtn.innerHTML='<i class="fa-solid fa-plus"></i> Create Scrim';
+    MM_MATCHES=[{map:''}];
+    const nameEl=document.getElementById('mm-n');if(nameEl)nameEl.value='';
+    document.getElementById('mm-dt').value='';document.getElementById('mm-tm').value='';
+    document.getElementById('mm-tz').value='America/New_York';
+    const cs=document.getElementById('mm-custom-scoring');if(cs)cs.checked=false;
+    const wrap=document.getElementById('mm-scoring-wrap');if(wrap)wrap.style.display='none';
+  }
   mmRenderMatchesList();
+  mmAutoCalc();
   openModal('match-modal');
 }
 function mmAddMatchRow(){MM_MATCHES.push({map:''});mmRenderMatchesList();}
@@ -8321,7 +8472,7 @@ function openMatchSignupModal(matchId){
   if(!teams.length)return notify('No team to sign up','You need to be the captain or manager of an approved team first','n-bad');
   const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
   window._msModalMatchId=matchId;
-  document.getElementById('ms-modal-match-name').textContent=`${m.name} · ${m.map} · ${m.date} ${m.time}`;
+  document.getElementById('ms-modal-match-name').textContent=`${m.name} · ${m.map} · ${formatScrimWhen(m,{plain:true})}`;
   const sel=document.getElementById('ms-modal-team');
   const requests=DB.get('matchRequests',[]);
   sel.innerHTML=teams.map(t=>{
@@ -8561,9 +8712,10 @@ function renderAMatches(){
       <td style="font-weight:600">${m.name}${m.scoring?' <i class="fa-solid fa-star" style="color:var(--amber);font-size:.7rem" title="Custom scoring"></i>':''} <i class="fa-solid fa-pen" style="font-size:.65rem;color:var(--textD);cursor:pointer" onclick="renameScrim('${m.id}')" title="Edit scrim title"></i><div style="font-size:.68rem;color:var(--textD);font-weight:400">${teamsIn}/${m.maxTeams||20} teams${pending?` · <span style="color:var(--amber)">${pending} pending request${pending===1?'':'s'}</span>`:''}</div></td>
       <td style="font-size:.78rem;white-space:nowrap">${seqHtml}</td>
       <td><span class="chip ${sc}">${m.status}</span></td>
-      <td class="text-dim" style="font-size:.75rem">${m.date} ${m.time}</td>
+      <td class="text-dim" style="font-size:.75rem">${formatScrimWhen(m,{short:true})}</td>
       <td style="display:flex;gap:.3rem;flex-wrap:wrap">
         <button class="btn btn-accent btn-xs" onclick="startAndLogMatch('${m.id}')" title="Start this scrim &amp; jump straight into logging its results"><i class="fa-solid fa-flag-checkered"></i></button>
+        <button class="btn btn-ghost btn-xs" onclick="openNewMatchModal('${m.id}')" title="Edit scrim — name, matches/maps, mode, date/time/timezone, scoring, slots"><i class="fa-solid fa-pen-to-square"></i></button>
         <button class="btn btn-ghost btn-xs" style="position:relative" onclick="renderMatchSignupRequests();openModal('match-signup-request-modal')" title="Signup requests (all scrims)">${pending?`<span style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.55rem;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center">${pending}</span>`:''}<i class="fa-solid fa-clipboard-list"></i></button>
         <button class="btn btn-ghost btn-xs" onclick="toggleSlotsRevealed('${m.id}')" title="${m.slotsRevealed?'Hide lobby from players':'Reveal lobby to players'}"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button>
         <button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')" title="Cycle status"><i class="fa-solid fa-arrows-rotate"></i></button>
@@ -8706,6 +8858,7 @@ const WEBHOOK_EVENTS={
   matchSignupAccepted:{label:'Scrim/Match Signup Accepted',icon:'fa-calendar-check',defaultScope:'all',tokens:'{team} {slot} {match} {map} {date} {time} {mode} {mentions}'},
   matchSignupDenied:{label:'Scrim/Match Signup Denied',icon:'fa-calendar-xmark',defaultScope:'captain',tokens:'{team} {match} {mentions}'},
   matchLobbyRevealed:{label:'Event Started (Lobby Revealed)',icon:'fa-table-cells',defaultScope:'none',tokens:'{match} {map} {date} {time}'},
+  matchTeamRemoved:{label:'Team Removed From Scrim',icon:'fa-user-slash',defaultScope:'captain',tokens:'{team} {match} {slot} {mentions}'},
   announcements:{label:'Announcements',icon:'fa-bullhorn'},
   playerOfWeek:{label:'Player of the Week',icon:'fa-crown'},
   weeklyRecap:{label:'Weekly Recap',icon:'fa-calendar-week'},
