@@ -1314,12 +1314,12 @@ tr:last-child td{border-bottom:none}
           <div class="card">
             <div class="card-title"><i class="fa-solid fa-dollar-sign"></i> Prize Pool</div>
             <div style="text-align:center;padding:.5rem 0 1rem">
-              <div class="font-syne text-amber" style="font-size:2.4rem;font-weight:800;letter-spacing:-.5px">$5,000</div>
+              <div class="font-syne text-amber" style="font-size:2.4rem;font-weight:800;letter-spacing:-.5px" id="dash-prize-total">$5,000</div>
               <div style="font-size:.72rem;color:var(--textD);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.9rem">Season 01 Prize Pool</div>
             </div>
-            <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--rS);padding:.5rem .85rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center"><span style="color:var(--amber);font-weight:600;font-size:.87rem"><i class="fa-solid fa-trophy"></i> 1st Place</span><span class="font-mono text-amber fw6">$3,000</span></div>
-            <div style="background:rgba(148,163,184,.05);border:1px solid rgba(148,163,184,.1);border-radius:var(--rS);padding:.5rem .85rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center"><span style="color:#94a3b8;font-weight:600;font-size:.87rem"><i class="fa-solid fa-medal" style="color:#94a3b8"></i> 2nd Place</span><span class="font-mono fw6" style="color:#94a3b8">$1,200</span></div>
-            <div style="background:rgba(205,127,50,.05);border:1px solid rgba(205,127,50,.1);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span style="color:#cd7f32;font-weight:600;font-size:.87rem"><i class="fa-solid fa-medal" style="color:#cd7f32"></i> 3rd Place</span><span class="font-mono fw6" style="color:#cd7f32">$800</span></div>
+            <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--rS);padding:.5rem .85rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center"><span style="color:var(--amber);font-weight:600;font-size:.87rem"><i class="fa-solid fa-trophy"></i> 1st Place</span><span class="font-mono text-amber fw6" id="dash-prize-1">$3,000</span></div>
+            <div style="background:rgba(148,163,184,.05);border:1px solid rgba(148,163,184,.1);border-radius:var(--rS);padding:.5rem .85rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center"><span style="color:#94a3b8;font-weight:600;font-size:.87rem"><i class="fa-solid fa-medal" style="color:#94a3b8"></i> 2nd Place</span><span class="font-mono fw6" style="color:#94a3b8" id="dash-prize-2">$1,200</span></div>
+            <div style="background:rgba(205,127,50,.05);border:1px solid rgba(205,127,50,.1);border-radius:var(--rS);padding:.5rem .85rem;display:flex;justify-content:space-between;align-items:center"><span style="color:#cd7f32;font-weight:600;font-size:.87rem"><i class="fa-solid fa-medal" style="color:#cd7f32"></i> 3rd Place</span><span class="font-mono fw6" style="color:#cd7f32" id="dash-prize-3">$800</span></div>
           </div>
           <div class="card">
             <div class="card-title"><i class="fa-solid fa-scroll"></i> Rules & Info</div>
@@ -1924,19 +1924,17 @@ tr:last-child td{border-bottom:none}
             <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.7rem;text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-trophy" style="color:var(--amber);margin-right:.35rem"></i>Placement Points</div>
             <table style="width:100%;font-size:.78rem">
               <thead><tr><th style="text-align:left;color:var(--textD);font-size:.65rem;padding-bottom:.3rem">Place</th><th style="text-align:right;color:var(--textD);font-size:.65rem;padding-bottom:.3rem">Points</th></tr></thead>
-              <tbody>
-                ${[[1,'🥇 1st',10],[2,'🥈 2nd',6],[3,'🥉 3rd',5],[4,'4th',4],[5,'5th',3],[6,'6th',2],[7,'7th–8th',1],[9,'9th+',0]].map(([,label,pts])=>`<tr><td style="padding:.15rem 0;color:var(--textM)">${label}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:${pts>0?'var(--amber)':'var(--textD)'}">${pts}</td></tr>`).join('')}
-              </tbody>
+              <tbody id="lb-placement-pts-ref"></tbody>
             </table>
           </div>
           <div class="card" style="padding:.9rem">
             <div style="font-size:.75rem;font-weight:700;color:var(--textM);margin-bottom:.7rem;text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-skull-crossbones" style="color:var(--red);margin-right:.35rem"></i>Kill Points</div>
-            <div style="font-size:.87rem;color:var(--text);margin-bottom:.5rem"><span class="font-mono text-accent fw6">1 pt</span> per elimination</div>
+            <div style="font-size:.87rem;color:var(--text);margin-bottom:.5rem"><span class="font-mono text-accent fw6" id="lb-kill-pt-ref">1 pt</span> per elimination</div>
             <div style="font-size:.78rem;color:var(--textM);">No kill limit — every elimination counts.</div>
             <div style="margin-top:.8rem;padding:.6rem .7rem;background:var(--bg3);border-radius:var(--rS);font-size:.75rem;color:var(--textD)">
-              Formula: <span style="color:var(--text)">Total = Placement Pts + (Kills × 1)</span>
+              Formula: <span style="color:var(--text)" id="lb-formula-ref">Total = Placement Pts + (Kills × 1)</span>
             </div>
-            <div style="margin-top:.5rem;padding:.5rem .7rem;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);border-radius:var(--rS);font-size:.72rem;color:var(--textM)">
+            <div style="margin-top:.5rem;padding:.5rem .7rem;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);border-radius:var(--rS);font-size:.72rem;color:var(--textM)" id="lb-example-ref">
               Example: 1st place + 8 kills = <span style="color:var(--accentL);font-weight:700">18 pts</span>
             </div>
           </div>
@@ -4296,8 +4294,20 @@ function renderDashLive(){
   targets.forEach(t=>t.innerHTML=html);
 }
 
+// Pulls the live Prize Pool total from Settings and splits it 60/24/16 for 1st/2nd/3rd — same ratio the
+// original hardcoded $5,000/$3,000/$1,200/$800 numbers used. Falls back to $5,000 if nothing's configured yet.
+function renderPrizePool(){
+  const cfg=DB.get('cfg',{});
+  const total=Number(cfg.prize)||5000;
+  const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');
+  const totalEl=document.getElementById('dash-prize-total');if(totalEl)totalEl.textContent=fmt(total);
+  const p1=document.getElementById('dash-prize-1');if(p1)p1.textContent=fmt(total*0.6);
+  const p2=document.getElementById('dash-prize-2');if(p2)p2.textContent=fmt(total*0.24);
+  const p3=document.getElementById('dash-prize-3');if(p3)p3.textContent=fmt(total*0.16);
+}
 function renderDashboardData(){
   renderDashLive();
+  renderPrizePool();
   // Matches
   const ms=DB.get('matches');const el=document.getElementById('d-matches');if(el){
     if(!ms.length){el.innerHTML='<div class="text-dim" style="font-size:.84rem;padding:1rem;text-align:center">No matches scheduled yet.</div>';}
@@ -7428,8 +7438,31 @@ function renderTdmCountryFilter(){
   const cur=sel.value;
   sel.innerHTML='<option value="">All Countries</option>'+COUNTRIES.filter(([code])=>used.has(code)).map(([code,name])=>`<option value="${code}" ${cur===code?'selected':''}>${flagEmoji(code)} ${name}</option>`).join('');
 }
+// Renders the Placement/Kill Points reference cards on the Leaderboard from whatever scoring is
+// actually active (PLACEMENT_PTS/KILL_PT — live, admin-configurable), instead of hardcoded PGC numbers.
+// Groups consecutive placements that share the same point value into one row, e.g. "7th–8th".
+function renderLbScoringRef(){
+  const ord=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+  const rows=[];
+  for(let i=0;i<PLACEMENT_PTS.length;){
+    const pts=PLACEMENT_PTS[i];let j=i;
+    while(j+1<PLACEMENT_PTS.length&&PLACEMENT_PTS[j+1]===pts)j++;
+    const isLastGroup=(j===PLACEMENT_PTS.length-1)&&pts===0;
+    const label=isLastGroup?`${ord(i+1)}+`:(i===j?ord(i+1):`${ord(i+1)}–${ord(j+1)}`);
+    const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';
+    rows.push(`<tr><td style="padding:.15rem 0;color:var(--textM)">${medal}${label}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:${pts>0?'var(--amber)':'var(--textD)'}">${pts}</td></tr>`);
+    if(isLastGroup)break;
+    i=j+1;
+  }
+  const tb=document.getElementById('lb-placement-pts-ref');if(tb)tb.innerHTML=rows.join('');
+  const kp=document.getElementById('lb-kill-pt-ref');if(kp)kp.textContent=`${KILL_PT} pt${KILL_PT===1?'':'s'}`;
+  const fm=document.getElementById('lb-formula-ref');if(fm)fm.textContent=`Total = Placement Pts + (Kills × ${KILL_PT})`;
+  const ex=document.getElementById('lb-example-ref');
+  if(ex){const exPts=(PLACEMENT_PTS[0]||0)+8*KILL_PT;ex.innerHTML=`Example: 1st place + 8 kills = <span style="color:var(--accentL);font-weight:700">${exPts} pts</span>`;}
+}
 function renderLB(){
   renderLbCountryFilter();
+  renderLbScoringRef();
   let pl=DB.get('players');const f=document.getElementById('lb-filter')?.value||'points';
   const countryF=document.getElementById('lb-country-filter')?.value||'';
   if(countryF)pl=pl.filter(p=>p.country===countryF);
