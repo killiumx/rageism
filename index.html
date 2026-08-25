@@ -154,6 +154,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .lf-input::placeholder{color:var(--textD)}
 .lf-input option{background:var(--bg3)}
 .lf-row{display:grid;grid-template-columns:1fr 80px;gap:.6rem}
+/* ── SETTINGS TABS ─────────────────────────── */
+.set-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem;border-bottom:1px solid var(--border);padding-bottom:0}
+.set-tab{background:none;border:none;color:var(--textM);font-family:var(--font-main);font-weight:600;font-size:.85rem;
+  padding:.7rem 1rem;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:.5rem;transition:all .15s}
+.set-tab:hover{color:var(--text)}
+.set-tab.active{color:var(--accentL);border-bottom-color:var(--accent)}
+.set-panel{display:none}
+.set-panel.active{display:block;animation:.3s ease fadeIn}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.set-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}.set-tab{padding:.6rem .8rem;font-size:.78rem;white-space:nowrap}}
+.ls-secure-note{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.72rem;color:var(--green);
+  background:var(--greenGlow);border:1px solid rgba(5,150,105,.25);border-radius:var(--rS);padding:.5rem .7rem;margin-bottom:.7rem}
 #login-fields{animation:.25s ease fade-up}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.65rem 1.25rem;border:none;border-radius:var(--rS);font-family:var(--font-main);
@@ -171,7 +183,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .btn-fw{width:100%}
 .divider{display:flex;align-items:center;gap:.8rem;margin:.8rem 0;color:var(--textD);font-size:.8rem}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.ls-admin-sec{display:none}
 .ls-tabs{display:flex;gap:.35rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.25rem;margin-bottom:1.4rem}
 .ls-tab-btn{flex:1;padding:.55rem .6rem;border:none;background:transparent;border-radius:calc(var(--rS) - 2px);font-family:var(--font-main);font-size:.82rem;font-weight:700;color:var(--textM);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:.4rem}
 .ls-tab-btn.active{background:var(--accent);color:#fff}
@@ -591,7 +602,6 @@ html[data-ovbg="transparent"]{
 .kpi-label{font-size:.75rem;font-weight:600;color:var(--textM);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.25rem}
 .kpi-value{font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:500;line-height:1;letter-spacing:-.5px}
 .kpi-sub{font-size:.78rem;color:var(--textD);margin-top:.3rem}
-.kpi-trend{position:absolute;top:.9rem;right:1rem;font-size:.72rem;font-weight:600;padding:.18rem .45rem;border-radius:6px}
 .kpi-glow{position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;pointer-events:none;filter:blur(20px);opacity:.3}
 
 /* ── TABLES ────────────────────────── */
@@ -623,11 +633,9 @@ tr:last-child td{border-bottom:none}
 .chip-disc{background:rgba(88,101,242,.12);color:#818cf8;border:1px solid rgba(88,101,242,.2)}
 
 /* ── PROGRESS ──────────────────────── */
-.progress-row{margin:.55rem 0}
 .progress-label{display:flex;justify-content:space-between;font-size:.77rem;margin-bottom:.3rem}
 .progress-label span:first-child{color:var(--textM);font-weight:500}
 .progress-label span:last-child{color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem}
-.progress-track{height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
 .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accentD),var(--accentL));transition:width 1.8s cubic-bezier(.4,0,.2,1)}
 
 /* ── MATCH ITEMS ───────────────────── */
@@ -660,7 +668,6 @@ tr:last-child td{border-bottom:none}
 .alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:.35rem}
 .alert-title{font-size:.87rem;font-weight:600;margin-bottom:.15rem}
 .alert-body{font-size:.78rem;color:var(--textM);line-height:1.45}
-.alert-time{font-size:.7rem;color:var(--textD);font-family:'DM Mono',monospace;margin-left:auto;flex-shrink:0;padding-top:.05rem}
 
 .quick-action{display:flex;align-items:center;gap:.9rem;padding:.85rem 1rem;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--rS);
@@ -734,7 +741,6 @@ tr:last-child td{border-bottom:none}
 .res-team-sel option{background:var(--bg3)}
 .res-player-rows{padding:.5rem .9rem .7rem}
 .res-prow{display:grid;grid-template-columns:1fr 70px 60px;gap:.4rem;margin-bottom:.35rem;align-items:center}
-.res-prow-hdr{font-size:.63rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.5px;padding:0 .1rem .25rem}
 .res-kills-in{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'DM Mono',monospace;font-size:.85rem;padding:.3rem .5rem;text-align:center;outline:none;transition:border-color .15s}
 .res-kills-in:focus{border-color:var(--accent)}
 .res-elim-btn{padding:.3rem .5rem;border-radius:5px;font-size:.68rem;font-weight:700;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--textD);transition:all .15s;white-space:nowrap}
@@ -752,7 +758,6 @@ tr:last-child td{border-bottom:none}
 .rlog-pline{display:flex;align-items:center;gap:.4rem;padding:.1rem 0;font-size:.8rem}
 
 /* ── ADMIN TABS ────────────────────── */
-.admin-tabs{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:1.2rem;background:var(--bg2);padding:.4rem;border-radius:var(--r);border:1px solid var(--border);width:fit-content}
 .atab{padding:.4rem .9rem;border-radius:var(--rS);font-size:.8rem;font-weight:600;color:var(--textM);cursor:pointer;border:none;background:none;transition:all .15s;white-space:nowrap}
 .atab.active{background:var(--bg);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.3)}
 .atab:hover:not(.active){color:var(--text);background:var(--surface)}
@@ -827,14 +832,8 @@ tr:last-child td{border-bottom:none}
 .kill-bar-num{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--textM);width:32px;text-align:right;flex-shrink:0}
 .disc-step{display:flex;gap:.9rem;align-items:flex-start;padding:.9rem 0;border-bottom:1px solid var(--border)}
 .disc-step:last-child{border:none}
-.disc-step-num{width:28px;height:28px;border-radius:50%;background:rgba(88,101,242,.2);border:1px solid rgba(88,101,242,.4);color:#7289da;font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.05rem}
-.disc-step-title{font-weight:700;font-size:.88rem;margin-bottom:.2rem}
-.disc-step-body{font-size:.82rem;color:var(--textM);line-height:1.55}
 .disc-code{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:.2rem .55rem;font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accentL);display:inline}
 .winner-badge{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:var(--r);padding:1rem;display:flex;align-items:center;gap:.8rem}
-.winner-badge-icon{font-size:2rem;line-height:1}
-.winner-badge-label{font-size:.7rem;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.15rem}
-.winner-badge-val{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800}
 .mab-card{background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.02));border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:1rem}
 .mab-card.blue{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.02));border-color:rgba(59,130,246,.2)}
 .mab-card.green{background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border-color:rgba(16,185,129,.2)}
@@ -855,7 +854,7 @@ tr:last-child td{border-bottom:none}
 .text-green{color:var(--green)}.text-red{color:var(--red)}.text-amber{color:var(--amber)}.text-accent{color:var(--accentL)}.text-muted{color:var(--textM)}.text-dim{color:var(--textD)}
 .font-mono{font-family:'DM Mono',monospace}
 .font-syne{font-family:'Syne',sans-serif}
-.fw6{font-weight:600}.fw7{font-weight:700}
+.fw6{font-weight:600}
 .overflow-x{overflow-x:auto}
 .divider-line{height:1px;background:var(--border);margin:1.2rem 0}
 
@@ -980,38 +979,6 @@ tr:last-child td{border-bottom:none}
   #theme-panel{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 80px)}
 }
 
-/* ── AI SITE GUIDE (floating, all users) — mirrors the theme bubble but on the opposite
-   corner so the two floating controls never collide. Talks to a Supabase Edge Function which
-   holds the Gemini key server-side; the browser never sees it. ─────────────────────── */
-#ai-bubble{position:fixed;bottom:22px;left:22px;z-index:7000;width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--accentD));border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;
-  box-shadow:0 8px 28px rgba(0,0,0,.25),0 0 0 4px rgba(255,255,255,.08);transition:transform .2s ease,box-shadow .2s ease}
-#ai-bubble:hover{transform:scale(1.08);box-shadow:0 10px 34px rgba(0,0,0,.32)}
-#ai-panel{position:fixed;bottom:86px;left:22px;z-index:7000;width:min(360px,92vw);max-height:min(560px,70vh);
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadowL);
-  display:none;flex-direction:column;overflow:hidden;font-family:var(--font-main);
-  opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transition:all .18s ease}
-#ai-panel.open{display:flex;opacity:1;transform:translateY(0) scale(1);pointer-events:all}
-#ai-panel-head{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0}
-#ai-panel-head i{color:var(--accent)}
-#ai-panel-title{font-weight:700;font-size:.88rem;flex:1;color:var(--text)}
-#ai-panel-close{background:none;border:none;color:var(--textM);cursor:pointer;font-size:1rem;padding:.2rem}
-#ai-msgs{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.55rem;font-size:.83rem;min-height:120px}
-.ai-msg{max-width:85%;padding:.55rem .75rem;border-radius:var(--rS);line-height:1.42;white-space:pre-wrap;word-break:break-word}
-.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px}
-.ai-msg.bot{align-self:flex-start;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px}
-.ai-msg.typing{opacity:.6;font-style:italic}
-#ai-quick-row{padding:0 .8rem .5rem;display:flex;gap:.35rem;flex-wrap:wrap;flex-shrink:0}
-#ai-quick-row .chip{cursor:pointer;font-size:.68rem}
-#ai-panel-input-row{display:flex;gap:.5rem;padding:.65rem .7rem;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-#ai-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.55rem .7rem;color:var(--text);font-size:.83rem;font-family:var(--font-main)}
-#ai-send{background:var(--accent);border:none;color:#fff;border-radius:var(--rS);width:38px;flex-shrink:0;cursor:pointer;font-size:.9rem}
-#ai-send:disabled{opacity:.5;cursor:default}
-@media(max-width:760px){
-  #ai-bubble{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 16px)}
-  #ai-panel{bottom:calc(76px + env(safe-area-inset-bottom,0px) + 80px);left:12px;width:calc(100vw - 24px)}
-}
 .tp-title{font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;margin-bottom:.15rem;color:var(--text)}
 .tp-sub{font-size:.7rem;color:var(--textM);margin-bottom:.8rem}
 .tp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
@@ -1115,9 +1082,9 @@ tr:last-child td{border-bottom:none}
       <div class="ls-tagline">PUBG Esports · Tournament Hub</div>
     </div>
     <div class="ls-feat">
-      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-trophy"></i></div><div class="ls-feat-txt">Live Scrims Results & Leaderboard</div></div>
-      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-chart-simple"></i></div><div class="ls-feat-txt">Real-time Leaderboard & Stats</div></div>
-      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-bolt"></i></div><div class="ls-feat-txt">Admin Controls & Match Management</div></div>
+      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-chart-simple"></i></div><div class="ls-feat-txt">Live Scrims, Results & Leaderboard</div></div>
+      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-users"></i></div><div class="ls-feat-txt">Team Management & Registration</div></div>
+      <div class="ls-feat-item"><div class="ls-feat-icon"><i class="fa-solid fa-shield-halved"></i></div><div class="ls-feat-txt">Secure Discord Sign-In — No Passwords</div></div>
     </div>
   </div>
   <div class="ls-right">
@@ -1126,9 +1093,10 @@ tr:last-child td{border-bottom:none}
       <div class="login-sub">Sign in with Discord to access the tournament hub</div>
 
       <!-- DISCORD LOGIN — the only sign-in method, via Supabase Auth. No passwords, ever. -->
-      <button class="btn btn-fw" onclick="discordLogin()" style="background:#5865F2;color:#fff;border:none;margin-bottom:.9rem;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.25rem;font-size:.95rem">
+      <button class="btn btn-fw" onclick="discordLogin()" style="background:#5865F2;color:#fff;border:none;margin-bottom:.7rem;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.25rem;font-size:.95rem">
         <i class="fa-brands fa-discord" style="font-size:1.1rem"></i> Continue with Discord
       </button>
+      <div class="ls-secure-note"><i class="fa-solid fa-lock"></i> Secured by Discord OAuth — we never see or store your password</div>
       <div style="font-size:.72rem;color:var(--textD);text-align:center;margin-bottom:.5rem">The tournament host (Master Admin) is simply whoever signs in with Discord first.</div>
 
       <!-- DISCORD LINK STEP — shown once, right after a first-time Discord sign-in. Signing in with
@@ -1427,9 +1395,9 @@ tr:last-child td{border-bottom:none}
             <div id="admin-alerts"></div>
           </div>
 
-          <!-- Quick Actions -->
+          <!-- More Actions (role mgmt + result logging that aren't in the quick-action bar above) -->
           <div class="card">
-            <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
+            <div class="card-title"><i class="fa-solid fa-bolt"></i> More Actions</div>
             <div class="quick-action" onclick="showPage('admin-matches')">
               <div class="qa-icon" style="background:rgba(245,158,11,.1);color:var(--amber)"><i class="fa-solid fa-trophy"></i></div>
               <div><div class="qa-label">Log Match Results</div><div class="qa-sub">Update kills, placements & stats</div></div>
@@ -1586,6 +1554,17 @@ tr:last-child td{border-bottom:none}
       <!-- ░ ADMIN SETTINGS ░ -->
       <div class="page" id="page-admin-settings">
         <div class="sh-row"><div class="sh"><div class="sh-title">Tournament <span style="color:var(--accentL)">Settings</span></div></div></div>
+
+        <div class="set-tabs">
+          <button class="set-tab active" data-set-tab="general" onclick="switchSettingsTab('general')"><i class="fa-solid fa-sliders"></i> General</button>
+          <button class="set-tab" data-set-tab="appearance" onclick="switchSettingsTab('appearance')"><i class="fa-solid fa-palette"></i> Appearance</button>
+          <button class="set-tab" data-set-tab="overlays" onclick="switchSettingsTab('overlays')"><i class="fa-solid fa-tv"></i> Overlays &amp; Broadcast</button>
+          <button class="set-tab" data-set-tab="webhooks" onclick="switchSettingsTab('webhooks')"><i class="fa-brands fa-discord"></i> Webhooks</button>
+          <button class="set-tab" data-set-tab="danger" onclick="switchSettingsTab('danger')"><i class="fa-solid fa-triangle-exclamation"></i> Advanced &amp; Danger Zone</button>
+        </div>
+
+        <!-- ═══ GENERAL ═══ -->
+        <div class="set-panel active" data-set-panel="general">
         <div class="card mb2">
           <div class="card-title"><i class="fa-solid fa-ranking-star"></i> Scrims Scoring System</div>
           <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Set exactly how many points each placement (1st through 20th) is worth, plus points per kill. This applies to every scrim/tournament going forward — matches already logged keep whatever scoring was active when you saved their results.</div>
@@ -1601,8 +1580,7 @@ tr:last-child td{border-bottom:none}
           <button class="btn btn-accent btn-fw" onclick="saveScoreSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Scoring System</button>
           <button class="btn btn-ghost btn-fw" style="margin-top:.5rem" onclick="resetScoreSettings()"><i class="fa-solid fa-rotate-left"></i> Reset to PGC Default</button>
         </div>
-        <div class="g2">
-          <div class="card">
+        <div class="card">
             <div class="card-title"><i class="fa-solid fa-sliders"></i> Configuration</div>
             <div class="fg"><label class="fl">Tournament Name</label><input class="fi" id="cfg-name" value="RAGEISM PUBG ESPORTS — Season 01"/></div>
             <div class="frow"><div class="fg"><label class="fl">Season</label><input class="fi" id="cfg-s" value="01"/></div><div class="fg"><label class="fl">Status</label><select class="fi fsel" id="cfg-st"><option>Registration Open</option><option>Group Stage</option><option>Knockout Stage</option><option>Finals</option><option>Completed</option></select></div></div>
@@ -1613,7 +1591,9 @@ tr:last-child td{border-bottom:none}
             <div class="fg"><label class="fl">Announcement Banner</label><textarea class="fta" id="cfg-ann" placeholder="Broadcast a message to all players..."></textarea></div>
             <button class="btn btn-accent btn-fw" onclick="saveCfg()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
           </div>
-          <div>
+        </div>
+        <!-- ═══ WEBHOOKS ═══ -->
+        <div class="set-panel" data-set-panel="webhooks">
             <div class="card mb2" id="cfg-webhooks-card">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Discord Webhooks</div>
               <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Auto-post announcements to Discord. Add as many webhooks as you like — one per channel, e.g. a #match-results channel, a separate #tdm channel, a #registrations channel, a #scrim-signups channel, and a private admin-activity channel. Each webhook only fires for the event type it's set to, so you can route match results, TDM results, team wins, player sign-ups, team registrations/approvals, scrim/tournament signup requests + acceptances, and announcements to whichever channels you want. Use "Who gets @mentioned" to control whether the whole roster (captain, manager & every member with Discord linked), just the captain, or nobody gets pinged for that channel — and optionally override the message text per webhook with tokens like {team}, {match}, {map}, {date}, {time}, {mode}, {mentions}.</div>
@@ -1629,6 +1609,10 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><label class="fl">Custom Message <span style="font-weight:400;color:var(--textD)">(optional — overrides the default text)</span></label><textarea class="fta" id="cfg-wh-msg" placeholder="e.g. {mentions} you're locked into **{match}** on {map} — {date} at {time}. GLHF!" style="min-height:60px"></textarea><div style="font-size:.68rem;color:var(--textD);margin-top:.3rem">Available tokens depend on the event: {mentions} {team} {match} {map} {date} {time} {mode} {player}</div></div>
               <button class="btn btn-accent btn-fw" onclick="addWebhook()"><i class="fa-solid fa-plus"></i> Add Webhook</button>
             </div>
+        </div>
+        <!-- ═══ APPEARANCE ═══ -->
+        <div class="set-panel" data-set-panel="appearance">
+          <div class="g2">
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-swatchbook"></i> Site Appearance</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Sets the default font and color theme every new visitor sees. Anyone can still pick their own color theme with the bubble in the corner — this just controls the default.</div>
@@ -1666,7 +1650,10 @@ tr:last-child td{border-bottom:none}
               <button class="btn btn-accent btn-fw" onclick="saveLogoUrl()"><i class="fa-solid fa-floppy-disk"></i> Save Logo</button>
             </div>
           </div>
-          <div>
+        </div>
+        <!-- ═══ OVERLAYS & BROADCAST ═══ -->
+        <div class="set-panel" data-set-panel="overlays">
+          <div class="g2">
             <div class="card mb2">
               <div class="card-title"><i class="fa-solid fa-paint-roller"></i> Overlay Design</div>
               <div style="font-size:.82rem;color:var(--textM);margin-bottom:1rem">Fully customize how <strong>both</strong> OBS overlays look — the TikTok stat card and the leaderboard broadcast graphic. Pick a preset or dial in your own colors, background, and corner style.</div>
@@ -1779,6 +1766,11 @@ tr:last-child td{border-bottom:none}
               <div class="fg"><textarea class="fta" id="cfg-sponsors" rows="4" placeholder="Sponsored by ExampleGG — use code RAGE10&#10;Watch live w/ @streamername — drop a follow"></textarea></div>
               <button class="btn btn-accent btn-fw" onclick="saveSponsors()"><i class="fa-solid fa-floppy-disk"></i> Save Sponsor Slides</button>
             </div>
+          </div>
+        </div>
+        <!-- ═══ ADVANCED & DANGER ZONE ═══ -->
+        <div class="set-panel" data-set-panel="danger">
+          <div class="g2">
             <div class="card mb2 master-only">
               <div class="card-title"><i class="fa-brands fa-discord" style="color:#7289da"></i> Admin Activity Log <span style="color:var(--textD);font-weight:400;font-size:.72rem">(master only)</span></div>
               <div style="font-size:.8rem;color:var(--textM);margin-bottom:.8rem">Role grants/revokes, settings changes, resets, and deletions performed by any admin — mirrored to any "Admin Activity Log" webhook configured in Discord Webhooks above.</div>
@@ -3922,7 +3914,7 @@ function showPage(n){
   if(n==='debug')renderDebugPage();
   if(n==='analytics')renderAnalytics('overview');
   if(n==='tdm')renderTdmPage();
-  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';const os=document.getElementById('ovscore-link');if(os)os.value=location.origin+location.pathname+'?overlay=score';onOvlbTypeChange();buildOverlayLbLink();}
+  if(n==='admin-settings'){const ov=document.getElementById('ov-link');if(ov)ov.value=location.origin+location.pathname+'?overlay=1';const os=document.getElementById('ovscore-link');if(os)os.value=location.origin+location.pathname+'?overlay=score';onOvlbTypeChange();buildOverlayLbLink();switchSettingsTab('general');}
 }
 
 // ═══ TICKER ═══
@@ -9315,6 +9307,11 @@ function fireWebhookEvent(event,embed,mentionIgns,vars){
       });
   });
 }
+// ── Settings page tabs (General / Appearance / Overlays / Webhooks / Danger Zone) ──
+function switchSettingsTab(tab){
+  document.querySelectorAll('#page-admin-settings .set-tab').forEach(b=>b.classList.toggle('active', b.dataset.setTab===tab));
+  document.querySelectorAll('#page-admin-settings .set-panel').forEach(p=>p.classList.toggle('active', p.dataset.setPanel===tab));
+}
 function saveCfg(){const cfg={name:v('cfg-name'),season:v('cfg-s'),status:v('cfg-st'),maxP:v('cfg-mp'),maxT:v('cfg-mt'),prize:v('cfg-pr'),discInvite:v('cfg-dc'),ann:v('cfg-ann')};
   const prev=DB.get('cfg',{});
   DB.set('cfg',{...prev,...cfg});notify('Settings saved!','','n-ok');
@@ -9674,110 +9671,6 @@ window.addEventListener('DOMContentLoaded',async()=>{
   }
 });
 
-// ═══════ AI SITE GUIDE — DISABLED FOR NOW ═══════
-// The Supabase project is currently over its egress quota / INACTIVE, so this whole feature
-// (both the JS below and its HTML widget near the end of <body>) is commented out rather than
-// deleted. To bring it back: uncomment this block and the matching HTML block, once the
-// Supabase project is restored.
-/*
-let AI_HISTORY=[];
-let AI_BUSY=false;
-let AI_LAST_SEND=0;
-const AI_MIN_GAP_MS=2500; // free-tier Gemini is rate-limited to a handful of requests/min — this just spaces out rapid clicks
-function toggleAiPanel(){
-  const p=document.getElementById('ai-panel');if(!p)return;
-  const opening=!p.classList.contains('open');
-  p.classList.toggle('open');
-  if(opening){
-    if(!AI_HISTORY.length){
-      appendAiMsg('bot',"Hey! I'm the site guide. Ask me how to sign up, how to join or start a team, what's happening on the leaderboard, or what matches are coming up.");
-    }
-    setTimeout(()=>document.getElementById('ai-input')?.focus(),80);
-  }
-}
-function appendAiMsg(role,text){
-  const wrap=document.getElementById('ai-msgs');if(!wrap)return null;
-  const el=document.createElement('div');
-  el.className='ai-msg '+(role==='user'?'user':'bot');
-  el.textContent=text;
-  wrap.appendChild(el);
-  wrap.scrollTop=wrap.scrollHeight;
-  return el;
-}
-function aiInputKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiMessage();}}
-function aiQuickAsk(q){
-  const input=document.getElementById('ai-input');if(!input)return;
-  input.value=q;sendAiMessage();
-}
-// Compact, read-only snapshot of live public stats — no PII beyond public IGNs that are already
-// shown on the leaderboard/teams pages. Kept small on purpose to keep each request cheap.
-function buildAiSiteContext(){
-  try{
-    const cfg=DB.get('cfg',{});
-    const players=DB.get('players',[]);
-    const teams=DB.get('teams',[]);
-    const matches=DB.get('matches',[]);
-    const tdmMs=DB.get('tdmMatches',[]);
-    const approvedTeams=teams.filter(t=>t.approved);
-    const recruiting=approvedTeams.filter(t=>t.recruiting).slice(0,6)
-      .map(t=>({name:t.name,tag:t.tag||'',lookingFor:t.recruitNote||''}));
-    const upcoming=matches.filter(m=>m.status==='upcoming')
-      .sort((a,b)=>new Date((a.date||'')+' '+(a.time||''))-new Date((b.date||'')+' '+(b.time||'')))
-      .slice(0,5).map(m=>({name:m.name,map:m.map||'',date:m.date||'',time:m.time||'',slots:`${(m.teams||[]).length}/${m.maxTeams||20}`,openSignups:!!m.openSignups}));
-    const liveTdm=tdmMs.find(m=>m.status==='live');
-    const topScrims=[...players].sort((a,b)=>(b.kills||0)-(a.kills||0)).slice(0,5)
-      .map(p=>({ign:p.ign,kills:p.kills||0,wins:p.wins||0,team:p.team||''}));
-    const topTdm=[...players].filter(p=>(p.tdmMatches||0)>0).sort((a,b)=>(b.tdmWins||0)-(a.tdmWins||0)).slice(0,5)
-      .map(p=>({ign:p.ign,wins:p.tdmWins||0,kills:p.tdmKills||0,elo:p.tdmElo||1000}));
-    return {
-      site:{name:cfg.name||'the tournament',season:cfg.season||'',status:cfg.status||'',prizePool:cfg.prize||''},
-      counts:{registeredPlayers:players.length,approvedTeams:approvedTeams.length,recruitingTeams:recruiting.length},
-      recruitingTeams:recruiting,
-      upcomingMatches:upcoming,
-      liveTdmMatch:liveTdm?{squadA:liveTdm.aName,squadB:liveTdm.bName,scoreA:liveTdm.scoreA,scoreB:liveTdm.scoreB,firstTo:liveTdm.target}:null,
-      topScrimPlayers:topScrims,
-      topTdmPlayers:topTdm,
-      viewer:CU?{loggedIn:true,ign:CU.ign}:{loggedIn:false}
-    };
-  }catch(e){console.warn('[ai-guide] context build failed',e);return {};}
-}
-async function sendAiMessage(){
-  if(AI_BUSY)return;
-  const input=document.getElementById('ai-input');if(!input)return;
-  const text=input.value.trim();if(!text)return;
-  const since=Date.now()-AI_LAST_SEND;
-  if(since<AI_MIN_GAP_MS)return notify('Hold on a sec','Give the assistant a moment between questions','n-bad');
-  AI_LAST_SEND=Date.now();
-  input.value='';
-  appendAiMsg('user',text);
-  const typing=appendAiMsg('bot','…thinking');
-  typing.classList.add('typing');
-  AI_BUSY=true;
-  const sendBtn=document.getElementById('ai-send');if(sendBtn)sendBtn.disabled=true;
-  try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/ai-assistant',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
-      body:JSON.stringify({message:text,history:AI_HISTORY.slice(-8),siteContext:buildAiSiteContext()})
-    });
-    let data={};try{data=await res.json();}catch(e){}
-    typing.remove();
-    if(!res.ok||data.error){
-      appendAiMsg('bot',"Sorry, I couldn't reach the assistant just now"+(data.error?` (${data.error})`:'')+". Try again in a bit, or use the menu on the left.");
-    }else{
-      const reply=data.reply||"I didn't get a reply back — try asking again.";
-      appendAiMsg('bot',reply);
-      AI_HISTORY.push({role:'user',text});AI_HISTORY.push({role:'assistant',text:reply});
-    }
-  }catch(e){
-    typing.remove();
-    appendAiMsg('bot',"Couldn't connect to the assistant — check your connection and try again.");
-  }finally{
-    AI_BUSY=false;
-    if(sendBtn)sendBtn.disabled=false;
-  }
-}
-*/
 </script>
 
 <!-- ═══════ FLOATING THEME BUBBLE — everyone can pick their own color theme ═══════ -->
