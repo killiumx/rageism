@@ -4420,10 +4420,10 @@ function ignIsCaptainElsewhere(ign,excludeTeamId){
   const t=DB.get('teams').find(x=>x.captain===ign&&x.id!==excludeTeamId);
   return t||null;
 }
-function trFindByUid(uid){
-  if(!uid)return null;
+function trFindById(id){
+  if(!id)return null;
   const players=DB.get('players');
-  return players.find(p=>String(p.uid).trim()===String(uid).trim())||null;
+  return players.find(p=>String(p.id).trim()===String(id).trim())||null;
 }
 // Single search box replacing the old two-box (captain UID / member UID) flow — type a name or
 // IGN, pick from the dropdown. First player added becomes captain automatically.
@@ -4431,41 +4431,48 @@ function trSearchPlayers(){
   const q=(v('tr-search')||'').toLowerCase().trim();
   const box=document.getElementById('tr-search-results');if(!box)return;
   if(!q){box.style.display='none';box.innerHTML='';return;}
-  const taken=new Set([...(TR_CAPTAIN?[TR_CAPTAIN.uid]:[]),...TR_MEMBERS.map(m=>m.uid)]);
+  const taken=new Set([...(TR_CAPTAIN?[TR_CAPTAIN.id]:[]),...TR_MEMBERS.map(m=>m.id)]);
   // Search by IGN, real name, AND Discord tag now — matching search boxes elsewhere (Manage
   // Players, Manage Team roster). Previously this only matched ign/name, so looking someone up by
   // their Discord tag silently returned nothing even though the field exists on every player.
-  const results=DB.get('players').filter(p=>!taken.has(p.uid)&&(p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q)||(p.discord||'').toLowerCase().includes(q))).slice(0,6);
+  const results=DB.get('players').filter(p=>!taken.has(p.id)&&(p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q)||(p.discord||'').toLowerCase().includes(q))).slice(0,6);
   box.style.display='block';
   if(!results.length){box.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching registered players</div>';return;}
   // Discord tag is now the primary identifying line shown per result (with IGN as a secondary
   // line) instead of just name+IGN, since Discord is what actually distinguishes people reliably —
   // IGNs can be similar/reused and were part of why the wrong player kept getting picked.
-  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.uid}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(p.discord)}`:esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}${!p.discord?' · no Discord linked':''}</div></div></div>`).join('');
+  // BUGFIX: rows used to be keyed by trAddPlayer('${p.uid}') — PUBG UID is an OPTIONAL field, so
+  // any two players who both left it blank (very common — e.g. accounts recreated after an IGN
+  // was removed from the roster, or added manually by an admin) shared the same falsy uid. Clicking
+  // either one of them then had trFindByUid() return whichever blank-UID player happened to come
+  // first in the players array — a completely random person got set as captain instead of the one
+  // actually clicked. Every player row already has a guaranteed-unique `id` (assigned at creation),
+  // so route through that instead.
+  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.id}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(p.discord)}`:esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}${!p.discord?' · no Discord linked':''}</div></div></div>`).join('');
 }
-function trAddPlayer(uid){
-  const p=trFindByUid(uid);if(!p)return;
+function trAddPlayer(id){
+  const p=trFindById(id);if(!p)return;
   const label=p.discord?`${p.discord} (${p.ign})`:p.ign;
   if(!TR_CAPTAIN){
     const clash=ignIsCaptainElsewhere(p.ign,null);
     if(clash)return notify('Already a captain',`${label} is already captain of "${clash.name}" — a player can only captain one team. Add them as a member instead, or pick a different captain.`,'n-bad');
-    TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''};notify('Captain set',label,'n-ok');
+    TR_CAPTAIN={id:p.id,uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''};notify('Captain set',label,'n-ok');
   }
-  else{TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''});notify('Player added',label,'n-ok');}
+  else{TR_MEMBERS.push({id:p.id,uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''});notify('Player added',label,'n-ok');}
   const s=document.getElementById('tr-search');if(s)s.value='';
   const box=document.getElementById('tr-search-results');if(box){box.style.display='none';box.innerHTML='';}
   trRenderRoster();
 }
-function trMakeCaptain(uid){
-  const target=TR_MEMBERS.find(m=>m.uid===uid);if(!target)return;
+function trMakeCaptain(id){
+  const target=TR_MEMBERS.find(m=>m.id===id);if(!target)return;
   const clash=ignIsCaptainElsewhere(target.ign,null);
   if(clash)return notify('Already a captain',`${target.discord||target.name} is already captain of "${clash.name}" — a player can only captain one team.`,'n-bad');
-  TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);
+  TR_MEMBERS=TR_MEMBERS.filter(m=>m.id!==id);
   if(TR_CAPTAIN)TR_MEMBERS.unshift(TR_CAPTAIN);
   TR_CAPTAIN=target;
   trRenderRoster();
 }
-function trRemoveMember(uid){TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);trRenderRoster();}
+function trRemoveMember(id){TR_MEMBERS=TR_MEMBERS.filter(m=>m.id!==id);trRenderRoster();}
 function trRemoveCaptain(){
   TR_CAPTAIN=TR_MEMBERS.length?TR_MEMBERS.shift():null;
   trRenderRoster();
@@ -4485,8 +4492,8 @@ function trRenderRoster(){
   rows+=TR_MEMBERS.map(m=>`<div style="display:flex;align-items:center;gap:.6rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .8rem">
     <div style="width:14px;flex-shrink:0"></div>
     <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${m.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(m.discord)}`:esc(m.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(m.ign)}</div></div>
-    <button class="btn btn-ghost btn-xs" title="Make captain" onclick="trMakeCaptain('${m.uid}')"><i class="fa-solid fa-crown"></i></button>
-    <i class="fa-solid fa-xmark" style="cursor:pointer;color:var(--textD);flex-shrink:0" onclick="trRemoveMember('${m.uid}')"></i>
+    <button class="btn btn-ghost btn-xs" title="Make captain" onclick="trMakeCaptain('${m.id}')"><i class="fa-solid fa-crown"></i></button>
+    <i class="fa-solid fa-xmark" style="cursor:pointer;color:var(--textD);flex-shrink:0" onclick="trRemoveMember('${m.id}')"></i>
   </div>`).join('');
   el.innerHTML=rows;
 }
