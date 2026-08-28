@@ -2203,7 +2203,7 @@ tr:last-child td{border-bottom:none}
 
     <div class="fg" style="position:relative">
       <label class="fl">Add Players <span class="text-dim" style="font-weight:400">(search by name or IGN)</span></label>
-      <input class="fi" id="tr-search" placeholder="Start typing a name or IGN..." oninput="trSearchPlayers()" onfocus="trSearchPlayers()" onblur="setTimeout(()=>{const b=document.getElementById('tr-search-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
+      <input class="fi" id="tr-search" placeholder="Start typing a name, IGN, or Discord tag..." oninput="trSearchPlayers()" onfocus="trSearchPlayers()" onblur="setTimeout(()=>{const b=document.getElementById('tr-search-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
       <div id="tr-search-results" class="tdm-search-results" style="display:none;position:absolute;left:0;right:0;z-index:5;background:var(--bg2);border:1px solid var(--border)"></div>
     </div>
     <div id="tr-roster" style="display:flex;flex-direction:column;gap:.4rem;margin:.6rem 0 1rem"></div>
@@ -4421,15 +4421,22 @@ function trSearchPlayers(){
   const box=document.getElementById('tr-search-results');if(!box)return;
   if(!q){box.style.display='none';box.innerHTML='';return;}
   const taken=new Set([...(TR_CAPTAIN?[TR_CAPTAIN.uid]:[]),...TR_MEMBERS.map(m=>m.uid)]);
-  const results=DB.get('players').filter(p=>!taken.has(p.uid)&&(p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q))).slice(0,6);
+  // Search by IGN, real name, AND Discord tag now — matching search boxes elsewhere (Manage
+  // Players, Manage Team roster). Previously this only matched ign/name, so looking someone up by
+  // their Discord tag silently returned nothing even though the field exists on every player.
+  const results=DB.get('players').filter(p=>!taken.has(p.uid)&&(p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q)||(p.discord||'').toLowerCase().includes(q))).slice(0,6);
   box.style.display='block';
   if(!results.length){box.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No matching registered players</div>';return;}
-  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.uid}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}</div></div></div>`).join('');
+  // Discord tag is now the primary identifying line shown per result (with IGN as a secondary
+  // line) instead of just name+IGN, since Discord is what actually distinguishes people reliably —
+  // IGNs can be similar/reused and were part of why the wrong player kept getting picked.
+  box.innerHTML=results.map(p=>`<div class="tdm-search-row" onmousedown="trAddPlayer('${p.uid}')"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(p.discord)}`:esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${p.team?' · '+esc(p.team):''}${!p.discord?' · no Discord linked':''}</div></div></div>`).join('');
 }
 function trAddPlayer(uid){
   const p=trFindByUid(uid);if(!p)return;
-  if(!TR_CAPTAIN){TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name};notify('Captain set',`${p.name} (${p.ign})`,'n-ok');}
-  else{TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name});notify('Player added',`${p.name} (${p.ign})`,'n-ok');}
+  const label=p.discord?`${p.discord} (${p.ign})`:p.ign;
+  if(!TR_CAPTAIN){TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''};notify('Captain set',label,'n-ok');}
+  else{TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''});notify('Player added',label,'n-ok');}
   const s=document.getElementById('tr-search');if(s)s.value='';
   const box=document.getElementById('tr-search-results');if(box){box.style.display='none';box.innerHTML='';}
   trRenderRoster();
@@ -4452,7 +4459,7 @@ function trRenderRoster(){
   if(TR_CAPTAIN){
     rows+=`<div style="display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px solid var(--accent);border-radius:var(--rS);padding:.5rem .8rem">
       <i class="fa-solid fa-crown" style="color:var(--amber);flex-shrink:0"></i>
-      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem">${esc(TR_CAPTAIN.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(TR_CAPTAIN.ign)} · Captain</div></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem">${TR_CAPTAIN.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(TR_CAPTAIN.discord)}`:esc(TR_CAPTAIN.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(TR_CAPTAIN.ign)} · Captain</div></div>
       <i class="fa-solid fa-xmark" style="cursor:pointer;color:var(--textD);flex-shrink:0" onclick="trRemoveCaptain()"></i>
     </div>`;
   }else{
@@ -4460,7 +4467,7 @@ function trRenderRoster(){
   }
   rows+=TR_MEMBERS.map(m=>`<div style="display:flex;align-items:center;gap:.6rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rS);padding:.5rem .8rem">
     <div style="width:14px;flex-shrink:0"></div>
-    <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${esc(m.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(m.ign)}</div></div>
+    <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${m.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(m.discord)}`:esc(m.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(m.ign)}</div></div>
     <button class="btn btn-ghost btn-xs" title="Make captain" onclick="trMakeCaptain('${m.uid}')"><i class="fa-solid fa-crown"></i></button>
     <i class="fa-solid fa-xmark" style="cursor:pointer;color:var(--textD);flex-shrink:0" onclick="trRemoveMember('${m.uid}')"></i>
   </div>`).join('');
