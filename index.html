@@ -1950,7 +1950,7 @@ tr:last-child td{border-bottom:none}
       <!-- ░ TEAMS ░ -->
       <div class="page" id="page-teams">
         <div class="sh-row"><div class="sh"><div class="sh-title">Registered <span style="color:var(--accentL)">Teams</span></div><div class="sh-sub" id="teams-count">0 teams</div></div>
-          <button class="btn btn-accent btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
+          <button class="btn btn-accent btn-sm" onclick="openTeamRegModal()"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
         </div>
         <div class="teams-toolbar">
           <input class="fi" id="teams-search" style="max-width:280px" placeholder="Search teams by name, tag, or player..." oninput="renderTeams()"/>
@@ -1971,7 +1971,7 @@ tr:last-child td{border-bottom:none}
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('upcoming',this)">Upcoming</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('done',this)">Ended</button>
             <button class="btn btn-ghost btn-sm" onclick="filterMatches('tdm',this)"><i class="fa-solid fa-skull-crossbones"></i> TDM</button>
-            <button class="btn btn-ghost btn-sm" onclick="openModal('team-reg-modal')"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
+            <button class="btn btn-ghost btn-sm" onclick="openTeamRegModal()"><i class="fa-solid fa-shield-halved"></i> Register Team</button>
             <button class="btn btn-ghost btn-sm admin-only" onclick="openNewMatchModal()" style="display:none"><i class="fa-solid fa-plus"></i> New</button>
           </div>
         </div>
@@ -4358,6 +4358,21 @@ function renderAdminOverview(){
 let TR_CAPTAIN=null; // resolved player {uid,ign,name}
 let TR_MEMBERS=[];   // array of resolved player {uid,ign,name}
 
+// BUGFIX: TR_CAPTAIN/TR_MEMBERS only used to get cleared after a *successful* regTeam() submit.
+// If someone opened "Register Team", added themselves as captain, then closed/cancelled the modal
+// (or just navigated away) without submitting, that leftover captain silently stuck around in memory.
+// Next time ANYONE reopened the modal, trAddPlayer() saw TR_CAPTAIN was already set and added the
+// new first search result as a plain member instead of captain — so whoever's leftover session ran
+// last (e.g. "cutty") kept getting auto-assigned captain on brand new teams. Always reset the roster
+// state fresh whenever this modal is opened, so it starts empty every time.
+function openTeamRegModal(){
+  TR_CAPTAIN=null;TR_MEMBERS=[];
+  ['tn','tt','tr-search','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
+  const box=document.getElementById('tr-search-results');if(box){box.style.display='none';box.innerHTML='';}
+  trRenderRoster();
+  openModal('team-reg-modal');
+}
 function trFindByUid(uid){
   if(!uid)return null;
   const players=DB.get('players');
