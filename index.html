@@ -8344,16 +8344,62 @@ function rosterRoleOptions(current){
   const opts=['',...ROSTER_ROLES];
   return opts.map(r=>`<option value="${r}" ${r===current?'selected':''}>${r||'— No role —'}</option>`).join('');
 }
+
+// Captain/Manager picker — scoped to the team's ACTUAL current roster (never free text) so a typo
+// or a name that doesn't match any real member can no longer silently break captain detection
+// (crown badge, isManagerOf() permission checks, webhook mentions all key off exact IGN match).
+// Shows Discord tag as the primary identifying line, same as the team-registration search.
+function mtSearchRoster(fieldPrefix,teamId){
+  const team=DB.get('teams').find(x=>x.id===teamId);if(!team)return;
+  const box=document.getElementById(fieldPrefix+'-results');if(!box)return;
+  const q=(document.getElementById(fieldPrefix+'-search')?.value||'').toLowerCase().trim();
+  const players=DB.get('players');
+  const roster=(team.members||[]).map(ign=>players.find(p=>p.ign===ign)||{ign,name:ign,discord:''});
+  const filtered=q?roster.filter(p=>p.ign.toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q)||(p.discord||'').toLowerCase().includes(q)):roster;
+  box.style.display='block';
+  let rows='';
+  if(fieldPrefix==='mt-mgr')rows+=`<div class="tdm-search-row" style="color:var(--textM)" onmousedown="mtSelectRoster('mt-mgr','${teamId}','')"><div style="flex:1">— No manager —</div></div>`;
+  if(!filtered.length&&!rows){box.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No roster match</div>';return;}
+  rows+=filtered.map(p=>`<div class="tdm-search-row" data-fp="${fieldPrefix}" data-team="${teamId}" data-ign="${esc(p.ign)}" onmousedown="mtSelectRosterFromEl(this)"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(p.discord)}`:esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${!p.discord?' · no Discord linked':''}</div></div></div>`).join('');
+  box.innerHTML=rows;
+}
+function mtSelectRosterFromEl(el){mtSelectRoster(el.dataset.fp,el.dataset.team,el.dataset.ign);}
+function mtSelectRoster(fieldPrefix,teamId,ign){
+  const p=ign?DB.get('players').find(x=>x.ign===ign):null;
+  const label=ign?(p&&p.discord?p.discord:ign):'';
+  const s=document.getElementById(fieldPrefix+'-search');if(s)s.value=label;
+  const v=document.getElementById(fieldPrefix+'-val');if(v)v.value=ign;
+  const box=document.getElementById(fieldPrefix+'-results');if(box){box.style.display='none';box.innerHTML='';}
+}
 function openManageTeam(id){
   const teams=DB.get('teams');const t=teams.find(x=>x.id===id);if(!t)return;
   const players=DB.get('players');
+  // Prefill each picker's visible search box with the currently-set player's Discord tag (falling
+  // back to IGN if they have none linked) — the hidden hidden-val input is what actually gets saved.
+  const capPlayer=players.find(p=>p.ign===t.captain);
+  const capLabel=capPlayer&&capPlayer.discord?capPlayer.discord:(t.captain||'');
+  const mgrPlayer=t.manager?players.find(p=>p.ign===t.manager):null;
+  const mgrLabel=mgrPlayer&&mgrPlayer.discord?mgrPlayer.discord:(t.manager||'');
   document.getElementById('manage-team-title').textContent='Manage: '+t.name;
   document.getElementById('manage-team-content').innerHTML=`
   <div class="fg"><label class="fl">Team Name</label><input class="fi" id="mt-name" value="${t.name}"/></div>
-  <div class="frow"><div class="fg"><label class="fl">Tag</label><input class="fi" id="mt-tag" value="${t.tag||''}"/></div><div class="fg"><label class="fl">Captain IGN</label><input class="fi" id="mt-cap" value="${t.captain}" list="ign-dl"/></div></div>
+  <div class="frow">
+    <div class="fg"><label class="fl">Tag</label><input class="fi" id="mt-tag" value="${t.tag||''}"/></div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Captain</label>
+      <input class="fi" id="mt-cap-search" value="${esc(capLabel)}" placeholder="Search roster by Discord or IGN..." oninput="mtSearchRoster('mt-cap','${id}')" onfocus="mtSearchRoster('mt-cap','${id}')" onblur="setTimeout(()=>{const b=document.getElementById('mt-cap-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
+      <input type="hidden" id="mt-cap-val" value="${esc(t.captain||'')}"/>
+      <div id="mt-cap-results" class="tdm-search-results" style="display:none;position:absolute;z-index:5;width:100%"></div>
+    </div>
+  </div>
   <div class="fg"><label class="fl">Team Color</label><input class="fi" id="mt-color" type="color" value="${t.color||'#6366f1'}"/></div>
   <div class="fg"><label class="fl">Team Logo URL <span class="text-dim" style="font-weight:400">(optional)</span></label><input class="fi" id="mt-logo" value="${t.logoUrl||''}" placeholder="e.g. https://cdn.discordapp.com/attachments/123/456/logo.png"/></div>
-  <div class="fg"><label class="fl">Manager IGN</label><input class="fi" id="mt-mgr" value="${t.manager||''}" list="ign-dl" placeholder="Assign a team manager (optional)"/></div>
+  <div class="fg" style="position:relative">
+    <label class="fl">Manager <span class="text-dim" style="font-weight:400">(optional)</span></label>
+    <input class="fi" id="mt-mgr-search" value="${esc(mgrLabel)}" placeholder="Search roster by Discord or IGN..." oninput="mtSearchRoster('mt-mgr','${id}')" onfocus="mtSearchRoster('mt-mgr','${id}')" onblur="setTimeout(()=>{const b=document.getElementById('mt-mgr-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
+    <input type="hidden" id="mt-mgr-val" value="${esc(t.manager||'')}"/>
+    <div id="mt-mgr-results" class="tdm-search-results" style="display:none;position:absolute;z-index:5;width:100%"></div>
+  </div>
   <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
     <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:${t.recruiting?'.5rem':'0'}"><input type="checkbox" id="mt-recruit" ${t.recruiting?'checked':''} onchange="document.getElementById('mt-roles-wrap').style.display=this.checked?'block':'none'" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> Looking for players (show as recruiting)</label>
     <div id="mt-roles-wrap" style="display:${t.recruiting?'block':'none'}"><input class="fi" id="mt-roles" value="${t.recruitNote||''}" placeholder="Roles needed, e.g. Sniper, IGL — optional note"/></div>
@@ -8410,13 +8456,14 @@ function saveManageTeam(id){
   const vals={
     name:document.getElementById('mt-name')?.value,
     tag:document.getElementById('mt-tag')?.value,
-    captain:document.getElementById('mt-cap')?.value,
+    captain:document.getElementById('mt-cap-val')?.value,
     color:document.getElementById('mt-color')?.value,
     logoUrl:document.getElementById('mt-logo')?.value||'',
-    manager:document.getElementById('mt-mgr')?.value||'',
+    manager:document.getElementById('mt-mgr-val')?.value||'',
     recruiting:!!document.getElementById('mt-recruit')?.checked,
     recruitNote:document.getElementById('mt-roles')?.value.trim()||''
   };
+  if(!vals.captain)return notify('Captain required','Pick a captain from the roster dropdown — search box must match a real player.','n-bad');
   const canRoster=canEditRoster(id);
   let mems=null;
   const rolesByIgn={};
