@@ -4501,24 +4501,41 @@ function trRenderRoster(){
 function regTeam(){
   const name=v('tn');if(!name)return notify('Team name required','','n-bad');
   if(!TR_CAPTAIN)return notify('Captain required','Search and add the captain by name or IGN first.','n-bad');
-  const teams=DB.get('teams');if(teams.find(t=>t.name===name))return notify('Name taken','','n-bad');
-  const clash=ignIsCaptainElsewhere(TR_CAPTAIN.ign,null);
-  if(clash)return notify('Already a captain',`${TR_CAPTAIN.discord||TR_CAPTAIN.name} is already captain of "${clash.name}" — a player can only captain one team at a time.`,'n-bad');
-  const mems=[TR_CAPTAIN.ign,...TR_MEMBERS.map(m=>m.ign)];
-  teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:TR_CAPTAIN.ign,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting:!!document.getElementById('t-recruit')?.checked,recruitNote:v('t-roles')||''});
-  DB.set('teams',teams);['tn','tt','tr-search','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
-  const newTeam=teams[teams.length-1];
-  TR_CAPTAIN=null;TR_MEMBERS=[];trRenderRoster();
-  updateStats();refreshDLs();updatePendingBadges();renderTeams();
-  closeModal('team-reg-modal');
-  notify('Team submitted!','Awaiting admin approval before appearing publicly.','n-ok');
-  fireWebhookEvent('teamRegistration',{title:'New Team Registered — Pending Approval',color:15844367,fields:[
-    {name:'Team',value:`${newTeam.name}${newTeam.tag?' ['+newTeam.tag+']':''}`,inline:true},
-    {name:'Captain',value:newTeam.captain||'—',inline:true},
-    {name:'Members',value:(newTeam.members||[]).join(', ')||'—',inline:false},
-    {name:'Map',value:newTeam.map||'—',inline:true}
-  ]},teamMentionIgns(newTeam),{team:newTeam.name,captain:newTeam.captain||'',manager:newTeam.manager||''});
+  const capIgn=TR_CAPTAIN.ign,capLabel=TR_CAPTAIN.discord||TR_CAPTAIN.name;
+  const memberIgns=[TR_CAPTAIN.ign,...TR_MEMBERS.map(m=>m.ign)];
+  const tag=v('tt'),map=v('tmap'),recruiting=!!document.getElementById('t-recruit')?.checked,recruitNote=v('t-roles')||'';
+  guardedAction('regTeam',async()=>{
+    let newTeam=null,blockedName=false,blockedClash=null;
+    const result=await sbAtomicUpdate('teams',teams=>{
+      // BUGFIX: this used to be a plain DB.get('teams') -> push -> DB.set('teams') outside of
+      // sbAtomicUpdate. Two people registering a team around the same moment both read the same
+      // snapshot; whichever write reached the server last silently overwrote the other's, discarding
+      // an entire team registration with no error shown to anyone. Re-check both guards against the
+      // freshest server copy right before writing, same as saveManageTeam already does for captains.
+      if(teams.find(t=>t.name===name)){blockedName=true;return teams;}
+      const clash=teams.find(t=>t.captain===capIgn);
+      if(clash){blockedClash=clash;return teams;}
+      newTeam={id:'t'+Date.now(),name,tag,captain:capIgn,manager:'',members:memberIgns,map,wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting,recruitNote};
+      teams.push(newTeam);
+      return teams;
+    });
+    if(result===null)return;
+    if(blockedName)return notify('Name taken','','n-bad');
+    if(blockedClash)return notify('Already a captain',`${capLabel} is already captain of "${blockedClash.name}" — a player can only captain one team at a time.`,'n-bad');
+    if(!newTeam)return;
+    ['tn','tt','tr-search','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    {const rc=document.getElementById('t-recruit');if(rc)rc.checked=false;}
+    TR_CAPTAIN=null;TR_MEMBERS=[];trRenderRoster();
+    updateStats();refreshDLs();updatePendingBadges();renderTeams();
+    closeModal('team-reg-modal');
+    notify('Team submitted!','Awaiting admin approval before appearing publicly.','n-ok');
+    fireWebhookEvent('teamRegistration',{title:'New Team Registered — Pending Approval',color:15844367,fields:[
+      {name:'Team',value:`${newTeam.name}${newTeam.tag?' ['+newTeam.tag+']':''}`,inline:true},
+      {name:'Captain',value:newTeam.captain||'—',inline:true},
+      {name:'Members',value:(newTeam.members||[]).join(', ')||'—',inline:false},
+      {name:'Map',value:newTeam.map||'—',inline:true}
+    ]},teamMentionIgns(newTeam),{team:newTeam.name,captain:newTeam.captain||'',manager:newTeam.manager||''});
+  });
 }
 function renderReg(){
   const pl=DB.get('players');const body=document.getElementById('reg-body');if(!body)return;
@@ -7225,7 +7242,20 @@ function saveEditPlayer(){
     const dupeUid=pl.find(x=>x.uid&&String(x.uid).trim()===newUid&&x.id!==id);
     if(dupeUid)return notify('UID already in use',`That PUBG UID is already registered to ${dupeUid.ign}`,'n-bad');
   }
-  p.ign=g('ep-ign')||p.ign;p.name=g('ep-name');p.discord=newDiscord;p.uid=newUid;
+  const newIgn=g('ep-ign')||p.ign;
+  // BUGFIX: this self-service form had no duplicate-IGN check at all — a player could rename
+  // themselves to an IGN someone else already has. Since team rosters, captain/manager lookups,
+  // join requests, and TDM quick-fill all match players by IGN string (assuming it's unique),
+  // two players sharing an IGN silently makes lookups resolve to whichever one comes first — the
+  // same "wrong player gets picked" bug as the PUBG UID collision, just triggerable by any user.
+  // Registration (completeDiscordLink) and the admin Edit Stats panel already guard this; this
+  // closes the gap here too. Case-insensitive, since "JackSparrow" and "jacksparrow" would collide
+  // in every one of those lookups just as badly as an exact match.
+  if(newIgn.toLowerCase()!==p.ign.toLowerCase()){
+    const dupeIgn=pl.find(x=>x.ign&&x.ign.toLowerCase()===newIgn.toLowerCase()&&x.id!==id);
+    if(dupeIgn)return notify('IGN already taken','That IGN belongs to another registered player — pick a different one.','n-bad');
+  }
+  p.ign=newIgn;p.name=g('ep-name');p.discord=newDiscord;p.uid=newUid;
   p.role=g('ep-role')||p.role;p.bio=g('ep-bio');p.country=g('ep-country');p.avatarUrl=g('ep-avatar');
   p.tag=g('ep-tag');p.region=g('ep-region');p.platform=g('ep-platform');p.team=g('ep-team');
   p.youtube=g('ep-yt');p.tiktok=g('ep-tt');p.twitch=g('ep-tw');
@@ -7255,7 +7285,7 @@ function openEditStats(id){
 function saveEditStats(){
   const id=v('es-id');const pl=DB.get('players');const p=pl.find(x=>x.id===id);if(!p)return;
   const newIgn=v('es-ign');
-  if(newIgn&&newIgn!==p.ign&&pl.find(x=>x.ign===newIgn&&x.id!==id))return notify('IGN already taken','','n-bad');
+  if(newIgn&&newIgn.toLowerCase()!==p.ign.toLowerCase()&&pl.find(x=>x.ign&&x.ign.toLowerCase()===newIgn.toLowerCase()&&x.id!==id))return notify('IGN already taken','','n-bad');
   const newDiscord=v('es-discord');
   if(newDiscord){
     const dupe=findDiscordOwner(newDiscord,null,id);
