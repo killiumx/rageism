@@ -4409,6 +4409,17 @@ function openTeamRegModal(){
   trRenderRoster();
   openModal('team-reg-modal');
 }
+// A player can only captain ONE team at a time. Without this check, nothing stopped the same IGN
+// from being set as captain on multiple teams — and since captain-based lookups (isManagerOf,
+// isTeamsMine, join-request approval, webhook mentions) all match by IGN, a person captaining more
+// than one team at once caused crossed/ambiguous state — approvals routing to the wrong team,
+// "my teams" showing the wrong roster, etc. This is the actual source of the "random captain"
+// glitch reported, on top of the earlier stale-search-state bug.
+function ignIsCaptainElsewhere(ign,excludeTeamId){
+  if(!ign)return null;
+  const t=DB.get('teams').find(x=>x.captain===ign&&x.id!==excludeTeamId);
+  return t||null;
+}
 function trFindByUid(uid){
   if(!uid)return null;
   const players=DB.get('players');
@@ -4435,7 +4446,11 @@ function trSearchPlayers(){
 function trAddPlayer(uid){
   const p=trFindByUid(uid);if(!p)return;
   const label=p.discord?`${p.discord} (${p.ign})`:p.ign;
-  if(!TR_CAPTAIN){TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''};notify('Captain set',label,'n-ok');}
+  if(!TR_CAPTAIN){
+    const clash=ignIsCaptainElsewhere(p.ign,null);
+    if(clash)return notify('Already a captain',`${label} is already captain of "${clash.name}" — a player can only captain one team. Add them as a member instead, or pick a different captain.`,'n-bad');
+    TR_CAPTAIN={uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''};notify('Captain set',label,'n-ok');
+  }
   else{TR_MEMBERS.push({uid:p.uid,ign:p.ign,name:p.name,discord:p.discord||''});notify('Player added',label,'n-ok');}
   const s=document.getElementById('tr-search');if(s)s.value='';
   const box=document.getElementById('tr-search-results');if(box){box.style.display='none';box.innerHTML='';}
@@ -4443,6 +4458,8 @@ function trAddPlayer(uid){
 }
 function trMakeCaptain(uid){
   const target=TR_MEMBERS.find(m=>m.uid===uid);if(!target)return;
+  const clash=ignIsCaptainElsewhere(target.ign,null);
+  if(clash)return notify('Already a captain',`${target.discord||target.name} is already captain of "${clash.name}" — a player can only captain one team.`,'n-bad');
   TR_MEMBERS=TR_MEMBERS.filter(m=>m.uid!==uid);
   if(TR_CAPTAIN)TR_MEMBERS.unshift(TR_CAPTAIN);
   TR_CAPTAIN=target;
@@ -4478,6 +4495,8 @@ function regTeam(){
   const name=v('tn');if(!name)return notify('Team name required','','n-bad');
   if(!TR_CAPTAIN)return notify('Captain required','Search and add the captain by name or IGN first.','n-bad');
   const teams=DB.get('teams');if(teams.find(t=>t.name===name))return notify('Name taken','','n-bad');
+  const clash=ignIsCaptainElsewhere(TR_CAPTAIN.ign,null);
+  if(clash)return notify('Already a captain',`${TR_CAPTAIN.discord||TR_CAPTAIN.name} is already captain of "${clash.name}" — a player can only captain one team at a time.`,'n-bad');
   const mems=[TR_CAPTAIN.ign,...TR_MEMBERS.map(m=>m.ign)];
   teams.push({id:'t'+Date.now(),name,tag:v('tt'),captain:TR_CAPTAIN.ign,manager:'',members:mems,map:v('tmap'),wins:0,kills:0,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),approved:false,ts:new Date().toLocaleString(),recruiting:!!document.getElementById('t-recruit')?.checked,recruitNote:v('t-roles')||''});
   DB.set('teams',teams);['tn','tt','tr-search','t-roles'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
@@ -7669,7 +7688,7 @@ function openTeamProfile(id){
     </div>
     <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem;color:var(--textM);text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-users" style="margin-right:.35rem"></i>Roster</div>
     <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem">
-      ${(t.members||[]).map((m,i)=>`<span class="chip ${m===t.captain?'chip-accent':'chip-neutral'}" style="font-size:.75rem">${m===t.captain?'<i class="fa-solid fa-crown" style="margin-right:.3rem;color:var(--amber)"></i>':''}${esc(m)}<span style="opacity:.6;margin-left:.35rem;font-size:.65rem">${esc((t.roles&&t.roles[m])||'Sub')}</span></span>`).join('')||'<span class="text-dim" style="font-size:.8rem">No roster listed</span>'}
+      ${(t.members||[]).map((m,i)=>`<span class="chip ${m===t.captain?'chip-accent':m===t.manager?'chip-neutral':'chip-neutral'}" style="font-size:.75rem${m===t.manager?';border-color:var(--accent)':''}">${m===t.captain?'<i class="fa-solid fa-crown" style="margin-right:.3rem;color:var(--amber)"></i>':m===t.manager?'<i class="fa-solid fa-screwdriver-wrench" style="margin-right:.3rem;color:var(--accentL)"></i>':''}${esc(m)}<span style="opacity:.6;margin-left:.35rem;font-size:.65rem">${esc((t.roles&&t.roles[m])||'Sub')}</span></span>`).join('')||'<span class="text-dim" style="font-size:.8rem">No roster listed</span>'}
     </div>
     <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem;color:var(--textM);text-transform:uppercase;letter-spacing:.5px"><i class="fa-solid fa-crosshairs" style="margin-right:.35rem"></i>Scrims History</div>
     <div class="tbl-wrap" style="margin-bottom:1.2rem"><table><thead><tr><th>Match</th><th>Map</th><th>Place</th><th>Kills</th><th>Pts</th></tr></thead><tbody>
@@ -8322,13 +8341,20 @@ function renderATeams(){
 
 function approveTeam(id){
   guardedAction('approveTeam:'+id,async()=>{
-    let approvedTeam=null;
+    let approvedTeam=null,blockedClash=null;
     const result=await sbAtomicUpdate('teams',teams=>{
       const t=teams.find(x=>x.id===id);if(!t)return teams;
+      // A player can only captain one team — block approval if their captain already captains a
+      // DIFFERENT already-approved team. (Two pending regs naming the same captain can still both
+      // exist at once; this is the checkpoint that stops the second one from ever going live.)
+      const clash=teams.find(x=>x.id!==id&&x.approved&&x.captain===t.captain);
+      if(clash){blockedClash=clash;return teams;}
       t.approved=true;approvedTeam=t;
       return teams;
     });
-    if(result===null||!approvedTeam)return;
+    if(result===null)return;
+    if(blockedClash)return notify('Already a captain',`This team's captain already captains the approved team "${blockedClash.name}" — have them pick a different captain before approving.`,'n-bad');
+    if(!approvedTeam)return;
     renderATeams();renderTeams();logAdminAction('Team approved',`${approvedTeam.name} was approved`);notify(`${approvedTeam.name} approved!`,'','n-ok');
     fireWebhookEvent('teamApproved',{title:'Team Approved ✅',color:3066993,fields:[
       {name:'Team',value:`${approvedTeam.name}${approvedTeam.tag?' ['+approvedTeam.tag+']':''}`,inline:true},
@@ -8360,11 +8386,18 @@ function mtSearchRoster(fieldPrefix,teamId){
   let rows='';
   if(fieldPrefix==='mt-mgr')rows+=`<div class="tdm-search-row" style="color:var(--textM)" onmousedown="mtSelectRoster('mt-mgr','${teamId}','')"><div style="flex:1">— No manager —</div></div>`;
   if(!filtered.length&&!rows){box.innerHTML='<div class="tdm-search-row" style="color:var(--textD);cursor:default">No roster match</div>';return;}
-  rows+=filtered.map(p=>`<div class="tdm-search-row" data-fp="${fieldPrefix}" data-team="${teamId}" data-ign="${esc(p.ign)}" onmousedown="mtSelectRosterFromEl(this)"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(p.discord)}`:esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${!p.discord?' · no Discord linked':''}</div></div></div>`).join('');
+  rows+=filtered.map(p=>{
+    const clash=fieldPrefix==='mt-cap'?ignIsCaptainElsewhere(p.ign,teamId):null;
+    return `<div class="tdm-search-row" style="${clash?'opacity:.55':''}" data-fp="${fieldPrefix}" data-team="${teamId}" data-ign="${esc(p.ign)}" onmousedown="mtSelectRosterFromEl(this)"><div class="cell-av">${avatarInitial(p.ign)}</div><div><div style="font-weight:600">${p.discord?`<i class="fa-brands fa-discord" style="color:#7289da;margin-right:.3rem"></i>${esc(p.discord)}`:esc(p.name)}</div><div class="text-dim" style="font-size:.72rem">${esc(p.ign)}${!p.discord?' · no Discord linked':''}${clash?` · already captains "${esc(clash.name)}"`:''}</div></div></div>`;
+  }).join('');
   box.innerHTML=rows;
 }
 function mtSelectRosterFromEl(el){mtSelectRoster(el.dataset.fp,el.dataset.team,el.dataset.ign);}
 function mtSelectRoster(fieldPrefix,teamId,ign){
+  if(fieldPrefix==='mt-cap'&&ign){
+    const clash=ignIsCaptainElsewhere(ign,teamId);
+    if(clash)return notify('Already a captain',`This player is already captain of "${clash.name}" — a player can only captain one team at a time. Reassign their captain over there first.`,'n-bad');
+  }
   const p=ign?DB.get('players').find(x=>x.ign===ign):null;
   const label=ign?(p&&p.discord?p.discord:ign):'';
   const s=document.getElementById(fieldPrefix+'-search');if(s)s.value=label;
@@ -8399,6 +8432,7 @@ function openManageTeam(id){
     <input class="fi" id="mt-mgr-search" value="${esc(mgrLabel)}" placeholder="Search roster by Discord or IGN..." oninput="mtSearchRoster('mt-mgr','${id}')" onfocus="mtSearchRoster('mt-mgr','${id}')" onblur="setTimeout(()=>{const b=document.getElementById('mt-mgr-results');if(b)b.style.display='none';},180)" autocomplete="off"/>
     <input type="hidden" id="mt-mgr-val" value="${esc(t.manager||'')}"/>
     <div id="mt-mgr-results" class="tdm-search-results" style="display:none;position:absolute;z-index:5;width:100%"></div>
+    <div class="text-dim" style="font-size:.72rem;margin-top:.35rem;line-height:1.4"><i class="fa-solid fa-circle-info" style="margin-right:.25rem"></i>A Manager gets everything the Captain can do (open this panel, approve join requests, sign the team up for scrims) <strong>plus</strong> the one thing Captain alone can't: adding or removing roster players directly. Without a Manager assigned, new players can only join via Join Requests that you approve below.</div>
   </div>
   <div class="fg" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .8rem">
     <label class="fl" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:${t.recruiting?'.5rem':'0'}"><input type="checkbox" id="mt-recruit" ${t.recruiting?'checked':''} onchange="document.getElementById('mt-roles-wrap').style.display=this.checked?'block':'none'" style="width:15px;height:15px;accent-color:var(--accent)"/> <i class="fa-solid fa-bullhorn" style="color:var(--green)"></i> Looking for players (show as recruiting)</label>
@@ -8464,6 +8498,8 @@ function saveManageTeam(id){
     recruitNote:document.getElementById('mt-roles')?.value.trim()||''
   };
   if(!vals.captain)return notify('Captain required','Pick a captain from the roster dropdown — search box must match a real player.','n-bad');
+  {const clash=ignIsCaptainElsewhere(vals.captain,id);
+  if(clash)return notify('Already a captain',`This player is already captain of "${clash.name}" — a player can only captain one team at a time.`,'n-bad');}
   const canRoster=canEditRoster(id);
   let mems=null;
   const rolesByIgn={};
@@ -8484,8 +8520,16 @@ function saveManageTeam(id){
     });
   }
   guardedAction('saveManageTeam:'+id,async()=>{
+    let blockedClash=null;
     const result=await sbAtomicUpdate('teams',teams=>{
       const t=teams.find(x=>x.id===id);if(!t)return teams;
+      // Re-check the captain-uniqueness rule against the freshest server data right before writing —
+      // closes the race window where another admin/captain assigns the same person captain of a
+      // different team between this modal opening and Save being clicked.
+      if(vals.captain){
+        const other=teams.find(x=>x.id!==id&&x.captain===vals.captain);
+        if(other){blockedClash=other;return teams;}
+      }
       t.name=vals.name||t.name;
       t.tag=vals.tag||t.tag;
       t.captain=vals.captain||t.captain;
@@ -8506,6 +8550,7 @@ function saveManageTeam(id){
       return teams;
     });
     if(result===null)return;
+    if(blockedClash)return notify('Already a captain',`This player is already captain of "${blockedClash.name}" — a player can only captain one team at a time.`,'n-bad');
     closeModal('manage-team-modal');renderATeams();renderTeams();notify('Team saved!','','n-ok');
   });
 }
