@@ -2265,6 +2265,12 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div class="modal-overlay" id="match-results-modal">
+  <div class="modal-box" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('match-results-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div id="match-results-content"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="edit-log-modal">
   <div class="modal-box" style="max-width:600px">
     <button class="modal-close" onclick="closeModal('edit-log-modal')"><i class="fa-solid fa-xmark"></i></button>
@@ -6983,6 +6989,67 @@ function renderAdminAuditLog(){
     <div style="font-size:.68rem;color:var(--textD)">${e.by} · ${e.ts}</div>
   </div>`).join('');
 }
+// Shared team/player breakdown block used by both the admin Log Results list (renderResultLogs)
+// and the read-only "View full results" modal opened from an ended scrim's schedule card
+// (openMatchResultsModal) — one source of truth for how a logged result renders.
+function buildLogTeamBlocksHtml(log){
+  const teams=DB.get('teams');
+  const summary=log.matchSummary||[];
+  const gamesCount=log.gamesCount||1;
+  const byTeam={};
+  log.entries.forEach(e=>{if(!byTeam[e.team||'—'])byTeam[e.team||'—']=[];byTeam[e.team||'—'].push(e);});
+  const sorted=Object.entries(byTeam).sort((a,b)=>{
+    const sa=summary.find(s=>s.teamName===a[0]),sb=summary.find(s=>s.teamName===b[0]);
+    if(sa&&sb)return sb.totalPts-sa.totalPts;
+    const pa=a[1][0]?.placement||99,pb=b[1][0]?.placement||99;return pa-pb;
+  });
+  return (gamesCount>1?`<div style="font-size:.65rem;color:var(--textD);margin-bottom:.5rem">Combined total across ${gamesCount} games (${(log.maps||[]).join(' → ')})</div>`:'')+
+    sorted.map(([tn,members])=>{
+      const t=teams.find(x=>x.name===tn);const tcolor=t?.color||'var(--accent)';
+      const tkills=members.reduce((a,e)=>a+e.kills,0);
+      const sum=summary.find(s=>s.teamName===tn);
+      const pl=members[0]?.placement;const plLabel=pl===1?'🥇':pl===2?'🥈':pl===3?'🥉':`#${pl}`;
+      const pts=sum?sum.totalPts:(PLACEMENT_PTS[(pl||1)-1]||0)+tkills*KILL_PT;
+      return `<div class="rlog-team-block">
+        <div class="rlog-team-name" style="display:flex;align-items:center;gap:.4rem;color:${tcolor}">
+          <span>${gamesCount>1?'':plLabel+' '}${esc(tn)}</span>
+          <span style="color:var(--textD);font-size:.65rem;font-weight:400">${tkills}K${sum&&sum.games>1?` · ${sum.games} games`:''}</span>
+          <span style="margin-left:auto;color:var(--accentL);font-family:'DM Mono',monospace;font-weight:700;font-size:.72rem">${pts}pts</span>
+          ${sum?`<span style="color:var(--textD);font-size:.63rem">(${sum.placePts}+${sum.killPts})</span>`:''}
+        </div>
+        ${members.map(e=>`<div class="rlog-pline">
+          <span style="font-weight:600;color:${e.elim?'var(--textD)':'var(--text)'}">${esc(e.ign)}</span>
+          ${gamesCount>1&&e.map?`<span style="font-size:.6rem;color:var(--textD)">G${e.game} ${MI[e.map]||''}${e.map}</span>`:''}
+          <span class="chip chip-red" style="font-size:.6rem">${e.kills}K</span>
+          ${e.elim?'<span style="font-size:.65rem;color:var(--red)">☠</span>':'<span style="font-size:.65rem;color:var(--green)">✓</span>'}
+          <span style="font-size:.62rem;color:var(--accentL);font-family:'DM Mono',monospace">${e.killPts!=null?e.killPts:(e.kills||0)*KILL_PT}pts</span>
+        </div>`).join('')}
+      </div>`;
+    }).join('');
+}
+// Looks up the results log for a given scrim — a scrim's results are logged once per session
+// (submitResults), so matchId->log is effectively 1:1; .find() just takes the (only) match.
+function findLogForMatch(matchId){
+  return DB.get('rlogs5',[]).find(l=>l.matchId===matchId);
+}
+// Read-only results viewer opened from an ended scrim's card on the Schedule page — lets anyone
+// (not just admins) see who won and the full per-team/per-player breakdown without having to go
+// into Admin → Log Results.
+function openMatchResultsModal(matchId){
+  const log=findLogForMatch(matchId);
+  const el=document.getElementById('match-results-content');if(!el)return;
+  if(!log){el.innerHTML='<div class="text-dim" style="padding:1rem;text-align:center">No results logged for this scrim yet.</div>';openModal('match-results-modal');return;}
+  const gamesCount=log.gamesCount||1;
+  el.innerHTML=`<div class="modal-title">${esc(log.matchName||log.matchId)}</div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
+      ${log.map?`<span style="font-size:.72rem;color:var(--textD)">${(log.maps||[log.map]).map(mk=>MI[mk]||'🗺').join(' ')} ${esc(log.map)}</span>`:''}
+      ${gamesCount>1?`<span class="chip chip-neutral" style="font-size:.62rem">${gamesCount} games</span>`:''}
+      ${log.winnerTeam||log.winnerIGN?`<span class="chip chip-amber" style="font-size:.62rem"><i class="fa-solid fa-trophy" style="margin-right:.25rem"></i>${esc(log.winnerTeam||log.winnerIGN)}</span>`:''}
+      <span class="text-dim" style="font-size:.62rem;margin-left:auto">${log.ts}</span>
+    </div>
+    ${buildLogTeamBlocksHtml(log)}`;
+  openModal('match-results-modal');
+}
 function renderResultLogs(){
   const logs=DB.get('rlogs5',[]);
   const el=document.getElementById('result-logs');if(!el)return;
@@ -7918,7 +7985,20 @@ function renderMatches(filter='all'){
     }
     const seq=(Array.isArray(m.mapSequence)&&m.mapSequence.length>1)?m.mapSequence:null;
     const seqLine=seq?`<div class="match-meta" style="margin-top:.15rem;font-size:.72rem"><i class="fa-solid fa-list-ol" style="opacity:.6;margin-right:.3rem"></i>${seq.map((mp,i)=>`${i+1}. ${mp||'TBD'}`).join('  →  ')}</div>`:'';
-    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m)} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${checkinBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
+    // Ended matches: surface the actual result right on the card instead of just an "Ended" chip —
+    // winner + top score at a glance, with a click-through to the full per-game/per-team breakdown.
+    let resultsBtn='';
+    if(m.status==='done'){
+      const log=findLogForMatch(m.id);
+      if(log){
+        const topPts=(log.matchSummary||[]).length?Math.max(...(log.matchSummary||[]).map(s=>s.totalPts||0)):0;
+        const winner=log.winnerTeam||log.winnerIGN||'';
+        resultsBtn=`<button class="btn btn-ghost btn-xs" title="View full results" onclick="openMatchResultsModal('${m.id}')">${winner?`<i class="fa-solid fa-trophy" style="color:var(--amber)"></i> ${esc(winner)}`:'<i class="fa-solid fa-trophy"></i> Results'}${topPts?` · ${topPts}pts`:''}</button>`;
+      }else if(ADM){
+        resultsBtn=`<span class="chip chip-neutral" style="font-size:.62rem" title="Log this scrim's results in Admin \u2192 Log Results">No results logged</span>`;
+      }
+    }
+    return `<div class="match-item"><div class="match-map-icon" style="font-size:1.3rem">${MI[m.map]||'<i class="fa-solid fa-map"></i>'}</div><div><div class="match-name">${m.name}</div><div class="match-meta">${formatScrimWhen(m)} · ${slotsFilled}/${m.maxTeams} teams · ${m.mode}${m.notes?' · '+m.notes:''}</div>${seqLine}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem"><div class="${sc}">${sl}</div><div style="display:flex;gap:.3rem;align-items:center">${ADM||m.slotsRevealed?`<button class="btn btn-ghost btn-xs" onclick="openMatchLobby('${m.id}')"><i class="fa-solid fa-table-cells"></i> Lobby</button>`:`<span class="chip chip-neutral" style="font-size:.62rem" title="The host hasn't started the event yet"><i class="fa-solid fa-lock" style="margin-right:.25rem"></i>Lobby locked</span>`}${signupBtn}${checkinBtn}${resultsBtn}${ADM?`<button class="btn btn-ghost btn-xs" title="${m.slotsRevealed?'Hide lobby from teams':'Reveal lobby to teams'}" onclick="toggleSlotsRevealed('${m.id}')"><i class="fa-solid ${m.slotsRevealed?'fa-eye':'fa-eye-slash'}"></i></button><button class="btn btn-ghost btn-xs" onclick="cycleMatchStatus('${m.id}')"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div></div></div>`;
   }).join('');
 }
 // ═══ TEAM LOBBY — a visual chart of every team registered for a match, in either a slot Grid
