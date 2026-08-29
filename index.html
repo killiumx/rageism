@@ -1959,18 +1959,27 @@ tr:last-child td{border-bottom:none}
       <!-- ░ LEADERBOARD ░ -->
       <div class="page" id="page-leaderboard">
         <div class="sh-row"><div class="sh"><div class="sh-title"><span style="color:var(--accentL)">Leaderboard</span></div></div>
-          <div style="display:flex;gap:.5rem;align-items:center">
-            <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem" id="lb-filter" onchange="renderLB()"><option value="points">Sort by Points</option><option value="kills">Sort by Kills</option><option value="kd">Sort by K/D</option><option value="wins">Sort by Wins</option><option value="games">Sort by Games</option></select>
-            <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem" id="lb-country-filter" onchange="renderLB()"><option value="">All Countries</option></select>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <div class="btn-group" style="display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:2px">
+              <button class="btn btn-accent btn-sm" id="lb-view-teams-btn" style="border-radius:calc(var(--rS) - 2px)" onclick="switchLbView('teams')"><i class="fa-solid fa-shield-halved"></i> Teams</button>
+              <button class="btn btn-ghost btn-sm" id="lb-view-players-btn" style="border-radius:calc(var(--rS) - 2px)" onclick="switchLbView('players')"><i class="fa-solid fa-user"></i> Players</button>
+            </div>
+            <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem;display:none" id="lb-filter" onchange="renderLB()"><option value="points">Sort by Points</option><option value="kills">Sort by Kills</option><option value="kd">Sort by K/D</option><option value="wins">Sort by Wins</option><option value="games">Sort by Games</option></select>
+            <select class="fi fsel" style="width:auto;font-size:.82rem;padding:.4rem .8rem;display:none" id="lb-country-filter" onchange="renderLB()"><option value="">All Countries</option></select>
             <button class="btn btn-ghost btn-sm" onclick="exportLbCsv()" title="Download standings as CSV"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
           </div>
         </div>
-        <div id="podium" class="mb3" style="display:flex;gap:1rem;justify-content:center;align-items:flex-end;flex-wrap:wrap"></div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Pts</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Games</th><th>Level</th><th></th></tr></thead><tbody id="lb-body"></tbody></table></div></div>
 
-        <!-- Team Standings -->
-        <div class="sh-row" style="margin-top:1.5rem"><div class="sh"><div class="sh-title" style="font-size:1.2rem">Team <span style="color:var(--accentL)">Standings</span></div></div></div>
-        <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Team</th><th style="color:var(--accentL)">Total Pts</th><th>Matches</th><th>Wins (Chicken)</th><th>Team Kills</th><th>Avg Pts/Match</th></tr></thead><tbody id="ts-body"></tbody></table></div></div>
+        <!-- Team Standings — the default/main view -->
+        <div id="lb-view-teams-wrap">
+          <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Team</th><th style="color:var(--accentL)">Total Pts</th><th>Matches</th><th>Wins (Chicken)</th><th>Team Kills</th><th>Avg Pts/Match</th></tr></thead><tbody id="ts-body"></tbody></table></div></div>
+        </div>
+
+        <!-- Player Rankings — hidden until switched to -->
+        <div id="lb-view-players-wrap" style="display:none">
+          <div id="podium" class="mb3" style="display:flex;gap:1rem;justify-content:center;align-items:flex-end;flex-wrap:wrap"></div>
+          <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Team</th><th style="color:var(--accentL)">Pts</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Wins</th><th>Games</th><th>Level</th><th></th></tr></thead><tbody id="lb-body"></tbody></table></div></div>
+        </div>
 
         <!-- Points reference -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
@@ -7626,7 +7635,25 @@ function renderLbScoringRef(){
   const ex=document.getElementById('lb-example-ref');
   if(ex){const exPts=(PLACEMENT_PTS[0]||0)+8*KILL_PT;ex.innerHTML=`Example: 1st place + 8 kills = <span style="color:var(--accentL);font-weight:700">${exPts} pts</span>`;}
 }
+// Leaderboard page defaults to Team Standings (the "main" board) with Player Rankings as a
+// secondary view a click away — teams are what most people actually care about ("who's winning"),
+// individual player stats are the drill-down. Persisted so it stays put across visits.
+function switchLbView(view){
+  localStorage.setItem('rge5_lbView',view);
+  const teamsWrap=document.getElementById('lb-view-teams-wrap'),playersWrap=document.getElementById('lb-view-players-wrap');
+  const teamsBtn=document.getElementById('lb-view-teams-btn'),playersBtn=document.getElementById('lb-view-players-btn');
+  const filterSel=document.getElementById('lb-filter'),countrySel=document.getElementById('lb-country-filter');
+  if(!teamsWrap||!playersWrap)return;
+  const isTeams=view!=='players';
+  teamsWrap.style.display=isTeams?'':'none';
+  playersWrap.style.display=isTeams?'none':'';
+  if(filterSel)filterSel.style.display=isTeams?'none':'';
+  if(countrySel)countrySel.style.display=isTeams?'none':'';
+  if(teamsBtn)teamsBtn.className='btn btn-sm '+(isTeams?'btn-accent':'btn-ghost');
+  if(playersBtn)playersBtn.className='btn btn-sm '+(isTeams?'btn-ghost':'btn-accent');
+}
 function renderLB(){
+  switchLbView(localStorage.getItem('rge5_lbView')||'teams');
   renderLbCountryFilter();
   renderLbScoringRef();
   let pl=DB.get('players');const f=document.getElementById('lb-filter')?.value||'points';
