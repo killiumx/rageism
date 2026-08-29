@@ -35,7 +35,14 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <!-- weight 300 isn't used anywhere in this app for any of these families — dropped to cut
      5 unused font files off every page load -->
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- font-display switched from swap -> optional: swap was rendering text in a fallback font
+     first, then abruptly jumping/reflowing once the real webfont (Syne especially — a much wider
+     display font than any fallback) finished downloading. That's the classic cause of a page
+     that visibly "flickers" or has its layout jump around shortly after load. `optional` tells
+     the browser to use the fallback and only swap to the webfont if it's already cached/fast —
+     otherwise it just keeps the fallback for that page view, trading a slightly-off font for
+     zero layout shift. -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=optional" rel="stylesheet">
 <!-- only fa-solid and fa-brands classes are used anywhere in this app (verified — no fa-regular/
      fa-light/fa-thin/fa-duotone) so we load just those two style sheets instead of the full
      all.min.css bundle, which also ships regular/light/thin/duotone definitions we never use -->
