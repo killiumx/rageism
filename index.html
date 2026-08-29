@@ -2182,7 +2182,7 @@ tr:last-child td{border-bottom:none}
     <label style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;margin-bottom:.6rem;cursor:pointer"><input type="checkbox" id="mm-checkin" checked onchange="mmToggleCheckinFields()" style="width:16px;height:16px"/> Require check-in before start <span style="font-weight:400;color:var(--textD)">(captains confirm "we're here"; no-shows auto-free their slot)</span></label>
     <div id="mm-checkin-fields" class="frow" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:1rem">
       <div class="fg"><label class="fl">Check-in opens (min before start)</label><input class="fi" id="mm-checkin-open" type="number" value="30" min="1"/></div>
-      <div class="fg"><label class="fl">Auto-free no-shows at (min before start)</label><input class="fi" id="mm-checkin-deadline" type="number" value="10" min="0"/></div>
+      <div class="fg"><label class="fl">Auto-free no-shows at (min after start)</label><input class="fi" id="mm-checkin-deadline" type="number" value="10" min="0"/></div>
       <div class="fg"><label class="fl">Self-leave cutoff (min before start)</label><input class="fi" id="mm-leave-cutoff" type="number" value="60" min="0"/></div>
     </div>
     <button class="btn btn-accent btn-fw" id="mm-save-btn" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
@@ -8817,7 +8817,10 @@ function checkinWindowState(m){
   const start=matchDateTs(m);if(!isFinite(start))return 'na';
   const now=Date.now();
   const opensAt=start-checkinOpenMinutes(m)*60000;
-  const deadlineAt=start-checkinDeadlineMinutes(m)*60000;
+  // Deadline is measured AFTER the scheduled start (not before) so teams can still check in
+  // once the match has gone live — a slightly late squad shouldn't be auto-freed the instant
+  // the clock hits start time.
+  const deadlineAt=start+checkinDeadlineMinutes(m)*60000;
   if(now<opensAt)return 'not-open';
   if(now<deadlineAt)return 'open';
   return 'closed';
