@@ -1973,7 +1973,7 @@ tr:last-child td{border-bottom:none}
 
         <!-- Team Standings — the default/main view -->
         <div id="lb-view-teams-wrap">
-          <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Team</th><th style="color:var(--accentL)">Total Pts</th><th>Matches</th><th>Wins (Chicken)</th><th>Team Kills</th><th>Avg Pts/Match</th></tr></thead><tbody id="ts-body"></tbody></table></div></div>
+          <div class="card"><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Team</th><th style="color:var(--accentL)">Total Pts</th><th>Matches</th><th>Wins (Chicken)</th><th>Team Kills</th><th>Avg Pts/Match</th><th class="admin-only" style="display:none"></th></tr></thead><tbody id="ts-body"></tbody></table></div></div>
         </div>
 
         <!-- Player Rankings — hidden until switched to -->
@@ -2269,6 +2269,25 @@ tr:last-child td{border-bottom:none}
   <div class="modal-box" style="max-width:600px">
     <button class="modal-close" onclick="closeModal('edit-log-modal')"><i class="fa-solid fa-xmark"></i></button>
     <div id="edit-log-content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="edit-team-stats-modal">
+  <div class="modal-box" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('edit-team-stats-modal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title">Edit Team Stats</div>
+    <div class="text-dim" style="font-size:.78rem;margin-bottom:1rem" id="ets-name"></div>
+    <input type="hidden" id="ets-id"/>
+    <div class="frow" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label class="fl">Total Points</label><input class="fi" id="ets-points" type="number" min="0"/></div>
+      <div class="fg"><label class="fl">Matches</label><input class="fi" id="ets-matches" type="number" min="0"/></div>
+    </div>
+    <div class="frow" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label class="fl">Wins (Chicken)</label><input class="fi" id="ets-wins" type="number" min="0"/></div>
+      <div class="fg"><label class="fl">Team Kills</label><input class="fi" id="ets-kills" type="number" min="0"/></div>
+    </div>
+    <div style="font-size:.7rem;color:var(--textD);margin:.4rem 0 1rem">This only changes the numbers shown on the Team Standings board — it doesn't touch individual player stats or the results log.</div>
+    <button class="btn btn-accent btn-fw" onclick="saveEditTeamStats()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
   </div>
 </div>
 
@@ -7716,7 +7735,7 @@ function exportLbCsv(){
 function renderTeamStandings(){
   const body=document.getElementById('ts-body');if(!body)return;
   const teams=DB.get('teams').filter(t=>t.approved);
-  if(!teams.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--textD)">No teams registered.</td></tr>';return;}
+  if(!teams.length){body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--textD)">No teams registered.</td></tr>';return;}
   const sorted=[...teams].sort((a,b)=>(b.points||0)-(a.points||0));
   const ic=['🥇','🥈','🥉'];
   body.innerHTML=sorted.map((t,i)=>{
@@ -7735,8 +7754,38 @@ function renderTeamStandings(){
       <td class="ts-num"><span class="font-mono text-green fw6">${t.wins||0}</span>${winRate!==null?`<span class="ts-winrate">${winRate}%</span>`:''}</td>
       <td class="ts-num"><span class="chip chip-red" style="font-size:.7rem">${t.kills||0}K</span></td>
       <td class="font-mono text-amber ts-num">${avg}</td>
+      <td class="admin-only" style="display:${ADM?'table-cell':'none'}"><button class="btn btn-ghost btn-xs" title="Manually edit this team's stats" onclick="openEditTeamStatsModal('${t.id}')"><i class="fa-solid fa-pen"></i></button></td>
     </tr>`;
   }).join('');
+}
+// Direct manual override for a team's Team Standings numbers — the escape hatch for whenever
+// recalcTeamMatchesPlayed() (or the points/kills/wins math in submitResults) doesn't land on the
+// number a host actually wants, without having to touch the raw results log or player records.
+function openEditTeamStatsModal(teamId){
+  if(!ADM)return;
+  const t=DB.get('teams',[]).find(x=>x.id===teamId);if(!t)return;
+  document.getElementById('ets-id').value=teamId;
+  document.getElementById('ets-name').textContent=`${t.name}${t.tag?' ['+t.tag+']':''}`;
+  document.getElementById('ets-points').value=t.points||0;
+  document.getElementById('ets-matches').value=t.matchesPlayed||0;
+  document.getElementById('ets-wins').value=t.wins||0;
+  document.getElementById('ets-kills').value=t.kills||0;
+  openModal('edit-team-stats-modal');
+}
+function saveEditTeamStats(){
+  if(!ADM)return;
+  const teamId=document.getElementById('ets-id').value;
+  const teams=DB.get('teams');const t=teams.find(x=>x.id===teamId);if(!t)return;
+  const before={points:t.points||0,matchesPlayed:t.matchesPlayed||0,wins:t.wins||0,kills:t.kills||0};
+  t.points=Math.max(0,parseInt(v('ets-points'))||0);
+  t.matchesPlayed=Math.max(0,parseInt(v('ets-matches'))||0);
+  t.wins=Math.max(0,parseInt(v('ets-wins'))||0);
+  t.kills=Math.max(0,parseInt(v('ets-kills'))||0);
+  DB.set('teams',teams);
+  closeModal('edit-team-stats-modal');
+  renderTeamStandings();renderTeams();renderAdminOverview();
+  logAdminAction('Team stats manually edited',`${t.name}: Pts ${before.points}→${t.points}, Matches ${before.matchesPlayed}→${t.matchesPlayed}, Wins ${before.wins}→${t.wins}, Kills ${before.kills}→${t.kills} (by ${CU?CU.name:'Admin'})`);
+  notify('Team stats updated!','','n-ok');
 }
 
 // ═══ TEAMS ═══
