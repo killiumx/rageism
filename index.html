@@ -639,6 +639,18 @@ th{padding:.6rem 1rem;text-align:left;font-size:.72rem;font-weight:700;color:var
   text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.88rem;transition:background .15s}
 tr:hover td{background:var(--surface)}
+/* Compact Team Standings table (Leaderboard page) — tighter rows than the default table styling
+   above so a full team list stays scannable at a glance instead of stretching the page. */
+#ts-body .ts-row td{padding:.42rem .8rem;font-size:.82rem}
+#ts-body .ts-rank{width:28px;font-size:.85rem;text-align:center}
+#ts-body .ts-rank-num{color:var(--textD);font-weight:700;font-size:.78rem}
+#ts-body .ts-team-cell{display:flex;align-items:center;gap:.45rem}
+#ts-body .ts-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#ts-body .ts-team-name{font-weight:700;font-size:.83rem;white-space:nowrap}
+#ts-body .ts-tag{font-weight:400;color:var(--textD);font-size:.72rem}
+#ts-body .ts-pts{font-weight:700;font-size:.76rem;padding:.15rem .5rem}
+#ts-body .ts-num{font-size:.8rem;white-space:nowrap}
+#ts-body .ts-winrate{color:var(--textD);font-size:.68rem;margin-left:.35rem}
 tr:last-child td{border-bottom:none}
 .rank-1 td:first-child{border-left:2px solid #f59e0b}
 .rank-2 td:first-child{border-left:2px solid #94a3b8}
@@ -6855,7 +6867,11 @@ function submitResults(){
   // always updated, just summed across however many games this session had.
   Object.values(teamTotals).forEach(tt=>{
     const t=teams.find(x=>x.id===tt.teamId);
-    if(t){t.points=(t.points||0)+tt.totalPts;t.kills=(t.kills||0)+tt.kills;t.wins=(t.wins||0)+tt.wins;t.matchesPlayed=(t.matchesPlayed||0)+1;}
+    // tt.games is how many games IN THIS SESSION this team actually appeared in — a 5-map scrim
+    // logged in one sitting should add 5 to matchesPlayed, not 1. (Previously this always added
+    // exactly 1 per submission regardless of gamesCount, which is why team standings showed
+    // "Matches: 1" for a scrim that was actually a 5-game session.)
+    if(t){t.points=(t.points||0)+tt.totalPts;t.kills=(t.kills||0)+tt.kills;t.wins=(t.wins||0)+tt.wins;t.matchesPlayed=(t.matchesPlayed||0)+tt.games;}
   });
   Object.values(playerTotals).forEach(pt=>{
     const p=pl.find(x=>x.ign===pt.ign);
@@ -7678,18 +7694,19 @@ function renderTeamStandings(){
   body.innerHTML=sorted.map((t,i)=>{
     const matches=t.matchesPlayed||0;
     const avg=matches>0?((t.points||0)/matches).toFixed(1):'—';
+    const winRate=matches>0?Math.round((t.wins||0)/matches*100):null;
     const tcolor=t.color||'var(--accent)';
-    return `<tr>
-      <td><span style="font-size:.88rem">${ic[i]||i+1}</span></td>
-      <td><div style="display:flex;align-items:center;gap:.5rem">
-        <div style="width:10px;height:10px;border-radius:50%;background:${tcolor};flex-shrink:0"></div>
-        <div><div style="font-weight:700;font-size:.88rem">${t.name}</div><div style="font-size:.68rem;color:var(--textD)">${t.tag||''}</div></div>
+    return `<tr class="ts-row">
+      <td class="ts-rank">${ic[i]||`<span class="ts-rank-num">${i+1}</span>`}</td>
+      <td><div class="ts-team-cell">
+        <div class="ts-dot" style="background:${tcolor}"></div>
+        <div class="ts-team-name">${esc(t.name)}${t.tag?` <span class="ts-tag">[${esc(t.tag)}]</span>`:''}</div>
       </div></td>
-      <td><span class="chip chip-accent" style="font-weight:700;font-size:.82rem">${t.points||0}</span></td>
-      <td class="text-muted font-mono" style="font-size:.82rem">${matches}</td>
-      <td><span class="font-mono text-green fw6">${t.wins||0}</span> <span style="font-size:.65rem;color:var(--textD)">🍗</span></td>
-      <td><span class="chip chip-red" style="font-size:.75rem">${t.kills||0}K</span></td>
-      <td class="font-mono text-amber" style="font-size:.82rem">${avg}</td>
+      <td><span class="chip chip-accent ts-pts">${t.points||0}</span></td>
+      <td class="text-muted font-mono ts-num">${matches}</td>
+      <td class="ts-num"><span class="font-mono text-green fw6">${t.wins||0}</span>${winRate!==null?`<span class="ts-winrate">${winRate}%</span>`:''}</td>
+      <td class="ts-num"><span class="chip chip-red" style="font-size:.7rem">${t.kills||0}K</span></td>
+      <td class="font-mono text-amber ts-num">${avg}</td>
     </tr>`;
   }).join('');
 }
