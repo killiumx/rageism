@@ -3237,7 +3237,7 @@ function playerFlag(p){return p.country?flagEmoji(p.country):regionFlag(p.region
 // they have one, otherwise falls back to the initial-letter circle exactly like before.
 function miniAvHTML(p,extraStyle=''){
   const letter=p&&p.ign?avatarInitial(p.ign):'?';
-  if(p&&p.avatarUrl)return `<div class="cell-av" style="overflow:hidden;padding:0;${extraStyle}"><img src="${esc(p.avatarUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${letter}'"/></div>`;
+  if(p&&p.avatarUrl)return `<div class="cell-av" style="overflow:hidden;padding:0;${extraStyle}"><img src="${esc(p.avatarUrl)}" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .15s" onload="this.style.opacity=1" onerror="this.parentElement.textContent='${letter}'"/></div>`;
   return `<div class="cell-av" style="${extraStyle}">${letter}</div>`;
 }
 function countryName(code){const m=COUNTRIES.find(c=>c[0]===code);return m?m[1]:'';}
@@ -7880,7 +7880,7 @@ function renderTeams(){
   if(!teams.length){g.innerHTML=`<div class="text-dim" style="padding:2rem;font-size:.85rem">No teams match your filters.</div>`;return;}
   g.innerHTML=teams.map(t=>`<div class="team-card">
     <div class="team-header" style="cursor:pointer" onclick="openTeamProfile('${t.id}')">
-      <div class="team-icon" style="background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'};overflow:hidden;padding:0">${t.logoUrl?`<img src="${esc(t.logoUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-shield-halved\\'></i>'"/>`:'<i class="fa-solid fa-shield-halved"></i>'}</div>
+      <div class="team-icon" style="background:${t.color||'var(--accent)'}18;color:${t.color||'var(--accent)'};overflow:hidden;padding:0">${t.logoUrl?`<img src="${esc(t.logoUrl)}" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .15s" onload="this.style.opacity=1" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-shield-halved\\'></i>'"/>`:'<i class="fa-solid fa-shield-halved"></i>'}</div>
       <div style="flex:1"><div class="team-name-text" style="color:${t.color||'var(--accentL)'}">${t.name}</div><div class="team-tag">${t.tag||''} · ${t.map}</div></div>
       <span class="chip chip-green">${t.wins||0}W</span>
     </div>
