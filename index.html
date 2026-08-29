@@ -1844,6 +1844,7 @@ tr:last-child td{border-bottom:none}
                 <button class="btn btn-ghost btn-fw" onclick="postTdmPlayerOfWeekNow()"><i class="fa-solid fa-crown"></i> Post TDM Player of the Week Now</button>
                 <button class="btn btn-ghost btn-fw" onclick="postMatchOfWeekNow()"><i class="fa-solid fa-fire"></i> Post Scrims Match of the Week Now</button>
                 <button class="btn btn-ghost btn-fw" onclick="postTdmMatchOfWeekNow()"><i class="fa-solid fa-fire"></i> Post TDM Match of the Week Now</button>
+                <button class="btn btn-ghost btn-fw" onclick="recalcTeamMatchesPlayed()" title="Fixes teams' Matches count using the actual game-by-game history in the results log — safe, doesn't touch points/kills/wins"><i class="fa-solid fa-arrows-rotate"></i> Recalculate Team Matches Played</button>
                 <button class="btn btn-danger btn-fw" onclick="resetAll()" style="border-color:rgba(239,68,68,.5);font-weight:700"><i class="fa-solid fa-bomb"></i> Full Tournament Reset</button>
               </div>
             </div>
@@ -9871,6 +9872,38 @@ document.addEventListener('click',e=>{
 // TDM field (tdmKills, tdmWins, tdmMatches, streaks) was left untouched, so the TDM leaderboard
 // (which reads those fields straight off the player record) looked completely unchanged afterward.
 // Also clearing the tdmMatches collection itself so old TDM match history doesn't linger either.
+// One-off maintenance fix: recomputes every team's matchesPlayed from the actual results-log
+// history (rlogs5), counting how many games each team appears in across perGameSummaries rather
+// than trusting the stored counter — which, before the submitResults fix, only ever incremented
+// by 1 per submission regardless of how many games a scrim session actually covered (e.g. a
+// 5-game tournament logged in one sitting only added 1, not 5). This does NOT touch points,
+// kills, or wins — those were already accumulating correctly; only the Matches count was wrong.
+function recalcTeamMatchesPlayed(){
+  if(!ADM)return;
+  const logs=DB.get('rlogs5',[]);
+  const teams=DB.get('teams');
+  const counts={}; // teamId -> total games found across every log
+  logs.forEach(log=>{
+    if(Array.isArray(log.perGameSummaries)&&log.perGameSummaries.length){
+      log.perGameSummaries.forEach(g=>{
+        (g.summary||[]).forEach(s=>{ if(s.teamId) counts[s.teamId]=(counts[s.teamId]||0)+1; });
+      });
+    }else{
+      // Older single-game logs never had perGameSummaries — matchSummary alone represents
+      // exactly one game each, so each team listed there counted as 1.
+      (log.matchSummary||[]).forEach(s=>{ if(s.teamId) counts[s.teamId]=(counts[s.teamId]||0)+1; });
+    }
+  });
+  let changed=0;
+  teams.forEach(t=>{
+    const correct=counts[t.id]||0;
+    if((t.matchesPlayed||0)!==correct){t.matchesPlayed=correct;changed++;}
+  });
+  DB.set('teams',teams);
+  renderTeamStandings();renderTeams();renderAdminOverview();
+  logAdminAction('Recalculated team matches played',`${changed} team(s) corrected from the results log by ${CU?CU.name:'Admin'}`);
+  notify('Recalculated!',changed?`${changed} team(s) had their Matches count corrected`:'Every team\'s Matches count was already correct','n-ok');
+}
 function resetSec(what){if(!confirm(`Delete all ${what}? Cannot be undone.`))return;if(what==='players')DB.set('players',[]);else if(what==='teams'){DB.set('teams',[]);DB.set('joinRequests',[]);}else if(what==='stats'){const pl=DB.get('players');pl.forEach(p=>{p.kills=0;p.deaths=0;p.wins=0;p.xp=0;p.points=0;p.gamesPlayed=0;p.tdmKills=0;p.tdmWins=0;p.tdmMatches=0;p.curWinStreak=0;p.curKillStreak=0;p.bestWinStreak=0;p.curTdmWinStreak=0;p.bestTdmWinStreak=0;p.bestMatchKills=0;p.weeklyKills=0;p.weeklyWins=0;p.weeklyTdmKills=0;p.weeklyTdmWins=0;});DB.set('players',pl);const tm=DB.get('teams');tm.forEach(t=>{t.kills=0;t.wins=0;t.points=0;t.matchesPlayed=0;});DB.set('teams',tm);DB.set('tdmMatches',[]);DB.set('h2hRecords',{});}
   else if(what==='tdmOnly'){
     // Wipes ONLY the TDM side (tdmKills/tdmWins/tdmMatches/TDM streaks + the tdmMatches history) —
