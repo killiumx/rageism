@@ -8857,6 +8857,15 @@ function leaveCutoffMinutes(m){return m.leaveCutoffMin!=null?m.leaveCutoffMin:60
 // 'open' = captains can check in right now · 'closed' = past the auto-free deadline.
 function checkinWindowState(m){
   if(!checkinIsEnabled(m))return 'na';
+  if(m.status==='done')return 'closed';
+  // Once the scrim is actually LIVE, check-in stays open for the whole time it's live —
+  // regardless of the scheduled-time math below. That math is only meant to gate check-in
+  // BEFORE a match starts; once teams are genuinely playing, a team still seated in its slot
+  // should always be able to hit "We're Here" and shouldn't get told the window "closed" just
+  // because the scheduled clock time drifted from when the host actually started things.
+  // The no-show sweep (maybeAutoFreeNoShows, via checkinDeadlinePassed below) is the one thing
+  // that actually locks this out, and only runs once per match.
+  if(m.status==='live')return m.noShowSwept?'closed':'open';
   const start=matchDateTs(m);if(!isFinite(start))return 'na';
   const now=Date.now();
   const opensAt=start-checkinOpenMinutes(m)*60000;
@@ -8867,6 +8876,13 @@ function checkinWindowState(m){
   if(now<opensAt)return 'not-open';
   if(now<deadlineAt)return 'open';
   return 'closed';
+}
+// Used only by the no-show sweep (maybeAutoFreeNoShows) to decide when to pull non-checked-in
+// teams — kept separate from checkinWindowState so a live match's check-in button can stay open
+// (see above) without also disabling the one-time auto-free sweep.
+function checkinDeadlinePassed(m){
+  const start=matchDateTs(m);if(!isFinite(start))return false;
+  return Date.now()>=start+checkinDeadlineMinutes(m)*60000;
 }
 // The team entry (in m.teams) that one of the current user's own teams holds in this match, if any.
 function myLobbyEntry(m){
@@ -8958,7 +8974,7 @@ function maybeAutoFreeNoShows(){
   ms.forEach(m=>{
     if(m.status!=='upcoming'&&m.status!=='live')return;
     if(!checkinIsEnabled(m)||m.noShowSwept)return;
-    if(checkinWindowState(m)!=='closed')return;
+    if(!checkinDeadlinePassed(m))return;
     const noShows=(m.teams||[]).filter(x=>!x.checkedIn);
     m.noShowSwept=true;changed=true;
     if(!noShows.length)return;
