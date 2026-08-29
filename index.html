@@ -2185,6 +2185,14 @@ tr:last-child td{border-bottom:none}
       <div class="fg"><label class="fl">Auto-free no-shows at (min after start)</label><input class="fi" id="mm-checkin-deadline" type="number" value="10" min="0"/></div>
       <div class="fg"><label class="fl">Self-leave cutoff (min before start)</label><input class="fi" id="mm-leave-cutoff" type="number" value="60" min="0"/></div>
     </div>
+    <div id="mm-manual-team-wrap" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rS);padding:.7rem .9rem;margin-bottom:1rem">
+      <label class="fl" style="margin-bottom:.4rem;display:block">Manually add a team to this scrim <span style="font-weight:400;color:var(--textD)">(works even if the scrim is Live — bypasses signup requests entirely)</span></label>
+      <div style="display:flex;gap:.5rem">
+        <select class="fi fsel" id="mm-manual-team-sel" style="flex:1"></select>
+        <button type="button" class="btn btn-accent btn-sm" onclick="mmManualAddTeam()" style="flex-shrink:0"><i class="fa-solid fa-plus"></i> Add</button>
+      </div>
+      <div style="font-size:.7rem;color:var(--textD);margin-top:.4rem">Drops the team into the lowest open slot. Use the Lobby view to move it afterward.</div>
+    </div>
     <button class="btn btn-accent btn-fw" id="mm-save-btn" onclick="createMatch()"><i class="fa-solid fa-plus"></i> Create Scrim</button>
   </div>
 </div>
@@ -8151,6 +8159,8 @@ function openNewMatchModal(id){
   if(existing){
     if(titleEl)titleEl.textContent='Edit Scrim';
     if(saveBtn)saveBtn.innerHTML='<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+    const mtWrap=document.getElementById('mm-manual-team-wrap');if(mtWrap)mtWrap.style.display='block';
+    mmPopulateManualTeamSelect(existing.id);
     MM_MATCHES=(Array.isArray(existing.mapSequence)&&existing.mapSequence.length)?existing.mapSequence.map(mp=>({map:mp||''})):[{map:existing.map||''}];
     document.getElementById('mm-n').value=existing.name||'';
     document.getElementById('mm-st').value=existing.status||'upcoming';
@@ -8187,10 +8197,43 @@ function openNewMatchModal(id){
     document.getElementById('mm-checkin-deadline').value=10;
     document.getElementById('mm-leave-cutoff').value=60;
     mmToggleCheckinFields();
+    const mtWrap=document.getElementById('mm-manual-team-wrap');if(mtWrap)mtWrap.style.display='none';
   }
   mmRenderMatchesList();
   mmAutoCalc();
   openModal('match-modal');
+}
+// Populates the "manually add a team" dropdown in the edit-scrim modal with every team not
+// already seated in this match — lets an admin drop a team straight into an open slot from the
+// edit area regardless of the scrim's status (upcoming or live), no signup request needed.
+function mmPopulateManualTeamSelect(matchId){
+  const sel=document.getElementById('mm-manual-team-sel');if(!sel)return;
+  const ms=DB.get('matches',[]);const m=ms.find(x=>x.id===matchId);
+  const seated=new Set((m?.teams||[]).map(x=>x.teamId));
+  const teams=DB.get('teams',[]).filter(t=>!seated.has(t.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  sel.innerHTML=teams.length?teams.map(t=>`<option value="${t.id}">${esc(t.name)}${t.tag?' ['+esc(t.tag)+']':''}</option>`).join(''):'<option value="">No available teams</option>';
+}
+// Drops the selected team straight into the match's lowest open slot. Deliberately has NO status
+// gate (upcoming/live/done all allowed) and NO check-in/signup requirement — this is the admin
+// "just put them in" override for when a team needs adding after the event has already gone live.
+function mmManualAddTeam(){
+  if(!ADM)return;
+  const matchId=MM_EDIT_ID;if(!matchId)return;
+  const teamId=v('mm-manual-team-sel');if(!teamId)return notify('No team selected','','n-bad');
+  const ms=DB.get('matches');const m=ms.find(x=>x.id===matchId);if(!m)return;
+  m.teams=m.teams||[];
+  if(m.teams.some(x=>x.teamId===teamId))return notify('Already in this match','','n-bad');
+  const cap=m.maxTeams||20;
+  if(m.teams.length>=cap)return notify('Match is full','Bump Max Teams first if you need another slot','n-bad');
+  const teamsDb=DB.get('teams');const t=teamsDb.find(x=>x.id===teamId);if(!t)return notify('Team not found','','n-bad');
+  const taken=new Set(m.teams.map(x=>x.slot).filter(Boolean));
+  let slot=MATCH_SLOT_RESERVED+1;while(taken.has(slot)&&slot<=cap)slot++;
+  m.teams.push({teamId:t.id,teamName:t.name,slot});
+  DB.set('matches',ms);
+  mmPopulateManualTeamSelect(matchId);
+  renderMatches();renderAMatches();renderDashboardData();
+  logAdminAction('Team manually added',`${t.name} was manually added to ${m.name} (Slot ${slot}) by ${CU?CU.name:'Admin'}${m.status==='live'?' — scrim was already live':''}`);
+  notify('Team added!',`${t.name} → Slot ${slot}`,'n-ok');
 }
 function mmToggleCheckinFields(){
   const on=!!document.getElementById('mm-checkin')?.checked;
